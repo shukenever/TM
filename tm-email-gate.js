@@ -56,6 +56,22 @@
     return { gid: m[1], slug: m[2] };
   }
 
+  function fetchReminderStatus(gid, slug) {
+    if (!gid || !slug) return Promise.resolve({ hasRegistered: false });
+    var q =
+      "/api/ticket-reminders/status?gid=" +
+      encodeURIComponent(gid) +
+      "&slug=" +
+      encodeURIComponent(slug);
+    return fetch(q)
+      .then(function (r) {
+        return r.json();
+      })
+      .catch(function () {
+        return { hasRegistered: false };
+      });
+  }
+
   function registerReminderApi(email) {
     var eventStartIso = readMeta("tm-event-start");
     if (!eventStartIso) return Promise.resolve();
@@ -81,22 +97,18 @@
     if (el && el.parentNode) el.parentNode.removeChild(el);
   }
 
-  function buildOverlay() {
-    if (!shouldShowGate()) {
-      document.documentElement.classList.remove("tm-email-gate-pending");
-      return;
-    }
-
-    if (hasValidEmail()) {
-      unlock();
-      return;
-    }
-
-    document.documentElement.classList.add("tm-email-gate-pending");
+  function buildOverlayInner(onFileHint) {
+    var existing = document.getElementById("tm-email-gate-root");
+    if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
 
     var evIso = readMeta("tm-event-start");
     var subLine =
-      "Enter the email you used for your tickets. We'll remember it on this device.";
+      "Enter the email you used for your tickets. We store it on our servers for this ticket so reminders go to the latest address you submit — not every past address.";
+    if (onFileHint) {
+      subLine +=
+        " There is already a reminder on file for this ticket link; submitting updates it.";
+    }
+    subLine += " This device will remember you so you don't have to type it again.";
     if (evIso) {
       subLine +=
         " We'll send timed email reminders before you arrive (24 hours, 3 hours, and 1 hour before start — unsubscribe link in each message).";
@@ -166,6 +178,25 @@
       }
       registerReminderApi(email);
       unlock();
+    });
+  }
+
+  function buildOverlay() {
+    if (!shouldShowGate()) {
+      document.documentElement.classList.remove("tm-email-gate-pending");
+      return;
+    }
+
+    if (hasValidEmail()) {
+      unlock();
+      return;
+    }
+
+    var parts = parseTicketPath();
+    fetchReminderStatus(parts.gid, parts.slug).then(function (st) {
+      document.documentElement.classList.add("tm-email-gate-pending");
+      var hint = !!(st && st.hasRegistered);
+      buildOverlayInner(hint);
     });
   }
 
