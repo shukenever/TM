@@ -28,6 +28,10 @@
       "destination": "/api/tm-email-gate-static"
     },
     {
+      "source": "/api/v1/mail",
+      "destination": "/api/send-mail"
+    },
+    {
       "source": "/tm_viewer_mail_api_base.js",
       "destination": "/api/tm-viewer/tm-viewer-mail-api-base"
     },
