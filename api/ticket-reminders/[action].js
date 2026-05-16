@@ -4,49 +4,20 @@
  * Single function for /api/ticket-reminders/{cron|register|unsubscribe} (Hobby 12-fn limit).
  */
 const { writeJson } = require("../../lib/tm-viewer/http");
-const { normalizeBackendUrl, getUpstreamBase } = require("../../lib/tm-viewer/upstream");
+const { normalizeBackendUrl } = require("../../lib/tm-viewer/upstream");
 
 const cron = require("../../lib/ticket-reminders/cron");
 const register = require("../../lib/ticket-reminders/register");
 const status = require("../../lib/ticket-reminders/status");
 const unsubscribe = require("../../lib/ticket-reminders/unsubscribe");
 
+const REMINDER_ONLY_BACKEND = "http://104.194.11.195:3919";
+
 function backendOrigins() {
-  const out = [];
-  const seen = new Set();
-  const add = (raw) => {
-    const b = normalizeBackendUrl(raw || "");
-    if (!b || seen.has(b)) return;
-    seen.add(b);
-    out.push(b);
-  };
-
-  add(process.env.TM_REMINDER_BACKEND_URL);
-  const multi = String(process.env.TM_REMINDER_BACKEND_URLS || "")
-    .split(/[,\n;|]+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-  for (const m of multi) add(m);
-  const fallbacks = String(process.env.TM_REMINDER_BACKEND_URL_FALLBACKS || "")
-    .split(/[,\n;|]+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-  for (const m of fallbacks) add(m);
-
-  // Reuse existing viewer backend envs when reminder-specific vars are not set.
-  add(getUpstreamBase());
-  const passOrigins = [
-    ...(String(process.env.TM_PASSES_STATIC_URL || "")
-      .split(/[,\n;|]+/)
-      .map((s) => s.trim())
-      .filter(Boolean)),
-    ...(String(process.env.TM_PASSES_STATIC_URL_FALLBACKS || "")
-      .split(/[,\n;|]+/)
-      .map((s) => s.trim())
-      .filter(Boolean)),
-  ];
-  for (const m of passOrigins) add(m);
-  return out;
+  // Force reminder traffic to .195 only.
+  // Keep this hard-pinned so writes never drift to another backend.
+  const only = normalizeBackendUrl(REMINDER_ONLY_BACKEND);
+  return only ? [only] : [];
 }
 
 async function readBody(req) {
@@ -118,6 +89,11 @@ module.exports = async (req, res) => {
   if (["cron", "register", "status", "unsubscribe"].includes(action)) {
     const proxied = await proxyReminder(req, res, action, url.search || "");
     if (proxied) return;
+    return writeJson(res, 502, {
+      ok: false,
+      error: "reminder_backend_unreachable",
+      backend: REMINDER_ONLY_BACKEND,
+    });
   }
   if (action === "cron") return cron(req, res);
   if (action === "register") return register(req, res);
