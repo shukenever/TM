@@ -6,7 +6,7 @@
   "crons": [
     {
       "path": "/api/ticket-reminders/cron",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 12 * * *"
     }
   ],
   "functions": {

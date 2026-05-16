@@ -10,3 +10,7 @@ npm run build
 ```
 
 In Vercel, use repository **root** as the project root (`outputDirectory`: `public`). Configure env vars in the dashboard (Resend, Upstash, etc.).
+
+## Cron (ticket reminders)
+
+**Hobby** plans only allow **one job per day**. This repo uses `0 12 * * *` (12:00 UTC daily). On **Pro**, you can change `vercel.json` → `crons[0].schedule` to a tighter interval (e.g. every 15 minutes); Hobby deploys will **fail** if the expression runs more than once per day.
