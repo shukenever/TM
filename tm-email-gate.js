@@ -99,7 +99,7 @@
       "Enter the email you used for your tickets. We'll remember it on this device.";
     if (evIso) {
       subLine +=
-        " We'll send timed email reminders before you arrive (24 hours, 6 hours, and 1 hour — unsubscribe link in each message).";
+        " We'll send timed email reminders before you arrive (24 hours, 3 hours, and 1 hour before start — unsubscribe link in each message).";
     }
 
     var root = document.createElement("div");
