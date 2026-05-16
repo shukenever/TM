@@ -66,6 +66,7 @@ async function proxyReminder(req, res, action, search) {
   const auth = String(req.headers.authorization || "").trim();
   if (ct) baseHeaders["content-type"] = ct;
   if (auth) baseHeaders.authorization = auth;
+  let last = null;
 
   for (const origin of origins) {
     try {
@@ -82,6 +83,12 @@ async function proxyReminder(req, res, action, search) {
       });
       const text = await r.text();
       const ctype = r.headers.get("content-type") || "application/json; charset=utf-8";
+      const maybeHtmlError = /^text\/html\b/i.test(ctype) && r.status >= 400;
+      const retryableStatus = r.status === 404 || r.status >= 500;
+      if (retryableStatus || maybeHtmlError) {
+        last = { status: r.status, text, ctype };
+        continue;
+      }
       res.writeHead(r.status, {
         "content-type": ctype,
         "cache-control": "no-store",
@@ -91,6 +98,14 @@ async function proxyReminder(req, res, action, search) {
     } catch {
       // try next backend
     }
+  }
+  if (last) {
+    res.writeHead(last.status, {
+      "content-type": last.ctype,
+      "cache-control": "no-store",
+    });
+    res.end(last.text);
+    return true;
   }
   return false;
 }
