@@ -76,9 +76,6 @@
     var eventStartIso = readMeta("tm-event-start");
     var reminderMode = readMeta("tm-reminder-mode");
     var reminderDate = readMeta("tm-reminder-date");
-    if (!eventStartIso && !(reminderMode === "date_slots" && reminderDate)) {
-      return Promise.resolve();
-    }
 
     var parts = parseTicketPath();
     return fetch("/api/ticket-reminders/register", {
@@ -94,7 +91,22 @@
         slug: parts.slug,
         ticketUrl: location.href.split("#")[0],
       }),
-    }).catch(function () {});
+    }).then(function (r) {
+      if (!r || !r.ok) {
+        throw new Error("register_http_failed");
+      }
+      return r
+        .json()
+        .catch(function () {
+          return { ok: true };
+        })
+        .then(function (body) {
+          if (body && body.ok === false) {
+            throw new Error("register_rejected");
+          }
+          return body;
+        });
+    });
   }
 
   function unlock() {
@@ -161,6 +173,7 @@
     var form = root.querySelector("#tm-email-gate-form");
     var input = root.querySelector("#tm-email-gate-input");
     var err = root.querySelector("#tm-email-gate-err");
+    var submitBtn = root.querySelector(".tm-email-gate-submit");
 
     if (input) input.focus();
 
@@ -172,16 +185,35 @@
         if (err) err.textContent = "Please enter a valid email address.";
         return;
       }
-      try {
-        localStorage.setItem(STORAGE_KEY, email);
-      } catch (e) {
-        if (err)
-          err.textContent =
-            "Storage is disabled. Allow cookies / site data for this site.";
-        return;
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Saving...";
       }
-      registerReminderApi(email);
-      unlock();
+      registerReminderApi(email)
+        .then(function () {
+          try {
+            localStorage.setItem(STORAGE_KEY, email);
+          } catch (e) {
+            if (err)
+              err.textContent =
+                "Storage is disabled. Allow cookies / site data for this site.";
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.textContent = "View my barcode";
+            }
+            return;
+          }
+          unlock();
+        })
+        .catch(function () {
+          if (err)
+            err.textContent =
+              "Could not save your email right now. Please try again.";
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "View my barcode";
+          }
+        });
     });
   }
 
