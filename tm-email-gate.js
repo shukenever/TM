@@ -74,7 +74,11 @@
 
   function registerReminderApi(email) {
     var eventStartIso = readMeta("tm-event-start");
-    if (!eventStartIso) return Promise.resolve();
+    var reminderMode = readMeta("tm-reminder-mode");
+    var reminderDate = readMeta("tm-reminder-date");
+    if (!eventStartIso && !(reminderMode === "date_slots" && reminderDate)) {
+      return Promise.resolve();
+    }
 
     var parts = parseTicketPath();
     return fetch("/api/ticket-reminders/register", {
@@ -83,6 +87,8 @@
       body: JSON.stringify({
         email: email,
         eventStartIso: eventStartIso,
+        reminderMode: reminderMode,
+        reminderDate: reminderDate,
         eventTitle: readMeta("tm-event-title"),
         gid: parts.gid,
         slug: parts.slug,
@@ -102,16 +108,14 @@
     if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
 
     var evIso = readMeta("tm-event-start");
-    var subLine =
-      "Enter the email you used for your tickets. We store it on our servers for this ticket so reminders go to the latest address you submit — not every past address.";
+    var subLine = "Enter the email used for this ticket.";
     if (onFileHint) {
-      subLine +=
-        " There is already a reminder on file for this ticket link; submitting updates it.";
+      subLine += " We already have one on file; submitting updates it.";
     }
-    subLine += " This device will remember you so you don't have to type it again.";
+    subLine +=
+      " We save only the latest address for this ticket and remember it on this device.";
     if (evIso) {
-      subLine +=
-        " We'll send timed email reminders before you arrive (24 hours, 3 hours, and 1 hour before start — unsubscribe link in each message).";
+      subLine += " Reminder summary: 24 hours, 3 hours, and 1 hour before start.";
     }
 
     var root = document.createElement("div");
