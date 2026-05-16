@@ -1,0 +1,47 @@
+{
+  "framework": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
+  "cleanUrls": true,
+  "crons": [
+    {
+      "path": "/api/ticket-reminders/cron",
+      "schedule": "*/15 * * * *"
+    }
+  ],
+  "functions": {
+    "api/tm-pkpass.js": {
+      "includeFiles": "wallet-pass-assets/**"
+    },
+    "api/tm-email-gate-static.js": {
+      "includeFiles": "tm-email-gate.js"
+    }
+  },
+  "redirects": [
+    { "source": "/index.html", "destination": "/", "permanent": true },
+    { "source": "/login.html", "destination": "/login", "permanent": true },
+    { "source": "/my-tickets.html", "destination": "/my-tickets", "permanent": true }
+  ],
+  "rewrites": [
+    {
+      "source": "/tm-email-gate.js",
+      "destination": "/api/tm-email-gate-static"
+    },
+    {
+      "source": "/tm_viewer_mail_api_base.js",
+      "destination": "/api/tm-viewer/tm-viewer-mail-api-base"
+    },
+    {
+      "source": "/tickets/:gid/:slug",
+      "destination": "/api/tm-passes-fetch?gid=:gid&slug=:slug"
+    },
+    {
+      "source": "/api/tm-viewer/send-mail",
+      "destination": "/api/send-mail"
+    },
+    {
+      "source": "/api/tm-viewer/transfer-to-buyer",
+      "destination": "/api/send-mail"
+    }
+  ]
+}
