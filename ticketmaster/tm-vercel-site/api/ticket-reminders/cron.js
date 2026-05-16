@@ -137,6 +137,8 @@ module.exports = async (req, res) => {
     let sent1 = 0;
     let skipped = 0;
     let cleaned = 0;
+    let sendErrors = 0;
+    const sendErrorSamples = [];
 
     for (const subId of ids) {
       const sub = await redis.hgetall(`reminder:sub:${subId}`);
@@ -179,6 +181,12 @@ module.exports = async (req, res) => {
         }
       } catch (e) {
         skipped++;
+        sendErrors++;
+        if (sendErrorSamples.length < 5) {
+          const detail =
+            (e && (e.code || e.message)) || String(e || "unknown_send_error");
+          sendErrorSamples.push(`${subId}:${String(detail).slice(0, 180)}`);
+        }
       }
     }
 
@@ -190,8 +198,10 @@ module.exports = async (req, res) => {
       sent1,
       skipped,
       cleaned,
+      sendErrors,
       at: new Date(now).toISOString(),
     };
+    if (sendErrorSamples.length) summary.sendErrorSamples = sendErrorSamples;
 
     return writeJson(res, 200, summary);
   } catch (e) {
