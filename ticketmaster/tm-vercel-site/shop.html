@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#026cdf"/>
+  <title>Tixx Shop — Verified tickets marketplace</title>
+  <link rel="icon" href="/public/favicon-32.png" type="image/png" sizes="32x32"/>
+  <link rel="apple-touch-icon" href="/public/apple-touch-icon.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --tm-blue: #026cdf;
+      --tm-blue-dark: #0153a3;
+      --tm-blue-glow: rgba(2,108,223,.45);
+      --bg: #f4f6f9;
+      --surface: #fff;
+      --border: #e2e8f0;
+      --text: #121212;
+      --muted: #5c6570;
+      --accent: #026cdf;
+      --navy: #0f172a;
+      --ease-out: cubic-bezier(.22, 1, .36, 1);
+      --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes heroZoom {
+      from { transform: scale(1.08); }
+      to { transform: scale(1); }
+    }
+    @keyframes heroShimmer {
+      0%, 100% { opacity: .55; transform: translateX(-8%) scale(1.1); }
+      50% { opacity: .75; transform: translateX(8%) scale(1.15); }
+    }
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(12px, -18px) scale(1.05); }
+      66% { transform: translate(-8px, 10px) scale(.96); }
+    }
+    @keyframes pulseRing {
+      0% { box-shadow: 0 0 0 0 rgba(59,130,246,.45); }
+      70% { box-shadow: 0 0 0 12px rgba(59,130,246,0); }
+      100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @keyframes slideDown {
+      from { opacity: 0; max-height: 0; }
+      to { opacity: 1; max-height: 800px; }
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(.94) translateY(12px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @keyframes backdropIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes trustPop {
+      from { opacity: 0; transform: translateY(10px) scale(.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes iconBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
+    * { box-sizing: border-box; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .topbar {
+      background: linear-gradient(90deg, #0b1320 0%, #141e30 52%, #1f2d46 100%);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      box-shadow: 0 4px 20px rgba(5,9,17,.35);
+      padding-top: env(safe-area-inset-top, 0);
+      transition: box-shadow .35s var(--ease-out), backdrop-filter .35s;
+    }
+    .topbar.is-scrolled {
+      box-shadow: 0 8px 32px rgba(5,9,17,.5);
+      backdrop-filter: blur(12px);
+    }
+    .tm-simple-bar {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: .85rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .tixx-brand {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      color: #fff;
+      transition: transform .25s var(--ease-spring), filter .25s;
+    }
+    .tixx-brand:hover { transform: scale(1.03); filter: brightness(1.08); }
+    .tixx-logo {
+      height: 32px;
+      width: auto;
+      display: block;
+    }
+    .tixx-logo--on-dark {
+      height: 32px;
+      width: auto;
+      display: block;
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.35));
+    }
+    .tm-nav-links {
+      display: flex; align-items: center; gap: .15rem;
+      font-size: .8125rem; font-weight: 600;
+    }
+    .tm-nav-links a {
+      color: rgba(255,255,255,.88);
+      text-decoration: none;
+      padding: .4rem .65rem;
+      border-radius: 6px;
+      transition: background .2s var(--ease-out), color .2s, transform .2s var(--ease-spring);
+    }
+    .tm-nav-links a:hover { background: rgba(255,255,255,.1); color: #fff; transform: translateY(-1px); }
+    .tm-nav-links a.active {
+      color: #fff;
+      background: rgba(2,108,223,.35);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+    }
+    .tm-nav-links .tixx-settings-btn-nav { margin-left: .15rem; }
+    .tm-login-btn {
+      padding: .48rem 1.05rem;
+      font-size: .6875rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #0f172a;
+      background: linear-gradient(180deg, #f8fcff 0%, #e3edf8 100%);
+      border: 1px solid rgba(15,23,42,.12);
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: none;
+      margin-left: .35rem;
+      transition: transform .25s var(--ease-spring), box-shadow .25s, filter .25s;
+    }
+    .tm-login-btn:hover {
+      filter: brightness(1.02);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255,255,255,.15);
+    }
+
+    .shop-hero {
+      position: relative;
+      min-height: 320px;
+      background: radial-gradient(120% 120% at 8% 0%, #63b0ff 0%, #1a4a87 40%, #0a1322 100%);
+      overflow: hidden;
+    }
+    .shop-hero::before {
+      content: '';
+      position: absolute;
+      width: 420px; height: 420px;
+      top: -120px; right: -80px;
+      background: radial-gradient(circle, rgba(56,189,248,.35) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: orbFloat 14s ease-in-out infinite;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .shop-hero::after {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      bottom: -60px; left: 10%;
+      background: radial-gradient(circle, rgba(2,108,223,.4) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: orbFloat 18s ease-in-out infinite reverse;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .shop-hero img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; object-position: center 30%;
+      animation: heroZoom 1.8s var(--ease-out) forwards;
+      will-change: transform;
+    }
+    .shop-hero-overlay {
+      position: relative; z-index: 3;
+      min-height: 320px;
+      max-width: 1200px; margin: 0 auto;
+      padding: 2.25rem 1rem 2.75rem;
+      background: linear-gradient(180deg, rgba(4,10,21,.12) 0%, rgba(4,10,21,.82) 100%);
+      display: flex; flex-direction: column; justify-content: flex-end;
+    }
+    .shop-kicker {
+      margin: 0 0 .35rem;
+      font-size: .625rem; font-weight: 700;
+      letter-spacing: .2em; text-transform: uppercase;
+      color: #cde4ff;
+      animation: fadeUp .7s var(--ease-out) .1s both;
+    }
+    .shop-hero h1 {
+      margin: 0 0 .45rem;
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(1.5rem, 4.5vw, 2.35rem);
+      font-weight: 800; color: #fff; line-height: 1.1;
+      max-width: 24ch;
+      animation: fadeUp .7s var(--ease-out) .2s both;
+    }
+    .shop-hero h1 em {
+      font-style: normal;
+      background: linear-gradient(90deg, #7dd3fc, #38bdf8, #fff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .shop-hero p {
+      margin: 0;
+      font-size: .9rem; line-height: 1.45;
+      color: rgba(255,255,255,.92);
+      max-width: 42ch;
+      animation: fadeUp .7s var(--ease-out) .35s both;
+    }
+
+    .search-wrap {
+      max-width: 960px;
+      margin: -1.75rem auto 0;
+      padding: 0 1rem 1.25rem;
+      position: relative; z-index: 5;
+      animation: fadeUp .75s var(--ease-out) .45s both;
+    }
+    .search-strip {
+      display: flex; flex-wrap: wrap; align-items: stretch;
+      background: rgba(255,255,255,.97);
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,.28);
+      box-shadow: 0 20px 50px rgba(2,6,23,.22), 0 0 0 1px rgba(255,255,255,.6) inset;
+      overflow: hidden;
+      transition: box-shadow .35s var(--ease-out), transform .35s var(--ease-out);
+    }
+    .search-strip:focus-within {
+      box-shadow: 0 24px 60px rgba(2,108,223,.18), 0 0 0 3px rgba(2,108,223,.12);
+      transform: translateY(-2px);
+    }
+    .search-seg {
+      flex: 1 1 140px;
+      padding: 10px 14px 12px;
+      display: flex; flex-direction: column; gap: 4px;
+      border-right: 1px solid #eef2f6;
+      min-width: 0;
+    }
+    .search-seg--grow { flex: 2 1 200px; }
+    .search-seg label {
+      font-size: .5625rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: #6b7280;
+    }
+    .search-seg input, .search-seg select {
+      border: 0; outline: none; background: transparent;
+      font: inherit; font-size: .875rem; font-weight: 500;
+      color: var(--text); width: 100%; min-width: 0;
+      transition: color .2s;
+    }
+    .search-seg:focus-within label { color: var(--tm-blue); }
+    .search-seg select { cursor: pointer; }
+    .search-go {
+      flex: 0 0 56px;
+      border: 0;
+      background: linear-gradient(145deg, #3b82f6, #1d4ed8);
+      color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: filter .25s, transform .25s var(--ease-spring);
+      position: relative;
+    }
+    .search-go:hover {
+      filter: brightness(1.08);
+      transform: scale(1.02);
+    }
+    .search-go:active { transform: scale(.96); }
+    .search-go svg { transition: transform .3s var(--ease-spring); }
+    .search-go:hover svg { transform: scale(1.1) rotate(-8deg); }
+
+    .trust-row {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 1rem 1.25rem;
+      display: flex; flex-wrap: wrap; gap: .65rem;
+      justify-content: center;
+    }
+    .trust-pill {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .5rem .95rem;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: .75rem; font-weight: 600;
+      color: #334155;
+      box-shadow: 0 4px 14px rgba(15,23,42,.06);
+      animation: trustPop .6s var(--ease-out) both;
+      transition: transform .25s var(--ease-spring), box-shadow .25s, border-color .25s;
+    }
+    .trust-pill:nth-child(1) { animation-delay: .55s; }
+    .trust-pill:nth-child(2) { animation-delay: .65s; }
+    .trust-pill:nth-child(3) { animation-delay: .75s; }
+    .trust-pill:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(2,108,223,.12);
+      border-color: rgba(2,108,223,.25);
+    }
+    .trust-pill svg {
+      width: 16px; height: 16px; color: var(--tm-blue); flex-shrink: 0;
+      transition: transform .3s var(--ease-spring);
+    }
+    .trust-pill:hover svg { animation: iconBounce .5s ease; }
+
+    .filters-sticky {
+      position: sticky;
+      top: 56px;
+      z-index: 20;
+      background: rgba(246,247,248,.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: .75rem 0 .25rem;
+      margin: 0 -1rem;
+      padding-left: 1rem;
+      padding-right: 1rem;
+      border-bottom: 1px solid transparent;
+    }
+    .filters-sticky.is-stuck {
+      border-bottom-color: var(--border);
+      box-shadow: 0 4px 16px rgba(15,23,42,.06);
+    }
+
+    .shop-main {
+      flex: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 1rem 3rem;
+    }
+
+    .toolbar {
+      display: flex; flex-wrap: wrap; align-items: center;
+      justify-content: space-between; gap: .75rem 1rem;
+      margin: 1.25rem 0 1rem;
+    }
+    .results-meta {
+      font-size: .875rem; color: var(--muted);
+      transition: opacity .2s;
+    }
+    .results-meta strong { color: var(--tm-blue); }
+    .toolbar-right {
+      display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
+    }
+    .toolbar-right select {
+      padding: .45rem .65rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font: inherit; font-size: .8125rem;
+      background: #fff;
+    }
+    .view-toggle {
+      display: flex; border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden; background: #fff;
+    }
+    .view-toggle button {
+      border: 0; background: transparent;
+      padding: .45rem .75rem; font: inherit;
+      font-size: .75rem; font-weight: 700;
+      cursor: pointer; color: var(--muted);
+      transition: all .25s var(--ease-out);
+    }
+    .view-toggle button.active {
+      background: var(--tm-blue); color: #fff;
+      box-shadow: 0 2px 8px rgba(2,108,223,.35);
+    }
+
+    .cat-row {
+      display: flex; flex-wrap: wrap; gap: .5rem;
+      margin-bottom: 1.25rem;
+    }
+    .cat-pill {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 999px;
+      padding: .45rem .95rem;
+      font-size: .8125rem; font-weight: 600;
+      cursor: pointer; color: var(--muted);
+      font-family: inherit;
+      transition: all .25s var(--ease-out);
+      position: relative;
+      overflow: hidden;
+    }
+    .cat-pill::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(2,108,223,.12), rgba(56,189,248,.08));
+      opacity: 0;
+      transition: opacity .25s;
+    }
+    .cat-pill:hover {
+      border-color: rgba(2,108,223,.3);
+      color: var(--tm-blue);
+      transform: translateY(-1px);
+    }
+    .cat-pill.active {
+      background: linear-gradient(135deg, rgba(2,108,223,.14), rgba(56,189,248,.1));
+      border-color: rgba(2,108,223,.4);
+      color: var(--tm-blue);
+      box-shadow: 0 4px 14px rgba(2,108,223,.12);
+    }
+    .cat-pill.active::before { opacity: 1; }
+
+    .banner {
+      padding: .75rem 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      font-size: .875rem;
+      animation: fadeUp .4s var(--ease-out);
+    }
+    .banner.ok { background: #ecfdf5; color: #065f46; }
+    .banner.err { background: #fef2f2; color: #991b1b; }
+
+    .event-grid {
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+    .event-grid.is-filtering { opacity: .6; pointer-events: none; transition: opacity .2s; }
+    .event-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(15,23,42,.05);
+      transition: box-shadow .35s var(--ease-out), border-color .35s, transform .35s var(--ease-out);
+      opacity: 0;
+      animation: fadeUp .55s var(--ease-out) forwards;
+    }
+    .event-card.is-visible { opacity: 1; }
+    .event-card:hover {
+      box-shadow: 0 16px 40px rgba(2,108,223,.12);
+      border-color: rgba(2,108,223,.28);
+      transform: translateY(-3px);
+    }
+    .event-card.open {
+      border-color: rgba(2,108,223,.4);
+      box-shadow: 0 12px 36px rgba(2,108,223,.14);
+    }
+    .event-card-head {
+      display: grid;
+      grid-template-columns: 100px 1fr auto;
+      gap: 1rem;
+      padding: 1.1rem 1.25rem;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      transition: background .2s;
+    }
+    .event-card-head:hover { background: linear-gradient(90deg, rgba(2,108,223,.03), transparent); }
+    @media (max-width: 640px) {
+      .event-card-head { grid-template-columns: 72px 1fr; }
+      .event-card-price { grid-column: 1 / -1; text-align: left; display: flex; align-items: center; gap: 1rem; }
+      .skeleton-card { grid-template-columns: 72px 1fr; }
+      .skeleton-price { display: none; }
+    }
+    .event-thumb {
+      width: 100%; aspect-ratio: 1;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+      transition: transform .4s var(--ease-spring);
+    }
+    .event-card:hover .event-thumb { transform: scale(1.04) rotate(-1deg); }
+    .event-thumb::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 35%, rgba(0,0,0,.35) 100%);
+    }
+    .event-thumb::before {
+      content: '';
+      position: absolute; inset: -50%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+      transform: translateX(-100%);
+      transition: transform .6s;
+    }
+    .event-card:hover .event-thumb::before { transform: translateX(100%); }
+    .event-thumb img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; opacity: .15;
+    }
+    .event-thumb-photo {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; z-index: 0; opacity: 1;
+    }
+    .event-thumb.has-photo .event-thumb-initials { display: none; }
+    .event-thumb.has-photo .event-thumb-mark { opacity: .92; }
+    .event-thumb-mark {
+      position: absolute; right: 6px; bottom: 6px; z-index: 2;
+      width: 22px; height: 22px; opacity: .85;
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,.25));
+    }
+    .event-thumb-initials {
+      position: relative; z-index: 1;
+      font-family: 'Sora', sans-serif;
+      font-weight: 800; font-size: 1.1rem;
+      color: rgba(255,255,255,.95);
+      text-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .thumb-concerts { background: linear-gradient(135deg, #7c3aed, #4f46e5); }
+    .thumb-sports { background: linear-gradient(135deg, #059669, #047857); }
+    .thumb-parking { background: linear-gradient(135deg, #d97706, #b45309); }
+    .thumb-events { background: linear-gradient(135deg, #026cdf, #0153a3); }
+    .event-title {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      font-size: 1.05rem;
+      line-height: 1.25;
+      margin: 0 0 .35rem;
+    }
+    .event-meta {
+      font-size: .8125rem; color: var(--muted);
+      line-height: 1.45;
+    }
+    .event-meta .venue { font-weight: 600; color: #334155; }
+    .event-badge {
+      display: inline-block;
+      margin-top: .35rem;
+      font-size: .6875rem; font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: .2rem .5rem;
+      border-radius: 4px;
+      background: #f1f5f9; color: #475569;
+    }
+    .event-badge.cat-concerts { background: #ede9fe; color: #6d28d9; }
+    .event-badge.cat-sports { background: #dcfce7; color: #15803d; }
+    .event-badge.cat-parking { background: #fef3c7; color: #b45309; }
+    .event-card-price { text-align: right; }
+    .event-chevron {
+      display: inline-block;
+      margin-left: .35rem;
+      font-size: .75rem;
+      color: var(--muted);
+      transition: transform .2s;
+    }
+    .event-card.open .event-chevron { transform: rotate(180deg); }
+    .from-price {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      font-size: 1.4rem;
+      color: var(--tm-blue);
+      transition: transform .3s var(--ease-spring);
+    }
+    .event-card:hover .from-price { transform: scale(1.04); }
+    .from-label { font-size: .75rem; color: var(--muted); }
+    .ticket-count {
+      font-size: .8125rem; font-weight: 600; color: #059669; margin-top: .25rem;
+      display: flex; align-items: center; justify-content: flex-end; gap: .25rem;
+    }
+
+    .seat-list {
+      border-top: 1px solid #f1f5f9;
+      padding: 0 1rem;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height .45s var(--ease-out), opacity .35s, padding .35s;
+    }
+    .event-card.open .seat-list {
+      max-height: 600px;
+      opacity: 1;
+      padding: .5rem 1rem 1rem;
+    }
+    .seat-row {
+      display: flex; flex-wrap: wrap;
+      align-items: center; justify-content: space-between;
+      gap: .5rem 1rem;
+      padding: .7rem 0;
+      border-bottom: 1px solid #f8fafc;
+      animation: fadeUp .35s var(--ease-out) both;
+    }
+    .seat-row:last-child { border-bottom: 0; }
+    .seat-info { font-size: .875rem; font-weight: 600; }
+    .seat-price-wrap { display: flex; align-items: baseline; gap: .65rem; }
+    .seat-price { font-family: 'Sora', sans-serif; font-weight: 800; color: var(--tm-blue); }
+    .seat-face { font-size: .75rem; color: var(--muted); text-decoration: line-through; }
+    .btn-buy {
+      border: 0;
+      background: linear-gradient(145deg, #0284f5, #026cdf);
+      color: #fff;
+      font-weight: 700; font-size: .8125rem;
+      padding: .52rem 1.1rem; border-radius: 10px;
+      cursor: pointer; font-family: inherit;
+      transition: transform .25s var(--ease-spring), box-shadow .25s, filter .25s;
+      box-shadow: 0 4px 14px rgba(2,108,223,.25);
+    }
+    .btn-buy:hover {
+      filter: brightness(1.06);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(2,108,223,.35);
+    }
+    .btn-buy:active { transform: translateY(0) scale(.98); }
+
+    .listing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .listing-grid.is-filtering { opacity: .6; pointer-events: none; transition: opacity .2s; }
+    .listing-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.1rem;
+      display: flex; flex-direction: column; gap: .35rem;
+      opacity: 0;
+      animation: fadeUp .5s var(--ease-out) forwards;
+      transition: transform .3s var(--ease-out), box-shadow .3s, border-color .3s;
+    }
+    .listing-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 32px rgba(2,108,223,.1);
+      border-color: rgba(2,108,223,.25);
+    }
+
+    .empty, #load {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--muted);
+    }
+    .empty { animation: fadeUp .5s var(--ease-out); }
+
+    /* Skeleton loaders */
+    .skeleton-grid {
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+    .skeleton-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.1rem 1.25rem;
+      display: grid;
+      grid-template-columns: 100px 1fr 100px;
+      gap: 1rem;
+      align-items: center;
+    }
+    .skeleton-block {
+      background: linear-gradient(90deg, #eef2f6 25%, #f8fafc 50%, #eef2f6 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s ease-in-out infinite;
+      border-radius: 8px;
+    }
+    .skeleton-thumb { width: 100%; aspect-ratio: 1; border-radius: 14px; }
+    .skeleton-line { height: 14px; margin-bottom: 8px; }
+    .skeleton-line.short { width: 60%; }
+    .skeleton-line.med { width: 80%; }
+    .skeleton-price { height: 28px; width: 70px; margin-left: auto; border-radius: 6px; }
+
+    .modal {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem; z-index: 100;
+      animation: backdropIn .25s ease;
+    }
+    .modal[hidden] { display: none; }
+    .panel {
+      background: #fff; border-radius: 20px;
+      max-width: 440px; width: 100%;
+      padding: 1.5rem;
+      box-shadow: 0 32px 80px rgba(0,0,0,.25);
+      animation: modalIn .4s var(--ease-out);
+    }
+    .panel h2 {
+      font-family: 'Sora', sans-serif;
+      margin: 0 0 .5rem;
+      font-size: 1.15rem;
+    }
+    .panel label {
+      display: block; font-size: .8125rem;
+      font-weight: 600; margin: .85rem 0 .35rem;
+    }
+    .panel input {
+      width: 100%; padding: .65rem .75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px; font: inherit;
+    }
+    .panel-actions {
+      display: flex; gap: .5rem; margin-top: 1.1rem;
+    }
+    .panel-actions .btn-buy { flex: 1; }
+    .btn-ghost {
+      background: #fff; color: var(--tm-blue);
+      border: 1px solid var(--border);
+    }
+
+    footer {
+      margin-top: auto;
+      background: linear-gradient(180deg, #131c2e 0%, #0f172a 100%);
+      color: #94a3b8;
+      padding: 2rem 1rem 1.5rem;
+      font-size: .8125rem;
+      position: relative;
+      overflow: hidden;
+    }
+    footer::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(56,189,248,.4), transparent);
+    }
+    .footer-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; flex-wrap: wrap;
+      align-items: center; justify-content: space-between;
+      gap: 1rem;
+    }
+    .footer-brand { display: flex; align-items: center; gap: .65rem; }
+    .footer-brand .tixx-logo { height: 28px; color: #e2e8f0; }
+    footer a { color: #7dd3fc; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    .footer-links {
+      display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem;
+    }
+    .footer-social {
+      display: inline-flex; align-items: center; gap: .4rem;
+      color: #e2e8f0; font-weight: 600;
+      transition: color .2s, transform .2s var(--ease-spring);
+    }
+    .footer-social:hover { color: #f472b6; text-decoration: none; transform: translateY(-1px); }
+    .footer-social svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* —— StubHub-style discover —— */
+    .shop-discover {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 1rem 1.5rem;
+    }
+    .discover-inner { max-width: 1200px; margin: 0 auto; }
+    .discover-top {
+      display: flex; flex-wrap: wrap; align-items: center;
+      justify-content: space-between; gap: .75rem 1rem;
+      margin-bottom: 1rem;
+    }
+    .loc-chip {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .4rem .85rem;
+      background: rgba(2,108,223,.08);
+      border: 1px solid rgba(2,108,223,.2);
+      border-radius: 999px;
+      font-size: .8125rem; font-weight: 600; color: var(--tm-blue);
+      cursor: pointer;
+      transition: background .2s, transform .2s;
+    }
+    .loc-chip:hover { background: rgba(2,108,223,.12); transform: translateY(-1px); }
+    .loc-chip svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .discover-cats {
+      display: flex; flex-wrap: wrap; gap: .35rem .15rem;
+      font-size: .8125rem; font-weight: 600;
+    }
+    .discover-cats a {
+      color: #334155; text-decoration: none;
+      padding: .35rem .65rem; border-radius: 6px;
+      transition: background .15s, color .15s;
+    }
+    .discover-cats a:hover { background: #f1f5f9; color: var(--tm-blue); }
+    .discover-cats a.active { color: var(--tm-blue); background: rgba(2,108,223,.1); }
+    .discover-search-hero {
+      max-width: 720px; margin: 0 auto 1rem;
+    }
+    .discover-search-hero h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(1.35rem, 3.5vw, 1.75rem);
+      font-weight: 800; text-align: center;
+      margin: 0 0 .85rem; color: #0f172a;
+      letter-spacing: -.02em;
+    }
+    .search-strip--hero {
+      border-radius: 999px;
+      box-shadow: 0 8px 32px rgba(2,108,223,.12);
+    }
+    .search-strip--hero .search-seg { border-right: none; }
+    .search-strip--hero .search-seg--grow { flex: 1 1 200px; }
+    .search-strip--hero .search-go {
+      flex: 0 0 52px;
+      border-radius: 0 999px 999px 0;
+      margin: 4px 4px 4px 0;
+      width: 52px; height: calc(100% - 8px);
+      align-self: center;
+    }
+
+    .discover-sections { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+    .discover-sections[hidden] { display: none !important; }
+    .carousel-section { margin: 1.75rem 0; }
+    .carousel-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 1rem; margin-bottom: .85rem;
+    }
+    .carousel-head h2 {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.2rem; font-weight: 800;
+      margin: 0; color: #0f172a;
+    }
+    .carousel-see {
+      font-size: .8125rem; font-weight: 700; color: var(--tm-blue);
+      text-decoration: none; white-space: nowrap;
+    }
+    .carousel-see:hover { text-decoration: underline; }
+    .carousel-wrap { position: relative; }
+    .carousel-track {
+      display: flex; gap: 1rem;
+      overflow-x: auto; overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      padding: .25rem .15rem 1rem;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
+    .carousel-track::-webkit-scrollbar { height: 6px; }
+    .carousel-track::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+    .carousel-card {
+      flex: 0 0 200px;
+      scroll-snap-align: start;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform .25s var(--ease-out), box-shadow .25s;
+      text-align: left;
+      font: inherit;
+      padding: 0;
+      color: inherit;
+    }
+    .carousel-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(2,108,223,.12);
+      border-color: rgba(2,108,223,.25);
+    }
+    .carousel-card-art {
+      aspect-ratio: 4/3;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .carousel-card-photo {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; z-index: 0;
+    }
+    .carousel-card-art.has-photo .carousel-card-initials { display: none; }
+    .carousel-card-art::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,.35) 100%);
+    }
+    .carousel-card-initials {
+      position: relative; z-index: 1;
+      font-family: 'Sora', sans-serif; font-weight: 800;
+      font-size: 1.5rem; color: #fff;
+      text-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+    .carousel-card-body { padding: .75rem .85rem .9rem; }
+    .carousel-card-title {
+      font-weight: 700; font-size: .875rem; line-height: 1.3;
+      margin: 0 0 .35rem;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .carousel-card-meta {
+      font-size: .75rem; color: var(--muted); line-height: 1.4;
+      margin: 0 0 .45rem;
+    }
+    .carousel-card-price {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800; font-size: .9375rem; color: var(--tm-blue);
+    }
+    .carousel-card-badge {
+      position: absolute; top: 8px; left: 8px; z-index: 2;
+      font-size: .625rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: .2rem .45rem; border-radius: 4px;
+      background: rgba(255,255,255,.92); color: #334155;
+    }
+    .carousel-empty {
+      font-size: .875rem; color: var(--muted);
+      padding: .5rem 0 1rem;
+    }
+    .all-events-heading {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.2rem; font-weight: 800;
+      margin: 0 0 .5rem; color: #0f172a;
+    }
+    @media (max-width: 640px) {
+      .carousel-card { flex: 0 0 168px; }
+      .search-strip--hero { border-radius: 16px; }
+      .search-strip--hero .search-go { border-radius: 0 12px 12px 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="tm-simple-bar">
+      <a class="tixx-brand" href="/" aria-label="Tixx home">
+        <img class="tixx-logo tixx-logo--on-dark"
+             src="/public/tixx-logo-header-sm.png"
+             srcset="/public/tixx-logo-header-sm.png 1x, /public/tixx-logo-header.png 2x"
+             alt="tixx.pw" width="100" height="32"/>
+      </a>
+      <nav class="tm-nav-links">
+        <a href="/">Home</a>
+        <a href="/shop.html" class="active">Shop</a>
+        <a href="/my-tickets">My tickets</a>
+        <button type="button" class="tixx-settings-btn-nav" data-tixx-settings title="Settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <a class="tm-login-btn" href="/login">Log in</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="shop-discover" aria-label="Search tickets">
+    <div class="discover-inner">
+      <div class="discover-top">
+        <button type="button" class="loc-chip" id="loc-chip" title="Change location">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="currentColor" stroke-width="2"/><path d="M12 21s7-4.35 7-10a7 7 0 1 0-14 0c0 5.65 7 10 7 10Z" stroke="currentColor" stroke-width="2"/></svg>
+          <span id="loc-label">Detecting location…</span>
+        </button>
+        <nav class="discover-cats" aria-label="Categories">
+          <a href="#" data-disc-cat="all" class="active">All</a>
+          <a href="#" data-disc-cat="concerts">Concerts</a>
+          <a href="#" data-disc-cat="sports">Sports</a>
+          <a href="#" data-disc-cat="events">Theater &amp; shows</a>
+          <a href="#" data-disc-cat="parking">Parking</a>
+        </nav>
+      </div>
+      <div class="discover-search-hero">
+        <h1 id="discover-title">Search events, artists, and venues</h1>
+        <form class="search-strip search-strip--hero" id="search-form" role="search">
+          <div class="search-seg search-seg--grow">
+            <label for="f-q">Search</label>
+            <input id="f-q" type="search" placeholder="Artist, event, or venue" autocomplete="off"/>
+          </div>
+          <button type="submit" class="search-go" aria-label="Search">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </form>
+      </div>
+      <form id="search-advanced" hidden>
+        <input id="f-location" type="hidden"/>
+      </form>
+    </div>
+  </section>
+
+  <div class="trust-row" aria-label="Trust badges">
+    <span class="trust-pill"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 9.5-8 10-4.5-.5-8-5-8-10V6l8-4Z" stroke="currentColor" stroke-width="2"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Verified TM passes</span>
+    <span class="trust-pill"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Instant email delivery</span>
+    <span class="trust-pill"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>50% off face value</span>
+  </div>
+
+  <main class="shop-main">
+    <div id="banner" class="banner" hidden></div>
+
+    <div id="discover-sections" class="discover-sections">
+      <section class="carousel-section" id="sec-near" hidden>
+        <div class="carousel-head">
+          <h2>Events near you</h2>
+          <a href="#" class="carousel-see" data-see="near">See all</a>
+        </div>
+        <div class="carousel-wrap"><div class="carousel-track" id="carousel-near"></div></div>
+      </section>
+      <section class="carousel-section" id="sec-popular">
+        <div class="carousel-head">
+          <h2>Popular events</h2>
+          <a href="#" class="carousel-see" data-see="popular">See all</a>
+        </div>
+        <div class="carousel-wrap"><div class="carousel-track" id="carousel-popular"></div></div>
+      </section>
+      <section class="carousel-section" id="sec-concerts">
+        <div class="carousel-head">
+          <h2>Concerts</h2>
+          <a href="#" class="carousel-see" data-see="concerts">See all</a>
+        </div>
+        <div class="carousel-wrap"><div class="carousel-track" id="carousel-concerts"></div></div>
+      </section>
+      <section class="carousel-section" id="sec-sports">
+        <div class="carousel-head">
+          <h2>Sports</h2>
+          <a href="#" class="carousel-see" data-see="sports">See all</a>
+        </div>
+        <div class="carousel-wrap"><div class="carousel-track" id="carousel-sports"></div></div>
+      </section>
+    </div>
+
+    <div class="filters-sticky" id="filters-sticky">
+    <h2 class="all-events-heading" id="all-events-heading">All events</h2>
+    <div class="cat-row" id="cat-row">
+      <button type="button" class="cat-pill active" data-cat="all">All</button>
+      <button type="button" class="cat-pill" data-cat="concerts">Concerts</button>
+      <button type="button" class="cat-pill" data-cat="sports">Sports</button>
+      <button type="button" class="cat-pill" data-cat="parking">Parking</button>
+      <button type="button" class="cat-pill" data-cat="events">More events</button>
+    </div>
+
+    <div class="toolbar">
+      <p class="results-meta" id="results-meta">Loading…</p>
+      <div class="toolbar-right">
+        <select id="f-date" aria-label="Date">
+          <option value="all">All dates</option>
+          <option value="week">Next 7 days</option>
+          <option value="month">Next 30 days</option>
+          <option value="future">Upcoming only</option>
+        </select>
+        <select id="f-sort" aria-label="Sort">
+          <option value="date">Sort: Date</option>
+          <option value="price_asc">Price: low to high</option>
+          <option value="price_desc">Price: high to low</option>
+          <option value="name">Name A–Z</option>
+        </select>
+        <div class="view-toggle">
+          <button type="button" class="active" data-view="events">Events</button>
+          <button type="button" data-view="listings">All seats</button>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div id="load">
+      <div class="skeleton-grid" aria-hidden="true">
+        <div class="skeleton-card"><div class="skeleton-block skeleton-thumb"></div><div><div class="skeleton-block skeleton-line med"></div><div class="skeleton-block skeleton-line short"></div></div><div class="skeleton-block skeleton-price"></div></div>
+        <div class="skeleton-card"><div class="skeleton-block skeleton-thumb"></div><div><div class="skeleton-block skeleton-line med"></div><div class="skeleton-block skeleton-line short"></div></div><div class="skeleton-block skeleton-price"></div></div>
+        <div class="skeleton-card"><div class="skeleton-block skeleton-thumb"></div><div><div class="skeleton-block skeleton-line med"></div><div class="skeleton-block skeleton-line short"></div></div><div class="skeleton-block skeleton-price"></div></div>
+      </div>
+      <p style="margin-top:1rem;font-size:.875rem">Loading marketplace…</p>
+    </div>
+    <div id="event-grid" class="event-grid" hidden></div>
+    <div id="listing-grid" class="listing-grid" hidden></div>
+    <div id="empty" class="empty" hidden>
+      No tickets match your search.
+      <br/><br/>
+      <a href="mailto:ezy.dev.bot@gmail.com">ezy.dev.bot@gmail.com</a>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img class="tixx-logo" src="/public/tixx-logo-sm.png" alt="tixx.pw" width="87" height="28"/>
+        <span>Verified ticket marketplace</span>
+      </div>
+      <div class="footer-links">
+        <a class="footer-social" href="https://www.instagram.com/tixxpw/" target="_blank" rel="noopener noreferrer" aria-label="Tixx on Instagram (@tixxpw)">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+          @tixxpw
+        </a>
+        <span>
+          <a href="mailto:ezy.dev.bot@gmail.com">Support</a>
+          · <a href="/">Home</a>
+        </span>
+      </div>
+    </div>
+  </footer>
+
+  <div id="modal" class="modal" hidden>
+    <div class="panel" role="dialog">
+      <h2>Complete purchase</h2>
+      <p id="buy-summary" class="event-meta"></p>
+      <label for="buy-email">Email (ticket sent here)</label>
+      <input type="email" id="buy-email" autocomplete="email" placeholder="you@email.com"/>
+      <label for="buy-name">First name (optional)</label>
+      <input type="text" id="buy-name" autocomplete="given-name"/>
+      <p id="buy-status" class="event-meta" role="status"></p>
+      <div class="panel-actions">
+        <button type="button" class="btn-buy btn-ghost" id="buy-cancel">Cancel</button>
+        <button type="button" class="btn-buy" id="buy-pay" hidden>Pay with card</button>
+        <button type="button" class="btn-buy" id="buy-email-btn">Email ticket</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/public/tixx-settings.js"></script>
+  <script>
+(function () {
+  var API = String(location.origin).replace(/\/+$/, '');
+  var allListings = [];
+  var active = null;
+  var state = {
+    q: '',
+    location: '',
+    date: 'all',
+    cat: 'all',
+    sort: 'date',
+    view: 'events'
+  };
+  var userCity = '';
+  var userRegion = '';
+  var LOC_KEY = 'tixx_user_city';
+  var REG_KEY = 'tixx_user_region';
+  var FAMOUS = ['taylor swift','beyoncé','beyonce','drake','bad bunny','ed sheeran','coldplay','billie eilish','post malone','travis scott','harry styles','olivia rodrigo','sabrina carpenter','morgan wallen','luke combs','zach bryan','eras tour','nfl','nba','mlb','nhl'];
+
+  function isFiltered() {
+    return !!(state.q.trim() || state.location.trim() || state.date !== 'all' || state.cat !== 'all');
+  }
+  function applyLocLabel() {
+    var el = document.getElementById('loc-label');
+    var title = document.getElementById('discover-title');
+    if (!el) return;
+    if (state.location.trim()) {
+      el.textContent = state.location.trim();
+      if (title) title.textContent = 'Tickets in ' + state.location.trim();
+    } else if (userCity) {
+      el.textContent = userCity + (userRegion ? ', ' + userRegion : '');
+      if (title) title.textContent = 'Events near ' + userCity;
+    } else {
+      el.textContent = 'Set location';
+      if (title) title.textContent = 'Search events, artists, and venues';
+    }
+  }
+  function saveLocation(city, region) {
+    userCity = (city || '').trim();
+    userRegion = (region || '').trim();
+    if (window.TixxSettings) window.TixxSettings.saveCity(userCity, userRegion);
+    else {
+      try {
+        if (userCity) localStorage.setItem(LOC_KEY, userCity);
+        if (userRegion) localStorage.setItem(REG_KEY, userRegion);
+      } catch (e) {}
+    }
+    applyLocLabel();
+    renderDiscover();
+  }
+  function loadSavedLocation() {
+    if (window.TixxSettings) {
+      userCity = window.TixxSettings.getCity();
+      userRegion = window.TixxSettings.getRegion();
+    } else {
+      try {
+        userCity = localStorage.getItem(LOC_KEY) || '';
+        userRegion = localStorage.getItem(REG_KEY) || '';
+      } catch (e) {}
+    }
+    applyLocLabel();
+    return !!userCity;
+  }
+  function detectLocation() {
+    loadSavedLocation();
+  }
+  window.addEventListener('tixx:location', function (e) {
+    if (!e.detail) return;
+    userCity = e.detail.city || '';
+    userRegion = e.detail.region || '';
+    applyLocLabel();
+    renderDiscover();
+  });
+  function venueTokens(venue) {
+    return String(venue || '').toLowerCase().replace(/[^a-z0-9\s,]/g, ' ').split(/\s+|,\s*/).filter(Boolean);
+  }
+  function locationMatch(ev) {
+    var needle = (state.location || userCity || '').trim().toLowerCase();
+    if (!needle) return true;
+    var blob = ((ev.venue || '') + ' ' + (ev.event_name || '') + ' ' + (userRegion || '')).toLowerCase();
+    if (blob.indexOf(needle) >= 0) return true;
+    var parts = needle.split(/[,\s]+/);
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i].length > 2 && blob.indexOf(parts[i]) >= 0) return true;
+    }
+    return false;
+  }
+  function fameBoost(name) {
+    var n = String(name || '').toLowerCase();
+    for (var i = 0; i < FAMOUS.length; i++) {
+      if (n.indexOf(FAMOUS[i]) >= 0) return 50;
+    }
+    return 0;
+  }
+  function carouselCardHtml(ev) {
+    var cat = esc(ev.category || 'events');
+    var photo = (ev.image_url || '').trim();
+    var artClass = 'carousel-card-art thumb-' + cat + (photo ? ' has-photo' : '');
+    var photoHtml = photo
+      ? '<img class="carousel-card-photo" src="' + esc(photo) + '" alt="" loading="lazy" decoding="async"/>'
+      : '';
+    return '<button type="button" class="carousel-card" data-event-key="' + esc(ev.key) + '">' +
+      '<div class="' + artClass + '">' + photoHtml +
+      '<span class="carousel-card-badge">' + esc(catLabel(ev.category)) + '</span>' +
+      '<span class="carousel-card-initials">' + esc(initials(ev.event_name)) + '</span></div>' +
+      '<div class="carousel-card-body">' +
+      '<p class="carousel-card-title">' + esc(ev.event_name) + '</p>' +
+      '<p class="carousel-card-meta">' + esc(ev.event_date_display) + '<br/>' + esc(ev.venue) + '</p>' +
+      '<p class="carousel-card-price">From ' + esc(money(ev.min_price)) + '</p></div></button>';
+  }
+  function fillCarousel(trackId, events, sectionId) {
+    var track = document.getElementById(trackId);
+    var sec = sectionId ? document.getElementById(sectionId) : null;
+    if (!track) return;
+    if (!events.length) {
+      track.innerHTML = '<p class="carousel-empty">No listings in this category yet.</p>';
+      if (sec) sec.hidden = false;
+      return;
+    }
+    track.innerHTML = events.map(carouselCardHtml).join('');
+    track.querySelectorAll('.carousel-card').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var key = btn.getAttribute('data-event-key');
+        var ev = events.find(function (e) { return e.key === key; });
+        if (ev) focusEvent(ev);
+      });
+    });
+    if (sec) sec.hidden = false;
+  }
+  function focusEvent(ev) {
+    state.q = ev.event_name || '';
+    document.getElementById('f-q').value = state.q;
+    state.view = 'events';
+    document.querySelectorAll('.view-toggle button').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-view') === 'events');
+    });
+    render();
+    setTimeout(function () {
+      var cards = document.querySelectorAll('.event-card');
+      var card = null;
+      for (var i = 0; i < cards.length; i++) {
+        if (cards[i].getAttribute('data-event') === ev.key) { card = cards[i]; break; }
+      }
+      if (card) {
+        card.classList.add('open');
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        document.getElementById('all-events-heading').scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 80);
+  }
+  function renderDiscover() {
+    var wrap = document.getElementById('discover-sections');
+    if (!wrap || !allListings.length) return;
+    if (isFiltered()) {
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    var allEv = groupEvents(allListings);
+    var popular = allEv.slice().sort(function (a, b) {
+      return (b.count + fameBoost(b.event_name)) - (a.count + fameBoost(a.event_name));
+    }).slice(0, 16);
+    var near = allEv.filter(locationMatch).slice(0, 14);
+    var concerts = allEv.filter(function (e) { return e.category === 'concerts'; }).slice(0, 14);
+    var sports = allEv.filter(function (e) { return e.category === 'sports'; }).slice(0, 14);
+    fillCarousel('carousel-popular', popular, 'sec-popular');
+    fillCarousel('carousel-concerts', concerts, 'sec-concerts');
+    fillCarousel('carousel-sports', sports, 'sec-sports');
+    var nearSec = document.getElementById('sec-near');
+    if (near.length && (userCity || state.location.trim())) {
+      fillCarousel('carousel-near', near, 'sec-near');
+    } else if (nearSec) {
+      nearSec.hidden = true;
+    }
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  }
+  function money(n) {
+    var x = Number(n);
+    return isFinite(x) ? '$' + x.toFixed(2) : '';
+  }
+  function initials(name) {
+    var p = String(name || 'E').trim().split(/\s+/);
+    return ((p[0] || 'E')[0] + (p[1] || '')[0]).toUpperCase();
+  }
+  function formatDateClient(raw) {
+    var s = String(raw || '').trim();
+    if (!s) return 'Date TBA';
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/);
+    if (!m) return s.length > 40 ? s.slice(0, 40) + '…' : s;
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var y = +m[1], mo = +m[2] - 1, d = +m[3];
+    var dt = new Date(y, mo, d, m[4] ? +m[4] : 12, m[5] ? +m[5] : 0);
+    if (isNaN(dt.getTime())) return s.slice(0, 24);
+    if (m[4]) {
+      var h = dt.getHours(), mm = dt.getMinutes();
+      var ap = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return days[dt.getDay()] + ', ' + months[mo] + ' ' + d + ' · ' + h + ':' + (mm < 10 ? '0' : '') + mm + ' ' + ap;
+    }
+    return days[dt.getDay()] + ', ' + months[mo] + ' ' + d + ', ' + y;
+  }
+  function dateTsClient(raw) {
+    var s = String(raw || '').trim();
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return 9999999999999;
+    return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
+  }
+  function normalizeListing(l) {
+    var row = Object.assign({}, l);
+    var venue = String(row.venue || '').trim();
+    if (!venue || venue.toLowerCase() === 'unknown') row.venue = 'Venue TBA';
+    row.event_date_display = row.event_date_display || formatDateClient(row.event_date);
+    row.event_date_ts = row.event_date_ts || dateTsClient(row.event_date);
+    row.category = row.category || 'events';
+    row.event_key = row.event_key || [row.event_name, row.event_date, row.venue].join('|').toLowerCase();
+    row.image_url = row.image_url || '';
+    row.event_id = row.event_id || '';
+    row.search_blob = row.search_blob || [
+      row.event_name, row.venue, row.section, row.row, row.seat, row.event_date_display, row.category
+    ].join(' ').toLowerCase();
+    return row;
+  }
+  function catLabel(c) {
+    var labels = { concerts: 'Concert', sports: 'Sports', parking: 'Parking', events: 'Event' };
+    return labels[c] || 'Event';
+  }
+  function thumbBlock(ev) {
+    var cat = esc(ev.category || 'events');
+    var photo = (ev.image_url || '').trim();
+    var cls = 'event-thumb thumb-' + cat + (photo ? ' has-photo' : '');
+    var photoHtml = photo
+      ? '<img class="event-thumb-photo" src="' + esc(photo) + '" alt="" loading="lazy" decoding="async"/>'
+      : '';
+    return '<div class="' + cls + '" aria-hidden="true">' + photoHtml +
+      '<span class="event-thumb-initials">' + esc(initials(ev.event_name)) + '</span>' +
+      '<img class="event-thumb-mark" src="/public/tixx-mark.png" alt="" width="22" height="22"/>' +
+      '</div>';
+  }
+  function showBanner(text, ok) {
+    var b = document.getElementById('banner');
+    if (!b) return;
+    b.hidden = false;
+    b.className = 'banner ' + (ok ? 'ok' : 'err');
+    b.textContent = text;
+  }
+
+  function matchesFilters(l) {
+    var q = state.q.trim().toLowerCase();
+    var loc = state.location.trim().toLowerCase();
+    if (state.cat !== 'all' && l.category !== state.cat) return false;
+    if (q && (l.search_blob || '').indexOf(q) < 0) return false;
+    if (loc) {
+      var blob = ((l.venue || '') + ' ' + (l.event_name || '') + ' ' + (l.search_blob || '')).toLowerCase();
+      if (blob.indexOf(loc) < 0) {
+        var ok = false;
+        loc.split(/[,\s]+/).forEach(function (p) {
+          if (p.length > 2 && blob.indexOf(p) >= 0) ok = true;
+        });
+        if (!ok) return false;
+      }
+    }
+    if (state.date !== 'all') {
+      var now = Date.now();
+      var ts = Number(l.event_date_ts) || 9999999999999;
+      if (state.date === 'future' && ts < now - 86400000) return false;
+      if (state.date === 'week' && (ts < now || ts > now + 7 * 86400000)) return false;
+      if (state.date === 'month' && (ts < now || ts > now + 30 * 86400000)) return false;
+    }
+    return true;
+  }
+
+  function filteredListings() {
+    return allListings.filter(matchesFilters);
+  }
+
+  function sortListings(arr) {
+    var copy = arr.slice();
+    copy.sort(function (a, b) {
+      if (state.sort === 'price_asc') return (a.price_usd || 0) - (b.price_usd || 0);
+      if (state.sort === 'price_desc') return (b.price_usd || 0) - (a.price_usd || 0);
+      if (state.sort === 'name') return String(a.event_name).localeCompare(String(b.event_name));
+      return (a.event_date_ts || 0) - (b.event_date_ts || 0);
+    });
+    return copy;
+  }
+
+  function groupEvents(list) {
+    var map = {};
+    list.forEach(function (l) {
+      var k = l.event_key || l.event_name;
+      if (!map[k]) {
+        map[k] = {
+          key: k,
+          event_name: l.event_name,
+          event_id: l.event_id || '',
+          event_date_display: l.event_date_display,
+          event_date_ts: l.event_date_ts,
+          venue: l.venue,
+          category: l.category,
+          image_url: l.image_url || '',
+          listings: []
+        };
+      } else if (!map[k].image_url && l.image_url) {
+        map[k].image_url = l.image_url;
+      }
+      if (!map[k].event_id && l.event_id) map[k].event_id = l.event_id;
+      map[k].listings.push(l);
+    });
+    var groups = Object.keys(map).map(function (k) { return map[k]; });
+    groups.forEach(function (g) {
+      g.listings.sort(function (a, b) { return (a.price_usd || 0) - (b.price_usd || 0); });
+      g.min_price = g.listings[0] ? g.listings[0].price_usd : 0;
+      g.count = g.listings.length;
+    });
+    groups.sort(function (a, b) {
+      if (state.sort === 'price_asc') return a.min_price - b.min_price;
+      if (state.sort === 'price_desc') return b.min_price - a.min_price;
+      if (state.sort === 'name') return String(a.event_name).localeCompare(String(b.event_name));
+      return (a.event_date_ts || 0) - (b.event_date_ts || 0);
+    });
+    return groups;
+  }
+
+  function staggerCards(container, selector) {
+    if (!container) return;
+    var cards = container.querySelectorAll(selector);
+    cards.forEach(function (el, i) {
+      el.style.animationDelay = Math.min(i * 0.06, 0.6) + 's';
+    });
+  }
+  function flashFilter() {
+    var eg = document.getElementById('event-grid');
+    var lg = document.getElementById('listing-grid');
+    [eg, lg].forEach(function (g) {
+      if (!g || g.hidden) return;
+      g.classList.add('is-filtering');
+      setTimeout(function () { g.classList.remove('is-filtering'); }, 220);
+    });
+  }
+
+  function render() {
+    var load = document.getElementById('load');
+    var empty = document.getElementById('empty');
+    var eg = document.getElementById('event-grid');
+    var lg = document.getElementById('listing-grid');
+    var meta = document.getElementById('results-meta');
+    if (load) load.hidden = true;
+
+    var list = sortListings(filteredListings());
+    var events = groupEvents(list);
+
+    if (meta) {
+      meta.innerHTML = '<strong>' + list.length + '</strong> tickets · <strong>' + events.length + '</strong> events';
+    }
+
+    if (!list.length) {
+      if (empty) empty.hidden = false;
+      if (eg) eg.hidden = true;
+      if (lg) lg.hidden = true;
+      return;
+    }
+    if (empty) empty.hidden = true;
+
+    if (state.view === 'listings') {
+      if (eg) eg.hidden = true;
+      if (lg) {
+        lg.hidden = false;
+        lg.innerHTML = list.map(function (l) {
+          var face = l.face_value_usd ? '<span class="seat-face">' + esc(money(l.face_value_usd)) + '</span>' : '';
+          return '<article class="listing-card">' +
+            '<div class="event-title" style="font-size:.95rem">' + esc(l.event_name) + '</div>' +
+            '<div class="event-meta">' + esc(l.event_date_display) + '<br/><span class="venue">' + esc(l.venue) + '</span></div>' +
+            '<div class="seat-info">Sec ' + esc(l.section) + ' · Row ' + esc(l.row) + ' · Seat ' + esc(l.seat) + '</div>' +
+            '<div class="seat-price-wrap"><span class="seat-price">' + esc(money(l.price_usd)) + '</span>' + face + '</div>' +
+            '<button type="button" class="btn-buy" data-id="' + esc(l.listing_id) + '">Buy</button></article>';
+        }).join('');
+        lg.querySelectorAll('[data-id]').forEach(function (btn) {
+          btn.addEventListener('click', function () { openBuy(btn.getAttribute('data-id')); });
+        });
+        staggerCards(lg, '.listing-card');
+      }
+      return;
+    }
+
+    if (lg) lg.hidden = true;
+    if (eg) {
+      eg.hidden = false;
+      eg.innerHTML = events.map(function (ev) {
+        var seats = ev.listings.map(function (l) {
+          var face = l.face_value_usd ? '<span class="seat-face">' + esc(money(l.face_value_usd)) + '</span>' : '';
+          return '<div class="seat-row">' +
+            '<span class="seat-info">Sec ' + esc(l.section) + ' · Row ' + esc(l.row) + ' · Seat ' + esc(l.seat) + '</span>' +
+            '<div class="seat-price-wrap">' + face + '<span class="seat-price">' + esc(money(l.price_usd)) + '</span>' +
+            '<button type="button" class="btn-buy" data-id="' + esc(l.listing_id) + '">Buy</button></div></div>';
+        }).join('');
+        return '<article class="event-card" data-event="' + esc(ev.key) + '">' +
+          '<div class="event-card-head">' +
+          thumbBlock(ev) +
+          '<div><h2 class="event-title">' + esc(ev.event_name) + '</h2>' +
+          '<div class="event-meta">' + esc(ev.event_date_display) + '<br/><span class="venue">' + esc(ev.venue) + '</span>' +
+          '<span class="event-badge cat-' + esc(ev.category) + '">' + esc(catLabel(ev.category)) + '</span></div></div>' +
+          '<div class="event-card-price"><div class="from-label">From</div><div class="from-price">' + esc(money(ev.min_price)) + '</div>' +
+          '<div class="ticket-count">' + ev.count + ' ticket' + (ev.count > 1 ? 's' : '') + ' <span class="event-chevron" aria-hidden="true">▼</span></div></div></div>' +
+          '<div class="seat-list">' + seats + '</div></article>';
+      }).join('');
+
+      eg.querySelectorAll('.event-card-head').forEach(function (head) {
+        head.addEventListener('click', function (e) {
+          if (e.target.closest('.btn-buy')) return;
+          head.parentElement.classList.toggle('open');
+        });
+      });
+      eg.querySelectorAll('.btn-buy').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          openBuy(btn.getAttribute('data-id'));
+        });
+      });
+      staggerCards(eg, '.event-card');
+    }
+    renderDiscover();
+  }
+
+  async function resolveMissingImages() {
+    var rounds = 0;
+    while (rounds < 5) {
+      var events = groupEvents(allListings);
+      var missing = events.filter(function (e) { return !(e.image_url || '').trim(); }).slice(0, 16);
+      if (!missing.length) break;
+      try {
+        var r = await fetch(API + '/api/shop/event-images', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            events: missing.map(function (e) {
+              return {
+                event_key: e.key,
+                event_name: e.event_name,
+                event_id: e.event_id || '',
+                category: e.category || 'events'
+              };
+            })
+          })
+        });
+        var data = await r.json();
+        if (!data.ok || !data.images) break;
+        var keys = Object.keys(data.images);
+        if (!keys.length) break;
+        keys.forEach(function (k) {
+          var url = data.images[k];
+          allListings.forEach(function (l) {
+            if (l.event_key === k) l.image_url = url;
+          });
+        });
+        render();
+      } catch (err) {
+        break;
+      }
+      rounds += 1;
+      await new Promise(function (res) { setTimeout(res, 200); });
+    }
+  }
+
+  function openBuy(id) {
+    active = allListings.find(function (l) { return l.listing_id === id; });
+    if (!active) return;
+    document.getElementById('buy-summary').textContent =
+      (active.event_name || '') + ' — Sec ' + active.section + ' · ' + money(active.price_usd);
+    document.getElementById('buy-status').textContent = '';
+    document.getElementById('modal').hidden = false;
+    document.getElementById('buy-email-btn').hidden = !window.__shopEmailBuy;
+    document.getElementById('buy-pay').hidden = !window.__shopStripe;
+    if (window.TixxSettings) {
+      var prof = window.TixxSettings.getProfile();
+      var nm = window.TixxSettings.getFullName();
+      var buyName = document.getElementById('buy-name');
+      var buyEmail = document.getElementById('buy-email');
+      if (buyName && nm && !buyName.value.trim()) buyName.value = nm;
+      try {
+        var sessEm = localStorage.getItem('tm_viewer_session_email') || sessionStorage.getItem('tm_viewer_session_email') || '';
+        if (buyEmail && sessEm && !buyEmail.value.trim()) buyEmail.value = sessEm;
+      } catch (e) {}
+    }
+  }
+  function closeBuy() {
+    document.getElementById('modal').hidden = true;
+    active = null;
+  }
+
+  async function postJson(path, body) {
+    var r = await fetch(API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var data = {};
+    try { data = await r.json(); } catch (e) {}
+    return { data: data };
+  }
+
+  var renderTimer = null;
+  function scheduleRender() {
+    if (renderTimer) clearTimeout(renderTimer);
+    renderTimer = setTimeout(function () {
+      renderTimer = null;
+      render();
+    }, 120);
+  }
+
+  document.getElementById('search-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    state.q = document.getElementById('f-q').value;
+    state.location = document.getElementById('f-location').value;
+    state.date = document.getElementById('f-date').value;
+    flashFilter();
+    render();
+  });
+  document.getElementById('f-q').addEventListener('input', function () {
+    state.q = this.value;
+    flashFilter();
+    scheduleRender();
+  });
+  var locChip = document.getElementById('loc-chip');
+  if (locChip) {
+    locChip.addEventListener('click', function () {
+      var cur = state.location || userCity || '';
+      var next = window.prompt('Enter city or venue area:', cur);
+      if (next === null) return;
+      state.location = next.trim();
+      var locIn = document.getElementById('f-location');
+      if (locIn) locIn.value = state.location;
+      if (state.location) saveLocation(state.location, userRegion);
+      else applyLocLabel();
+      flashFilter();
+      render();
+    });
+  }
+  document.querySelectorAll('.discover-cats a').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var cat = a.getAttribute('data-disc-cat') || 'all';
+      document.querySelectorAll('.discover-cats a').forEach(function (x) { x.classList.remove('active'); });
+      a.classList.add('active');
+      document.querySelectorAll('.cat-pill').forEach(function (b) {
+        b.classList.toggle('active', b.getAttribute('data-cat') === cat);
+      });
+      state.cat = cat;
+      flashFilter();
+      render();
+      document.getElementById('all-events-heading').scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+  document.querySelectorAll('.carousel-see').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var kind = a.getAttribute('data-see');
+      if (kind === 'concerts') state.cat = 'concerts';
+      else if (kind === 'sports') state.cat = 'sports';
+      else if (kind === 'near' && (userCity || state.location)) state.location = state.location || userCity;
+      else state.cat = 'all';
+      document.querySelectorAll('.cat-pill').forEach(function (b) {
+        b.classList.toggle('active', b.getAttribute('data-cat') === state.cat);
+      });
+      document.querySelectorAll('.discover-cats a').forEach(function (x) {
+        x.classList.toggle('active', x.getAttribute('data-disc-cat') === state.cat);
+      });
+      var locIn = document.getElementById('f-location');
+      if (locIn) locIn.value = state.location;
+      flashFilter();
+      render();
+      document.getElementById('all-events-heading').scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+  document.getElementById('f-date').addEventListener('change', function () {
+    state.date = this.value;
+    flashFilter();
+    render();
+  });
+  document.getElementById('f-sort').addEventListener('change', function () {
+    state.sort = this.value;
+    flashFilter();
+    render();
+  });
+  document.querySelectorAll('.cat-pill').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.cat-pill').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      state.cat = btn.getAttribute('data-cat');
+      flashFilter();
+      render();
+    });
+  });
+  document.querySelectorAll('.view-toggle button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.view-toggle button').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      state.view = btn.getAttribute('data-view');
+      flashFilter();
+      render();
+    });
+  });
+
+  document.getElementById('buy-cancel').addEventListener('click', closeBuy);
+  document.getElementById('modal').addEventListener('click', function (e) {
+    if (e.target.id === 'modal') closeBuy();
+  });
+  document.getElementById('buy-email-btn').addEventListener('click', async function () {
+    if (!active) return;
+    var st = document.getElementById('buy-status');
+    var em = (document.getElementById('buy-email').value || '').trim();
+    var nm = (document.getElementById('buy-name').value || '').trim();
+    if (!em || em.indexOf('@') < 1) { st.textContent = 'Enter a valid email.'; return; }
+    st.textContent = 'Sending…';
+    var res = await postJson('/api/shop/purchase', { listing_id: active.listing_id, buyer_email: em, buyer_name: nm });
+    if (res.data.ok) {
+      st.textContent = res.data.message || 'Sent!';
+      showBanner('Ticket emailed to ' + em, true);
+      if (window.TixxSettings) {
+        window.TixxSettings.recordOrder({
+          at: new Date().toISOString(),
+          listing_id: active.listing_id,
+          event_name: active.event_name,
+          price_usd: active.price_usd,
+          link: active.path ? ('/' + active.path) : ''
+        });
+      }
+      allListings = allListings.filter(function (l) { return l.listing_id !== active.listing_id; });
+      render();
+      setTimeout(closeBuy, 1800);
+    } else {
+      st.textContent = res.data.error || res.data.detail || 'Failed';
+    }
+  });
+  document.getElementById('buy-pay').addEventListener('click', async function () {
+    if (!active) return;
+    var st = document.getElementById('buy-status');
+    var em = (document.getElementById('buy-email').value || '').trim();
+    if (!em) { st.textContent = 'Enter your email first.'; return; }
+    st.textContent = 'Opening checkout…';
+    var res = await postJson('/api/shop/checkout', {
+      listing_id: active.listing_id,
+      buyer_email: em,
+      buyer_name: (document.getElementById('buy-name').value || '').trim()
+    });
+    if (res.data.ok && res.data.checkout_url) location.href = res.data.checkout_url;
+    else st.textContent = res.data.error || 'Checkout unavailable';
+  });
+
+  (async function init() {
+    try {
+      var qs = new URLSearchParams(location.search);
+      if (qs.get('paid') === '1') showBanner('Payment received — check your email.', true);
+      if (qs.get('q')) {
+        document.getElementById('f-q').value = qs.get('q');
+        state.q = qs.get('q');
+      }
+      if (qs.get('location')) {
+        document.getElementById('f-location').value = qs.get('location');
+        state.location = qs.get('location');
+      }
+      if (qs.get('date')) {
+        document.getElementById('f-date').value = qs.get('date');
+        state.date = qs.get('date');
+      }
+      if (qs.get('cat')) {
+        state.cat = qs.get('cat');
+        document.querySelectorAll('.cat-pill').forEach(function (b) {
+          b.classList.toggle('active', b.getAttribute('data-cat') === state.cat);
+        });
+        document.querySelectorAll('.discover-cats a').forEach(function (a) {
+          a.classList.toggle('active', a.getAttribute('data-disc-cat') === state.cat);
+        });
+      }
+      var r = await fetch(API + '/api/shop/listings');
+      var data = await r.json();
+      if (!data.ok) throw new Error(data.error || 'load_failed');
+      allListings = (data.listings || []).map(normalizeListing);
+      window.__shopEmailBuy = data.email_purchase_enabled;
+      window.__shopStripe = data.stripe_enabled;
+      render();
+      resolveMissingImages();
+      loadSavedLocation();
+    } catch (e) {
+      document.getElementById('load').textContent = 'Could not load shop.';
+      showBanner(String(e.message || e), false);
+    }
+    var sticky = document.getElementById('filters-sticky');
+    var topbar = document.querySelector('.topbar');
+    if (sticky || topbar) {
+      window.addEventListener('scroll', function () {
+        if (sticky) sticky.classList.toggle('is-stuck', window.scrollY > 120);
+        if (topbar) topbar.classList.toggle('is-scrolled', window.scrollY > 8);
+      }, { passive: true });
+    }
+  })();
+})();
+  </script>
+</body>
+</html>

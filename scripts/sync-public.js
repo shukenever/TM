@@ -8,11 +8,13 @@ const path = require("path");
 
 const root = path.join(__dirname, "..");
 const pub = path.join(root, "public");
+const siteSrc = path.join(root, "ticketmaster", "tm-vercel-site");
 
 const NAMES = [
   "index.html",
   "login.html",
   "my-tickets.html",
+  "shop.html",
   "tickets",
   "tm-email-gate.js",
   "tm_viewer_login_url.js",
@@ -21,13 +23,10 @@ const NAMES = [
   "tm_viewer_link_registry.json",
 ];
 
-/** Never copy tickets/ into public unless TM_VERCEL_INCLUDE_TICKETS=1 — static files win over rewrites and would bypass transfer stubs / ?access=. */
-const includeTickets = /^(1|true|yes|on)$/i.test(
-  (process.env.TM_VERCEL_INCLUDE_TICKETS || "").trim(),
-);
-
-/** Prefer `tm-vercel-site/<name>`; else `tm-vercel-site/public/<name>`. Resolve **before** wiping `public/`. */
+/** Prefer ticketmaster/tm-vercel-site for Tixx marketplace pages. */
 function resolveSourcePath(name) {
+  const fromSite = path.join(siteSrc, name);
+  if (fs.existsSync(fromSite)) return fromSite;
   const primary = path.join(root, name);
   if (fs.existsSync(primary)) return primary;
   const fallback = path.join(root, "public", name);
@@ -38,6 +37,11 @@ function resolveSourcePath(name) {
   return null;
 }
 
+/** Never copy tickets/ into public unless TM_VERCEL_INCLUDE_TICKETS=1 — static files win over rewrites and would bypass transfer stubs / ?access=. */
+const includeTickets = /^(1|true|yes|on)$/i.test(
+  (process.env.TM_VERCEL_INCLUDE_TICKETS || "").trim(),
+);
+
 const sources = {};
 for (const name of NAMES) {
   if (name === "tickets" && !includeTickets) {
@@ -45,6 +49,12 @@ for (const name of NAMES) {
   }
   const src = resolveSourcePath(name);
   if (src) sources[name] = src;
+}
+
+// Tixx static assets (logo, settings, favicons)
+const sitePublic = path.join(siteSrc, "public");
+if (fs.existsSync(sitePublic) && fs.statSync(sitePublic).isDirectory()) {
+  sources["public/tixx-site"] = sitePublic;
 }
 
 fs.rmSync(pub, { recursive: true, force: true });
@@ -69,6 +79,13 @@ for (const name of NAMES) {
   } else {
     fs.copyFileSync(src, dst);
   }
+}
+
+if (sources["public/tixx-site"]) {
+  const dstPub = path.join(pub, "public");
+  fs.mkdirSync(dstPub, { recursive: true });
+  fs.cpSync(sources["public/tixx-site"], dstPub, { recursive: true });
+  console.log("[sync-public] copied ticketmaster/tm-vercel-site/public → public/public");
 }
 
 // Optional local hero assets from tm_hit_viewer --download-event-images
