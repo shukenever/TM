@@ -4068,7 +4068,14 @@ class _TmViewerApiHandler(BaseHTTPRequestHandler):
         if mod is None:
             self._write_json(503, {"ok": False, "error": "shop_module_missing"})
             return
-        self._write_json(200, mod.shop_listings())
+        parsed = urllib.parse.urlparse(self.path)
+        qs = urllib.parse.parse_qs(parsed.query)
+        try:
+            limit = int((qs.get("limit") or ["10000"])[0])
+        except (TypeError, ValueError):
+            limit = 10000
+        limit = max(0, min(limit, 25000))
+        self._write_json(200, mod.shop_listings(limit=limit))
 
     def _handle_shop_event_images(self) -> None:
         mod = _import_tm_shop_module()

@@ -691,9 +691,91 @@
     .panel {
       background: #fff; border-radius: 20px;
       max-width: 440px; width: 100%;
+      max-height: min(92vh, 640px);
+      overflow: auto;
       padding: 1.5rem;
       box-shadow: 0 32px 80px rgba(0,0,0,.25);
       animation: modalIn .4s var(--ease-out);
+      position: relative;
+    }
+    .buy-close {
+      position: absolute; top: .85rem; right: .85rem;
+      width: 2rem; height: 2rem; border: 0; border-radius: 999px;
+      background: #f1f5f9; color: #64748b; font-size: 1.35rem; line-height: 1;
+      cursor: pointer;
+    }
+    .buy-close:hover { background: #e2e8f0; color: #0f172a; }
+    .buy-event-card {
+      margin: .75rem 0 1rem;
+      padding: .85rem .9rem;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(2,108,223,.08), rgba(2,108,223,.02));
+      border: 1px solid rgba(2,108,223,.14);
+    }
+    .buy-event-title {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      font-size: .95rem;
+      line-height: 1.35;
+      margin: 0 0 .35rem;
+      color: #0f172a;
+    }
+    .buy-event-meta {
+      font-size: .8125rem;
+      color: var(--muted);
+      line-height: 1.45;
+      margin: 0 0 .55rem;
+    }
+    .buy-price-row {
+      display: flex; align-items: baseline; justify-content: space-between; gap: .75rem;
+    }
+    .buy-price-main {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      font-size: 1.35rem;
+      color: var(--tm-blue);
+    }
+    .buy-price-face {
+      font-size: .75rem;
+      color: #94a3b8;
+      text-decoration: line-through;
+    }
+    .buy-status {
+      min-height: 1.25rem;
+      font-size: .8125rem;
+      margin: .65rem 0 0;
+      color: var(--muted);
+    }
+    .buy-status.ok { color: #059669; font-weight: 600; }
+    .buy-status.err { color: #dc2626; font-weight: 600; }
+    .buy-fine-print {
+      margin: .85rem 0 0;
+      font-size: .6875rem;
+      color: #94a3b8;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .panel-actions.buy-actions {
+      position: sticky; bottom: 0;
+      background: #fff;
+      padding-top: .35rem;
+      flex-wrap: wrap;
+    }
+    .btn-buy.btn-primary {
+      background: linear-gradient(135deg, #026cdf, #0153a3);
+      flex: 1 1 100%;
+      order: -1;
+      padding: .85rem 1rem;
+      font-size: .9375rem;
+    }
+    .btn-buy.btn-primary:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-buy.btn-unavail {
+      background: #94a3b8;
+      cursor: not-allowed;
     }
     .panel h2 {
       font-family: 'Sora', sans-serif;
@@ -1115,19 +1197,28 @@
   </footer>
 
   <div id="modal" class="modal" hidden>
-    <div class="panel" role="dialog">
-      <h2>Complete purchase</h2>
-      <p id="buy-summary" class="event-meta"></p>
-      <label for="buy-email">Email (ticket sent here)</label>
+    <div class="panel buy-panel" role="dialog" aria-labelledby="buy-title">
+      <button type="button" class="buy-close" id="buy-cancel-x" aria-label="Close">&times;</button>
+      <h2 id="buy-title">Complete purchase</h2>
+      <div class="buy-event-card" id="buy-event-card">
+        <p class="buy-event-title" id="buy-event-title"></p>
+        <p class="buy-event-meta" id="buy-event-meta"></p>
+        <div class="buy-price-row">
+          <span class="buy-price-main" id="buy-price-main"></span>
+          <span class="buy-price-face" id="buy-price-face" hidden></span>
+        </div>
+      </div>
+      <label for="buy-email">Email — ticket sent here instantly</label>
       <input type="email" id="buy-email" autocomplete="email" placeholder="you@email.com"/>
-      <label for="buy-name">First name (optional)</label>
-      <input type="text" id="buy-name" autocomplete="given-name"/>
-      <p id="buy-status" class="event-meta" role="status"></p>
-      <div class="panel-actions">
+      <label for="buy-name">Name on order (optional)</label>
+      <input type="text" id="buy-name" autocomplete="name" placeholder="First name"/>
+      <p id="buy-status" class="buy-status" role="status"></p>
+      <div class="panel-actions buy-actions">
+        <button type="button" class="btn-buy btn-primary" id="buy-confirm">Confirm &amp; get ticket</button>
         <button type="button" class="btn-buy btn-ghost" id="buy-cancel">Cancel</button>
         <button type="button" class="btn-buy" id="buy-pay" hidden>Pay with card</button>
-        <button type="button" class="btn-buy" id="buy-email-btn">Email ticket</button>
       </div>
+      <p class="buy-fine-print">Verified TM pass · Instant email delivery · Up to 50% off face value</p>
     </div>
   </div>
 
@@ -1294,12 +1385,21 @@
   }
   function renderDiscover() {
     var wrap = document.getElementById('discover-sections');
-    if (!wrap || !allListings.length) return;
+    if (!wrap) return;
     if (isFiltered()) {
       wrap.hidden = true;
       return;
     }
     wrap.hidden = false;
+    if (!allListings.length) {
+      fillCarousel('carousel-popular', [], 'sec-popular');
+      fillCarousel('carousel-concerts', [], 'sec-concerts');
+      fillCarousel('carousel-sports', [], 'sec-sports');
+      fillCarousel('carousel-shows', [], 'sec-shows');
+      var nearSec = document.getElementById('sec-near');
+      if (nearSec) nearSec.hidden = true;
+      return;
+    }
     var allEv = groupEvents(allListings);
     var popular = allEv.slice().sort(function (a, b) {
       return (b.count + fameBoost(b.event_name)) - (a.count + fameBoost(a.event_name));
@@ -1365,6 +1465,7 @@
     row.event_key = row.event_key || [row.event_name, row.event_date, row.venue].join('|').toLowerCase();
     row.image_url = row.image_url || '';
     row.event_id = row.event_id || '';
+    row.purchasable = row.purchasable !== false;
     row.search_blob = row.search_blob || [
       row.event_name, row.venue, row.section, row.row, row.seat, row.event_date_display, row.category
     ].join(' ').toLowerCase();
@@ -1500,13 +1601,24 @@
     var events = groupEvents(list);
 
     if (meta) {
-      meta.innerHTML = '<strong>' + list.length + '</strong> tickets · <strong>' + events.length + '</strong> events';
+      var total = allListings.length;
+      var purch = allListings.filter(function (l) { return l.purchasable !== false; }).length;
+      var extra = (total !== list.length) ? ' (filtered)' : '';
+      meta.innerHTML = '<strong>' + list.length + '</strong> tickets · <strong>' + events.length + '</strong> events' + extra +
+        (window.__shopParseStats ? ' · <span style="color:#64748b">' + total + ' from links.txt</span>' : '');
     }
 
     if (!list.length) {
-      if (empty) empty.hidden = false;
+      if (empty) {
+        empty.hidden = false;
+        if (!allListings.length && window.__shopLoadError) {
+          empty.innerHTML = esc(window.__shopLoadError) +
+            '<br/><br/>Check that the registry is running and <code>TM_LINKS_FILE</code> points to your links.txt on the VPS.';
+        }
+      }
       if (eg) eg.hidden = true;
       if (lg) lg.hidden = true;
+      renderDiscover();
       return;
     }
     if (empty) empty.hidden = true;
@@ -1517,12 +1629,15 @@
         lg.hidden = false;
         lg.innerHTML = list.map(function (l) {
           var face = l.face_value_usd ? '<span class="seat-face">' + esc(money(l.face_value_usd)) + '</span>' : '';
+          var buyBtn = l.purchasable === false
+            ? '<button type="button" class="btn-buy btn-unavail" disabled>Unavailable</button>'
+            : '<button type="button" class="btn-buy" data-id="' + esc(l.listing_id) + '">Buy</button>';
           return '<article class="listing-card">' +
             '<div class="event-title" style="font-size:.95rem">' + esc(l.event_name) + '</div>' +
             '<div class="event-meta">' + esc(l.event_date_display) + '<br/><span class="venue">' + esc(l.venue) + '</span></div>' +
             '<div class="seat-info">Sec ' + esc(l.section) + ' · Row ' + esc(l.row) + ' · Seat ' + esc(l.seat) + '</div>' +
             '<div class="seat-price-wrap"><span class="seat-price">' + esc(money(l.price_usd)) + '</span>' + face + '</div>' +
-            '<button type="button" class="btn-buy" data-id="' + esc(l.listing_id) + '">Buy</button></article>';
+            buyBtn + '</article>';
         }).join('');
         lg.querySelectorAll('[data-id]').forEach(function (btn) {
           btn.addEventListener('click', function () { openBuy(btn.getAttribute('data-id')); });
@@ -1538,10 +1653,12 @@
       eg.innerHTML = events.map(function (ev) {
         var seats = ev.listings.map(function (l) {
           var face = l.face_value_usd ? '<span class="seat-face">' + esc(money(l.face_value_usd)) + '</span>' : '';
+          var buyBtn = l.purchasable === false
+            ? '<button type="button" class="btn-buy btn-unavail" disabled title="No viewer link yet">Unavailable</button>'
+            : '<button type="button" class="btn-buy" data-id="' + esc(l.listing_id) + '">Buy · ' + esc(money(l.price_usd)) + '</button>';
           return '<div class="seat-row">' +
             '<span class="seat-info">Sec ' + esc(l.section) + ' · Row ' + esc(l.row) + ' · Seat ' + esc(l.seat) + '</span>' +
-            '<div class="seat-price-wrap">' + face + '<span class="seat-price">' + esc(money(l.price_usd)) + '</span>' +
-            '<button type="button" class="btn-buy" data-id="' + esc(l.listing_id) + '">Buy</button></div></div>';
+            '<div class="seat-price-wrap">' + face + buyBtn + '</div></div>';
         }).join('');
         return '<article class="event-card" data-event="' + esc(ev.key) + '">' +
           '<div class="event-card-head">' +
@@ -1615,26 +1732,56 @@
   function openBuy(id) {
     active = allListings.find(function (l) { return l.listing_id === id; });
     if (!active) return;
-    document.getElementById('buy-summary').textContent =
-      (active.event_name || '') + ' — Sec ' + active.section + ' · ' + money(active.price_usd);
-    document.getElementById('buy-status').textContent = '';
+    var st = document.getElementById('buy-status');
+    var confirmBtn = document.getElementById('buy-confirm');
+    document.getElementById('buy-event-title').textContent = active.event_name || 'Event';
+    document.getElementById('buy-event-meta').innerHTML =
+      esc(active.event_date_display || '') + '<br/>' + esc(active.venue || '') +
+      '<br/>Sec ' + esc(active.section) + ' · Row ' + esc(active.row) + ' · Seat ' + esc(active.seat);
+    document.getElementById('buy-price-main').textContent = money(active.price_usd);
+    var faceEl = document.getElementById('buy-price-face');
+    if (active.face_value_usd && faceEl) {
+      faceEl.textContent = money(active.face_value_usd) + ' face';
+      faceEl.hidden = false;
+    } else if (faceEl) {
+      faceEl.hidden = true;
+    }
+    if (st) {
+      st.textContent = '';
+      st.className = 'buy-status';
+    }
     document.getElementById('modal').hidden = false;
-    document.getElementById('buy-email-btn').hidden = !window.__shopEmailBuy;
-    document.getElementById('buy-pay').hidden = !window.__shopStripe;
+    document.body.style.overflow = 'hidden';
+    var canBuy = active.purchasable !== false;
+    var canEmail = window.__shopEmailBuy !== false;
+    if (confirmBtn) {
+      confirmBtn.hidden = false;
+      confirmBtn.disabled = !canBuy || !canEmail;
+      confirmBtn.textContent = canBuy
+        ? (canEmail ? 'Confirm & get ticket' : 'Email delivery unavailable')
+        : 'Ticket link pending — contact support';
+    }
+    document.getElementById('buy-pay').hidden = !window.__shopStripe || !canBuy;
     if (window.TixxSettings) {
-      var prof = window.TixxSettings.getProfile();
-      var nm = window.TixxSettings.getFullName();
+      var nm = window.TixxSettings.getFullName && window.TixxSettings.getFullName();
       var buyName = document.getElementById('buy-name');
       var buyEmail = document.getElementById('buy-email');
       if (buyName && nm && !buyName.value.trim()) buyName.value = nm;
+      try {
+        var prof = window.TixxSettings.getProfile && window.TixxSettings.getProfile();
+        if (buyEmail && prof && prof.email && !buyEmail.value.trim()) buyEmail.value = prof.email;
+      } catch (eP) {}
       try {
         var sessEm = localStorage.getItem('tm_viewer_session_email') || sessionStorage.getItem('tm_viewer_session_email') || '';
         if (buyEmail && sessEm && !buyEmail.value.trim()) buyEmail.value = sessEm;
       } catch (e) {}
     }
+    var emInput = document.getElementById('buy-email');
+    if (emInput) setTimeout(function () { emInput.focus(); }, 60);
   }
   function closeBuy() {
     document.getElementById('modal').hidden = true;
+    document.body.style.overflow = '';
     active = null;
   }
 
@@ -1753,19 +1900,30 @@
   });
 
   document.getElementById('buy-cancel').addEventListener('click', closeBuy);
+  var buyCancelX = document.getElementById('buy-cancel-x');
+  if (buyCancelX) buyCancelX.addEventListener('click', closeBuy);
   document.getElementById('modal').addEventListener('click', function (e) {
     if (e.target.id === 'modal') closeBuy();
   });
-  document.getElementById('buy-email-btn').addEventListener('click', async function () {
+  async function runPurchase() {
     if (!active) return;
     var st = document.getElementById('buy-status');
+    var confirmBtn = document.getElementById('buy-confirm');
     var em = (document.getElementById('buy-email').value || '').trim();
     var nm = (document.getElementById('buy-name').value || '').trim();
-    if (!em || em.indexOf('@') < 1) { st.textContent = 'Enter a valid email.'; return; }
-    st.textContent = 'Sending…';
+    if (active.purchasable === false) {
+      if (st) { st.textContent = 'This seat is not ready for instant delivery yet.'; st.className = 'buy-status err'; }
+      return;
+    }
+    if (!em || em.indexOf('@') < 1) {
+      if (st) { st.textContent = 'Enter a valid email address.'; st.className = 'buy-status err'; }
+      return;
+    }
+    if (st) { st.textContent = 'Sending your ticket…'; st.className = 'buy-status'; }
+    if (confirmBtn) confirmBtn.disabled = true;
     var res = await postJson('/api/shop/purchase', { listing_id: active.listing_id, buyer_email: em, buyer_name: nm });
     if (res.data.ok) {
-      st.textContent = res.data.message || 'Sent!';
+      if (st) { st.textContent = res.data.message || 'Ticket sent! Check your inbox.'; st.className = 'buy-status ok'; }
       showBanner('Ticket emailed to ' + em, true);
       if (window.TixxSettings) {
         window.TixxSettings.recordOrder({
@@ -1778,11 +1936,16 @@
       }
       allListings = allListings.filter(function (l) { return l.listing_id !== active.listing_id; });
       render();
-      setTimeout(closeBuy, 1800);
+      setTimeout(closeBuy, 2200);
     } else {
-      st.textContent = res.data.error || res.data.detail || 'Failed';
+      if (st) {
+        st.textContent = res.data.error || res.data.detail || 'Purchase failed. Try again or email support.';
+        st.className = 'buy-status err';
+      }
+      if (confirmBtn) confirmBtn.disabled = false;
     }
-  });
+  }
+  document.getElementById('buy-confirm').addEventListener('click', runPurchase);
   document.getElementById('buy-pay').addEventListener('click', async function () {
     if (!active) return;
     var st = document.getElementById('buy-status');
@@ -1798,7 +1961,28 @@
     else st.textContent = res.data.error || 'Checkout unavailable';
   });
 
+  async function fetchShopListings() {
+    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 28000) : null;
+    try {
+      var r = await fetch(API + '/api/shop/listings?limit=10000', {
+        cache: 'no-store',
+        signal: ctrl ? ctrl.signal : undefined
+      });
+      var data = {};
+      try { data = await r.json(); } catch (eJ) {
+        throw new Error('bad_response');
+      }
+      if (!r.ok && !data.error) data.error = 'http_' + r.status;
+      return data;
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+
   (async function init() {
+    var loadEl = document.getElementById('load');
+    var metaEl = document.getElementById('results-meta');
     try {
       var qs = new URLSearchParams(location.search);
       if (qs.get('paid') === '1') showBanner('Payment received — check your email.', true);
@@ -1823,18 +2007,32 @@
           a.classList.toggle('active', a.getAttribute('data-disc-cat') === state.cat);
         });
       }
-      var r = await fetch(API + '/api/shop/listings');
-      var data = await r.json();
-      if (!data.ok) throw new Error(data.error || 'load_failed');
+      var data = await fetchShopListings();
+      if (!data.ok) {
+        window.__shopLoadError = data.error || data.detail || 'Inventory unavailable';
+        throw new Error(window.__shopLoadError);
+      }
+      window.__shopLoadError = '';
       allListings = (data.listings || []).map(normalizeListing);
-      window.__shopEmailBuy = data.email_purchase_enabled;
-      window.__shopStripe = data.stripe_enabled;
+      window.__shopEmailBuy = data.email_purchase_enabled !== false;
+      window.__shopStripe = !!data.stripe_enabled;
+      window.__shopParseStats = data.parse_stats || null;
+      if (data.parse_stats && data.parse_stats.lines_read) {
+        var title = document.getElementById('discover-title');
+        if (title && !state.q.trim()) {
+          title.textContent = data.event_count + ' events · ' + data.count + ' tickets available';
+        }
+      }
       render();
       resolveMissingImages();
       loadSavedLocation();
     } catch (e) {
-      document.getElementById('load').textContent = 'Could not load shop.';
-      showBanner(String(e.message || e), false);
+      window.__shopLoadError = String(e.message || e || 'load_failed');
+      if (metaEl) metaEl.textContent = 'Could not load inventory';
+      showBanner(window.__shopLoadError, false);
+      render();
+    } finally {
+      if (loadEl) loadEl.hidden = true;
     }
     var sticky = document.getElementById('filters-sticky');
     var topbar = document.querySelector('.topbar');

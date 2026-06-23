@@ -20,6 +20,7 @@ Env:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -34,12 +35,18 @@ from pathlib import Path
 
 _STOCK_LOCK = threading.Lock()
 _MEDIA_CACHE_LOCK = threading.Lock()
+_REGISTRY_SEAT_INDEX: dict[tuple[str, str, str, str], str] | None = None
+_REGISTRY_SRS_BUCKETS: dict[tuple[str, str, str], list[tuple[str, str]]] | None = None
+_REGISTRY_SEAT_LOCK = threading.Lock()
 _TM_APP_BASE = "https://app.ticketmaster.com"
 _RE_VIEWER = re.compile(
     r"https?://[^\s\"'<>\[\]]+/tickets/(\d+)/([^\s\"'<>\[\]/\.]+)",
     re.I,
 )
 _RE_USD = re.compile(r"(\d+(?:\.\d+)?)")
+_SHOP_PUBLIC_BASE = (
+    os.environ.get("SHOP_PUBLIC_BASE") or os.environ.get("TM_VIEWER_PUBLIC_SITE") or "https://tixx.pw"
+).rstrip("/")
 
 
 def _import_marketplace_db():
@@ -191,6 +198,9 @@ def _extract_viewer_link(text: str) -> str:
 
 
 def _pick_link_from_cells(cells: list[str], line: str) -> str:
+    found = _extract_viewer_link(line)
+    if found:
+        return found
     if len(cells) > 11:
         link = (cells[11] or "").strip()
         if link.startswith("http") and _RE_VIEWER.search(link):
@@ -199,7 +209,135 @@ def _pick_link_from_cells(cells: list[str], line: str) -> str:
         c = (cell or "").strip()
         if c.startswith("http") and _RE_VIEWER.search(c):
             return c
-    return _extract_viewer_link(line)
+    return ""
+
+
+def _norm_event_name(name: str) -> str:
+    return re.sub(r"\s+", " ", (name or "").strip().lower())
+
+
+def _norm_seat_token(val: str) -> str:
+    return re.sub(r"\s+", "", (val or "").strip().upper())
+
+
+def _registry_json_paths() -> list[Path]:
+    paths: list[Path] = []
+    seen: set[str] = set()
+
+    def add(p: Path) -> None:
+        if not p.is_file():
+            return
+        key = str(p.resolve())
+        if key in seen:
+            return
+        seen.add(key)
+        paths.append(p.resolve())
+
+    reg_env = (os.environ.get("TM_VIEWER_REGISTRY_PATH") or "").strip()
+    if reg_env:
+        add(Path(reg_env))
+    base = _stock_data_dir()
+    for cand in (
+        base / "tm_viewer_link_registry.json",
+        base / "tm.bz" / "tm_viewer_link_registry.json",
+        Path(__file__).resolve().parent.parent / "tm_viewer_link_registry.json",
+        Path(__file__).resolve().parent / "tm-vercel-site" / "tm_viewer_link_registry.json",
+    ):
+        add(cand)
+    for root in _script_roots():
+        add(root / "tm_viewer_link_registry.json")
+    return paths
+
+
+def _viewer_url_from_path(rel: str) -> str:
+    rel = (rel or "").strip().lstrip("/")
+    m = re.match(r"tickets/(\d+)/([^/.]+)", rel, re.I)
+    if not m:
+        return ""
+    gid, slug = m.group(1), m.group(2)
+    return f"{_SHOP_PUBLIC_BASE}/tickets/{gid}/{slug}"
+
+
+def _registry_seat_index() -> dict[tuple[str, str, str, str], str]:
+    global _REGISTRY_SEAT_INDEX, _REGISTRY_SRS_BUCKETS
+    with _REGISTRY_SEAT_LOCK:
+        if _REGISTRY_SEAT_INDEX is not None and _REGISTRY_SRS_BUCKETS is not None:
+            return _REGISTRY_SEAT_INDEX
+        index: dict[tuple[str, str, str, str], str] = {}
+        srs_buckets: dict[tuple[str, str, str], list[tuple[str, str]]] = {}
+        for path in _registry_json_paths():
+            try:
+                raw = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            by_email = raw.get("by_email") if isinstance(raw, dict) else None
+            if not isinstance(by_email, dict):
+                continue
+            for rows in by_email.values():
+                if not isinstance(rows, list):
+                    continue
+                for rec in rows:
+                    if not isinstance(rec, dict):
+                        continue
+                    url = _viewer_url_from_path(str(rec.get("path") or ""))
+                    if not url:
+                        continue
+                    ev = _norm_event_name(str(rec.get("event_name") or ""))
+                    section = _norm_seat_token(str(rec.get("section") or ""))
+                    row = _norm_seat_token(str(rec.get("row") or ""))
+                    seat = _norm_seat_token(str(rec.get("seat") or ""))
+                    if not ev or not section or not row or not seat:
+                        continue
+                    key = (ev, section, row, seat)
+                    index.setdefault(key, url)
+                    bucket = srs_buckets.setdefault((section, row, seat), [])
+                    if not any(b[0] == ev for b in bucket):
+                        bucket.append((ev, url))
+        _REGISTRY_SEAT_INDEX = index
+        _REGISTRY_SRS_BUCKETS = srs_buckets
+        return index
+
+
+def _registry_lookup_viewer_url(cells: list[str]) -> str:
+    if (os.environ.get("SHOP_SKIP_REGISTRY_LOOKUP") or "").strip().lower() in ("1", "true", "yes"):
+        return ""
+    event_name = cells[1].strip() if len(cells) > 1 else ""
+    section = _norm_seat_token(cells[6] if len(cells) > 6 else "")
+    row = _norm_seat_token(cells[7] if len(cells) > 7 else "")
+    seat = _norm_seat_token(cells[8] if len(cells) > 8 else "")
+    if not event_name or not section:
+        return ""
+    idx = _registry_seat_index()
+    en = _norm_event_name(event_name)
+    exact = idx.get((en, section, row, seat))
+    if exact:
+        return exact
+    buckets = _REGISTRY_SRS_BUCKETS or {}
+    for ev, url in buckets.get((section, row, seat), []):
+        if ev == en or en in ev or ev in en:
+            return url
+    return ""
+
+
+def _listing_uid(row: dict) -> str:
+    return "|".join(
+        [
+            (row.get("event_id") or "")[:48],
+            _norm_event_name(row.get("event_name") or ""),
+            _norm_seat_token(row.get("section") or ""),
+            _norm_seat_token(row.get("row") or ""),
+            _norm_seat_token(row.get("seat") or ""),
+        ]
+    )
+
+
+def _email_purchase_enabled() -> bool:
+    env = (os.environ.get("SHOP_ALLOW_EMAIL_PURCHASE") or "").strip().lower()
+    if env in ("0", "false", "no"):
+        return False
+    if env in ("1", "true", "yes"):
+        return True
+    return bool((os.environ.get("TM_RESEND_API_KEY") or "").strip())
 
 
 def _shop_log_path() -> Path:
@@ -611,37 +749,49 @@ def _parse_stock_line(raw_line: str, *, source: str = "") -> dict | None:
         return None
     combo, payload = line.split(" | ", 1)
     cells = _csv_split(payload)
-    if len(cells) < 12:
+    if len(cells) < 9:
+        return None
+    event_name = (cells[1] if len(cells) > 1 else "").strip()
+    if not event_name:
         return None
     link = _pick_link_from_cells(cells, line)
-    if not link.startswith("http"):
-        return None
-    m = _RE_VIEWER.search(link)
-    if not m:
-        return None
-    gid, slug = m.group(1), m.group(2)
+    if not _RE_VIEWER.search(link or ""):
+        link = _registry_lookup_viewer_url(cells) or link
+    purchasable = bool(_RE_VIEWER.search(link or ""))
     face = _parse_usd(cells[9] if len(cells) > 9 else "")
     disc = _discount()
     if face is not None:
         price = round(face * disc, 2)
     else:
         price = _default_price()
+    if purchasable:
+        m = _RE_VIEWER.search(link or "")
+        if not m:
+            return None
+        gid, slug = m.group(1), m.group(2)
+        listing_id = slug
+    else:
+        gid = "0"
+        slug = hashlib.sha256(raw_line.encode("utf-8", errors="replace")).hexdigest()[:18]
+        listing_id = slug
+        link = link or ""
     return {
         "raw_line": raw_line.rstrip("\n\r") + "\n",
         "combo": combo.strip(),
         "event_id": cells[0].strip(),
-        "event_name": cells[1].strip(),
-        "event_date": cells[2].strip(),
-        "venue": cells[3].strip(),
-        "section": cells[6].strip(),
-        "row": cells[7].strip(),
-        "seat": cells[8].strip(),
+        "event_name": event_name,
+        "event_date": cells[2].strip() if len(cells) > 2 else "",
+        "venue": cells[3].strip() if len(cells) > 3 else "",
+        "section": cells[6].strip() if len(cells) > 6 else "",
+        "row": cells[7].strip() if len(cells) > 7 else "",
+        "seat": cells[8].strip() if len(cells) > 8 else "",
         "face_value_usd": face,
         "price_usd": price,
         "link": link,
         "gid": gid,
         "slug": slug,
-        "listing_id": slug,
+        "listing_id": listing_id,
+        "purchasable": purchasable,
         "source_file": source,
     }
 
@@ -681,8 +831,9 @@ def _public_listing(row: dict) -> dict:
         "discount_label": "50% off face value",
         "category": category,
         "search_blob": search_blob,
-        "path": f"tickets/{row['gid']}/{row['slug']}",
+        "path": f"tickets/{row['gid']}/{row['slug']}" if row.get("purchasable", True) else "",
         "image_url": "",
+        "purchasable": bool(row.get("purchasable", True)),
     }
 
 
@@ -718,35 +869,43 @@ def _event_summaries(listings: list[dict]) -> list[dict]:
     return out
 
 
-def _load_listings(*, limit: int = 500) -> tuple[list[dict], Path, str | None]:
+def _load_listings(*, limit: int = 10000) -> tuple[list[dict], Path, str | None, dict]:
     path = _resolve_links_txt()
+    stats = {"lines_read": 0, "lines_parsed": 0, "lines_skipped": 0, "purchasable": 0}
     if not path.is_file():
-        return [], path, "links_txt_not_found"
+        return [], path, "links_txt_not_found", stats
     listings: list[dict] = []
-    seen_ids: set[str] = set()
+    seen: set[str] = set()
     try:
         text = path.read_text(encoding="utf-8", errors="replace")
     except OSError as e:
-        return [], path, f"links_txt_read_failed: {e}"
+        return [], path, f"links_txt_read_failed: {e}", stats
     src = str(path)
     for line in text.splitlines():
+        if not line.strip() or line.strip().startswith("#"):
+            continue
+        stats["lines_read"] += 1
         row = _parse_stock_line(line, source=src)
         if not row:
+            stats["lines_skipped"] += 1
             continue
-        lid = (row.get("listing_id") or row.get("slug") or "").strip()
-        if not lid or lid in seen_ids:
+        uid = _listing_uid(row)
+        if uid in seen:
+            stats["lines_skipped"] += 1
             continue
-        seen_ids.add(lid)
-        pub = _public_listing(row)
-        listings.append(pub)
+        seen.add(uid)
+        stats["lines_parsed"] += 1
+        if row.get("purchasable"):
+            stats["purchasable"] += 1
+        listings.append(_public_listing(row))
     listings.sort(key=lambda x: (x.get("event_date") or "", x.get("event_name") or ""))
     if limit > 0:
         listings = listings[:limit]
-    return listings, path, None
+    return listings, path, None, stats
 
 
-def shop_listings(limit: int = 500) -> dict:
-    listings, path, err = _load_listings(limit=limit)
+def shop_listings(limit: int = 10000) -> dict:
+    listings, path, err, parse_stats = _load_listings(limit=limit)
     if err and not listings:
         return {
             "ok": False,
@@ -756,6 +915,7 @@ def shop_listings(limit: int = 500) -> dict:
             "listings": [],
             "count": 0,
             "event_count": 0,
+            "parse_stats": parse_stats,
         }
     _attach_cached_images(listings)
     _db_upsert_listings_async(listings)
@@ -769,9 +929,9 @@ def shop_listings(limit: int = 500) -> dict:
         "event_count": len(events),
         "events": events,
         "listings": listings,
+        "parse_stats": parse_stats,
         "shop_email": "ezy.dev.bot@gmail.com",
-        "email_purchase_enabled": (os.environ.get("SHOP_ALLOW_EMAIL_PURCHASE") or "").strip().lower()
-        in ("1", "true", "yes"),
+        "email_purchase_enabled": _email_purchase_enabled(),
         "stripe_enabled": bool((os.environ.get("STRIPE_SECRET_KEY") or "").strip()),
         "marketplace": stats,
     }
@@ -886,12 +1046,7 @@ def _pop_listing_by_id(listing_id: str) -> tuple[dict | None, str | None]:
 
 
 def shop_purchase(listing_id: str, buyer_email: str, buyer_name: str = "") -> tuple[int, dict]:
-    allow_free = (os.environ.get("SHOP_ALLOW_EMAIL_PURCHASE") or "").strip().lower() in (
-        "1",
-        "true",
-        "yes",
-    )
-    if not allow_free:
+    if not _email_purchase_enabled():
         return 403, {
             "ok": False,
             "error": "email_purchase_disabled",
@@ -903,6 +1058,8 @@ def shop_purchase(listing_id: str, buyer_email: str, buyer_name: str = "") -> tu
     if err:
         code = 404 if err == "listing_not_found" else 503
         return code, {"ok": False, "error": err}
+    if not row.get("purchasable", True) or not (row.get("link") or "").strip():
+        return 400, {"ok": False, "error": "listing_not_purchasable"}
     ok, detail = _send_purchase_email(buyer_email, buyer_name, row)
     entry = {
         "at": datetime.now().isoformat(),

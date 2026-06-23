@@ -3291,10 +3291,15 @@
     }
     async function loadHomeEvents() {
       var loadEl = document.getElementById('home-load');
+      var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 28000) : null;
       try {
         var base = apiBase();
         if (!base) throw new Error('no_api');
-        var r = await fetch(base + '/api/shop/listings', { cache: 'no-store' });
+        var r = await fetch(base + '/api/shop/listings?limit=10000', {
+          cache: 'no-store',
+          signal: ctrl ? ctrl.signal : undefined
+        });
         var data = await r.json();
         if (!data.ok) throw new Error(data.error || 'load_failed');
         homeListings = (data.listings || []).map(function (l) {
@@ -3314,7 +3319,9 @@
         updateHomeStockBanner(data.count, data.event_count);
         resolveHomeImages();
       } catch (e) {
-        if (loadEl) loadEl.textContent = 'Could not load events. Open the shop to browse listings.';
+        if (loadEl) loadEl.textContent = 'Could not load events — check registry is online (links.txt on VPS).';
+      } finally {
+        if (timer) clearTimeout(timer);
       }
     }
     loadHomeEvents();
