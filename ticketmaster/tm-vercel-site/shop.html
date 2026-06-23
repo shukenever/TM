@@ -1244,12 +1244,9 @@
   <script>
 (function () {
   var API = String(location.origin).replace(/\/+$/, '');
-  var allListings = [];
   var shopEvents = [];
-  var listingsLoadDone = false;
-  var listingsLoadGen = 0;
-  var listingsLoadStarted = false;
-  var serverSearchQ = '';
+  var listingsByEventKey = {};
+  var openEventKeys = {};
   var active = null;
   var state = {
     q: '',
@@ -1398,6 +1395,10 @@
     document.querySelectorAll('.view-toggle button').forEach(function (b) {
       b.classList.toggle('active', b.getAttribute('data-view') === 'events');
     });
+    if (ev.key) {
+      openEventKeys[ev.key] = true;
+      loadEventListings(ev.key);
+    }
     render();
     setTimeout(function () {
       var cards = document.querySelectorAll('.event-card');
@@ -1513,36 +1514,94 @@
     });
     return copy;
   }
-  function buildEventsForDisplay(list) {
-    if (isFiltered() || listingsLoadDone || !shopEvents.length) {
-      return sortEventGroups(groupEvents(list));
+  function shopEventByKey(key) {
+    for (var i = 0; i < shopEvents.length; i++) {
+      if (shopEvents[i].event_key === key) return shopEvents[i];
     }
-    var partialByKey = {};
-    groupEvents(list).forEach(function (g) { partialByKey[g.key] = g; });
-    return sortEventGroups(shopEvents.map(function (e) {
+    return null;
+  }
+  function buildEventSearchQuery(ev) {
+    var parts = [(ev && ev.event_name) || ''];
+    var venue = (ev && ev.venue) || '';
+    if (venue && venue !== 'Venue TBA') parts.push(venue);
+    return parts.join(' ').trim();
+  }
+  function allLoadedListings() {
+    var out = [];
+    var seen = {};
+    Object.keys(listingsByEventKey).forEach(function (k) {
+      var cache = listingsByEventKey[k];
+      if (!cache || !cache.listings) return;
+      cache.listings.forEach(function (l) {
+        if (seen[l.listing_id]) return;
+        seen[l.listing_id] = true;
+        out.push(l);
+      });
+    });
+    return out;
+  }
+  function findListingById(id) {
+    var rows = allLoadedListings();
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].listing_id === id) return rows[i];
+    }
+    return null;
+  }
+  function eventDateTs(ev) {
+    return Number(ev.event_date_ts) || dateTsClient(ev.event_date);
+  }
+  function eventMatchesDisplayFilters(e) {
+    if (state.cat !== 'all' && e.category !== state.cat) return false;
+    if (!locationMatch(e)) return false;
+    if (state.date !== 'all') {
+      var now = Date.now();
+      var ts = eventDateTs(e);
+      if (state.date === 'future' && ts < now - 86400000) return false;
+      if (state.date === 'week' && (ts < now || ts > now + 7 * 86400000)) return false;
+      if (state.date === 'month' && (ts < now || ts > now + 30 * 86400000)) return false;
+    }
+    var q = state.q.trim().toLowerCase();
+    if (q) {
+      var blob = [
+        e.event_name, e.venue, e.event_date_display, e.event_date, e.event_id, e.category
+      ].join(' ').toLowerCase();
+      var parts = q.split(/\s+/).filter(Boolean);
+      for (var i = 0; i < parts.length; i++) {
+        if (blob.indexOf(parts[i]) < 0) return false;
+      }
+    }
+    return true;
+  }
+  function buildEventsForDisplay() {
+    return sortEventGroups(shopEvents.filter(eventMatchesDisplayFilters).map(function (e) {
       var key = e.event_key;
       if (!key) return null;
-      if (partialByKey[key]) return partialByKey[key];
+      var cache = listingsByEventKey[key] || {};
+      var listings = (cache.listings || []).slice().sort(function (a, b) {
+        return (a.price_usd || 0) - (b.price_usd || 0);
+      });
       return {
         key: key,
         event_name: e.event_name,
         event_id: e.event_id || '',
         event_date_display: e.event_date_display || formatDateClient(e.event_date),
-        event_date_ts: e.event_date_ts || dateTsClient(e.event_date),
+        event_date_ts: eventDateTs(e),
         venue: (e.venue && String(e.venue).toLowerCase() !== 'unknown') ? e.venue : 'Venue TBA',
         category: e.category || 'events',
         image_url: e.image_url || '',
-        listings: [],
-        count: e.ticket_count || 0,
+        listings: listings,
+        count: e.ticket_count || listings.length || 0,
         min_price: evMinPrice(e),
-        seatsPending: true
+        seatsPending: !!cache.loading,
+        seatsError: cache.error || '',
+        seatsLoaded: !!cache.loaded
       };
     }).filter(Boolean));
   }
   function allDiscoverEvents() {
-    if (shopEvents.length && !isFiltered()) return apiEventsToCarousel(shopEvents);
-    if (allListings.length) return groupEvents(allListings);
-    return apiEventsToCarousel(shopEvents);
+    return apiEventsToCarousel(shopEvents.filter(function (e) {
+      return state.cat === 'all' || e.category === state.cat;
+    }));
   }
   function initials(name) {
     var p = String(name || 'E').trim().split(/\s+/);
@@ -1636,7 +1695,7 @@
   }
 
   function filteredListings() {
-    return allListings.filter(matchesFilters);
+    return allLoadedListings().filter(matchesFilters);
   }
 
   function sortListings(arr) {
@@ -1718,27 +1777,30 @@
     if (load) load.hidden = true;
 
     var list = sortListings(filteredListings());
-    var events = buildEventsForDisplay(list);
-    var ticketTotal = window.__shopCatalogCount || window.__shopTotalCount || allListings.length || list.length;
-    var ticketShown = listingsLoadDone ? list.length : Math.max(list.length, ticketTotal);
+    var events = buildEventsForDisplay();
+    var ticketTotal = window.__shopCatalogCount || window.__shopTotalCount || 0;
+    var ticketShown = allLoadedListings().length;
+    var anySeatsLoading = Object.keys(listingsByEventKey).some(function (k) {
+      return listingsByEventKey[k] && listingsByEventKey[k].loading;
+    });
 
     if (meta) {
-      var evN = isFiltered() ? events.length : (shopEvents.length || events.length);
+      var evN = events.length;
       var extra = isFiltered() ? ' (filtered)' : '';
-      var loading = !listingsLoadDone && ticketTotal > allListings.length ? ' · loading seats…' : '';
-      meta.innerHTML = '<strong>' + ticketShown + '</strong> tickets · <strong>' + evN + '</strong> events' + extra + loading;
+      var loading = anySeatsLoading ? ' · loading seats…' : '';
+      meta.innerHTML = '<strong>' + ticketTotal + '</strong> tickets · <strong>' + evN + '</strong> events shown' + extra + loading;
     }
 
     if (!events.length && !list.length) {
       if (empty) {
-        if (shopEvents.length && !listingsLoadDone && !window.__shopLoadError) {
-          empty.hidden = false;
-          empty.textContent = (window.TixxPublic && window.TixxPublic.MSG.ticketsLoading) || 'Loading tickets…';
-        } else if (!allListings.length && window.__shopLoadError) {
+        if (window.__shopLoadError) {
           empty.hidden = false;
           empty.textContent = (window.TixxPublic && window.TixxPublic.shopError()) || 'The shop is temporarily unavailable.';
         } else {
-          empty.hidden = !!shopEvents.length;
+          empty.hidden = false;
+          empty.textContent = shopEvents.length
+            ? 'No events match your filters.'
+            : ((window.TixxPublic && window.TixxPublic.MSG.categoryEmpty) || 'Nothing here yet.');
         }
       }
       if (eg) eg.hidden = true;
@@ -1752,6 +1814,10 @@
       if (eg) eg.hidden = true;
       if (lg) {
         lg.hidden = false;
+        if (!list.length) {
+          lg.innerHTML = '<p class="carousel-empty" style="padding:1.25rem">Expand an event above to load seats, or use search to narrow events first.</p>';
+          return;
+        }
         lg.innerHTML = list.map(function (l) {
           var face = l.face_value_usd ? '<span class="seat-face">' + esc(money(l.face_value_usd)) + '</span>' : '';
           var buyBtn = l.purchasable === false
@@ -1776,9 +1842,13 @@
     if (eg) {
       eg.hidden = false;
       eg.innerHTML = events.map(function (ev) {
-        var seats = ev.seatsPending && !ev.listings.length
+        var seats = ev.seatsPending
           ? '<p class="seat-pending" style="padding:.75rem 1rem;color:#64748b;font-size:.9rem">Loading available seats…</p>'
-          : ev.listings.map(function (l) {
+          : (ev.seatsError
+            ? '<p class="seat-pending" style="padding:.75rem 1rem;color:#b91c1c;font-size:.9rem">' + esc(ev.seatsError) + '</p>'
+            : (!ev.listings.length
+              ? '<p class="seat-pending" style="padding:.75rem 1rem;color:#64748b;font-size:.9rem">No seats listed for this event.</p>'
+              : ev.listings.map(function (l) {
           var face = l.face_value_usd ? '<span class="seat-face">' + esc(money(l.face_value_usd)) + '</span>' : '';
           var buyBtn = l.purchasable === false
             ? '<button type="button" class="btn-buy btn-unavail" disabled title="No viewer link yet">Unavailable</button>'
@@ -1786,8 +1856,9 @@
           return '<div class="seat-row">' +
             '<span class="seat-info">Sec ' + esc(l.section) + ' · Row ' + esc(l.row) + ' · Seat ' + esc(l.seat) + '</span>' +
             '<div class="seat-price-wrap">' + face + buyBtn + '</div></div>';
-        }).join('');
-        return '<article class="event-card" data-event="' + esc(ev.key) + '">' +
+        }).join('')));
+        var openCls = openEventKeys[ev.key] ? ' open' : '';
+        return '<article class="event-card' + openCls + '" data-event="' + esc(ev.key) + '">' +
           '<div class="event-card-head">' +
           thumbBlock(ev) +
           '<div><h2 class="event-title">' + esc(ev.event_name) + '</h2>' +
@@ -1802,7 +1873,16 @@
       eg.querySelectorAll('.event-card-head').forEach(function (head) {
         head.addEventListener('click', function (e) {
           if (e.target.closest('.btn-buy')) return;
-          head.parentElement.classList.toggle('open');
+          var card = head.parentElement;
+          var eventKey = card.getAttribute('data-event');
+          var wasOpen = card.classList.contains('open');
+          card.classList.toggle('open');
+          if (card.classList.contains('open')) {
+            openEventKeys[eventKey] = true;
+            if (!wasOpen) loadEventListings(eventKey);
+          } else {
+            delete openEventKeys[eventKey];
+          }
         });
       });
       eg.querySelectorAll('.btn-buy').forEach(function (btn) {
@@ -1824,8 +1904,12 @@
       shopEvents.forEach(function (e) {
         if (e.event_key === k) e.image_url = url;
       });
-      allListings.forEach(function (l) {
-        if (l.event_key === k) l.image_url = url;
+      Object.keys(listingsByEventKey).forEach(function (k) {
+        var cache = listingsByEventKey[k];
+        if (!cache || !cache.listings) return;
+        cache.listings.forEach(function (l) {
+          if (l.event_key === k) l.image_url = url;
+        });
       });
     });
     render();
@@ -1846,7 +1930,6 @@
       });
     }
     (shopEvents || []).forEach(function (e) { add(e); });
-    groupEvents(allListings).forEach(add);
     return out.slice(0, limit || 25);
   }
 
@@ -1873,7 +1956,7 @@
   }
 
   function openBuy(id) {
-    active = allListings.find(function (l) { return l.listing_id === id; });
+    active = findListingById(id);
     if (!active) return;
     var st = document.getElementById('buy-status');
     var confirmBtn = document.getElementById('buy-confirm');
@@ -1954,17 +2037,14 @@
     state.location = document.getElementById('f-location').value;
     state.date = document.getElementById('f-date').value;
     flashFilter();
-    if (searchReloadTimer) clearTimeout(searchReloadTimer);
-    listingsLoadDone = false;
-    listingsLoadStarted = false;
-    ensureListingsBackgroundLoad();
+    listingsByEventKey = {};
+    openEventKeys = {};
     render();
   });
   document.getElementById('f-q').addEventListener('input', function () {
     state.q = this.value;
     flashFilter();
     scheduleRender();
-    scheduleSearchReload();
   });
   var locChip = document.getElementById('loc-chip');
   if (locChip) {
@@ -2042,7 +2122,6 @@
       document.querySelectorAll('.view-toggle button').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
       state.view = btn.getAttribute('data-view');
-      if (state.view === 'listings') ensureListingsBackgroundLoad();
       flashFilter();
       render();
     });
@@ -2083,7 +2162,7 @@
           link: active.path ? ('/' + active.path) : ''
         });
       }
-      allListings = allListings.filter(function (l) { return l.listing_id !== active.listing_id; });
+      removeListingById(active.listing_id);
       render();
       setTimeout(closeBuy, 2200);
     } else {
@@ -2124,81 +2203,70 @@
     return data;
   }
 
-  async function loadAllListingsBackground() {
-    var pageSize = 1000;
-    var offset = 0;
-    var total = 0;
-    var seenIds = {};
-    var q = state.q.trim();
-    serverSearchQ = q;
-    var gen = ++listingsLoadGen;
-    listingsLoadDone = false;
-    allListings = [];
-    try {
-      while (true) {
-        if (gen !== listingsLoadGen) return;
-        var chunk = await fetchShopListingsPage(offset, pageSize, q);
-        if (gen !== listingsLoadGen) return;
-        total = chunk.count || total;
-        window.__shopTotalCount = total;
-        window.__shopCatalogCount = chunk.catalog_count || window.__shopCatalogCount || total;
-        if (chunk.event_count) window.__shopEventCount = chunk.event_count;
-        var rows = (chunk.listings || []).map(normalizeListing).filter(function (l) {
-          if (!l.listing_id || seenIds[l.listing_id]) return false;
-          seenIds[l.listing_id] = true;
-          return true;
-        });
-        if (!rows.length && !chunk.has_more && offset >= total) break;
-        if (rows.length) {
-          allListings = allListings.concat(rows);
-          offset += rows.length;
-          render();
-        } else if (!chunk.has_more) {
-          break;
-        } else {
-          offset += pageSize;
+  function removeListingById(id) {
+    Object.keys(listingsByEventKey).forEach(function (k) {
+      var cache = listingsByEventKey[k];
+      if (!cache || !cache.listings) return;
+      cache.listings = cache.listings.filter(function (l) { return l.listing_id !== id; });
+    });
+  }
+
+  async function loadEventListings(eventKey) {
+    if (!eventKey) return;
+    var cache = listingsByEventKey[eventKey];
+    if (cache && (cache.loading || cache.loaded)) return cache.promise;
+
+    var ev = shopEventByKey(eventKey);
+    if (!ev) return;
+
+    var q = buildEventSearchQuery(ev);
+    listingsByEventKey[eventKey] = { loading: true, loaded: false, listings: [], error: '' };
+    render();
+
+    var promise = (async function () {
+      var pageSize = 500;
+      var offset = 0;
+      var all = [];
+      var seen = {};
+      try {
+        while (true) {
+          var chunk = await fetchShopListingsPage(offset, pageSize, q);
+          var rows = (chunk.listings || []).map(normalizeListing).filter(function (l) {
+            if (l.event_key !== eventKey) return false;
+            if (!l.listing_id || seen[l.listing_id]) return false;
+            seen[l.listing_id] = true;
+            return true;
+          });
+          if (rows.length) {
+            all = all.concat(rows);
+            offset += rows.length;
+          } else if (!chunk.has_more) {
+            break;
+          } else {
+            offset += pageSize;
+          }
+          if (!chunk.has_more || offset >= (chunk.count || 0)) break;
         }
-        if (offset >= total) break;
-        var more = chunk.has_more === true || (rows.length >= pageSize && offset < total);
-        if (!more && rows.length < pageSize) break;
-        await new Promise(function (res) { setTimeout(res, 0); });
+        listingsByEventKey[eventKey] = {
+          loading: false,
+          loaded: true,
+          listings: all,
+          error: ''
+        };
+      } catch (e) {
+        listingsByEventKey[eventKey] = {
+          loading: false,
+          loaded: true,
+          listings: [],
+          error: String((e && e.message) || e || 'Could not load seats')
+        };
       }
-      if (gen !== listingsLoadGen) return;
-      listingsLoadDone = true;
-      window.__shopEmailBuy = window.__shopEmailBuy !== false;
       render();
       resolveMissingImages();
-    } catch (e) {
-      if (gen !== listingsLoadGen) return;
-      if (!allListings.length && !shopEvents.length) {
-        window.__shopLoadError = String((e && e.message) || e || 'load_failed');
-      }
-      render();
-    }
-  }
+    })();
 
-  function ensureListingsBackgroundLoad() {
-    if (listingsLoadStarted && !listingsLoadDone) return;
-    if (listingsLoadDone) return;
-    listingsLoadStarted = true;
-    loadAllListingsBackground();
-  }
-
-  function scheduleListingsBackgroundLoad() {
-    setTimeout(function () {
-      ensureListingsBackgroundLoad();
-    }, 120);
-  }
-
-  var searchReloadTimer = null;
-  function scheduleSearchReload() {
-    if (searchReloadTimer) clearTimeout(searchReloadTimer);
-    searchReloadTimer = setTimeout(function () {
-      searchReloadTimer = null;
-      listingsLoadDone = false;
-      listingsLoadStarted = false;
-      ensureListingsBackgroundLoad();
-    }, 350);
+    listingsByEventKey[eventKey].promise = promise;
+    return promise;
   }
 
   async function fetchShopEventsFast() {
@@ -2267,9 +2335,6 @@
       render();
       resolveMissingImages();
       loadSavedLocation();
-      if ((window.__shopCatalogCount || data.count || 0) > 0 || shopEvents.length) {
-        scheduleListingsBackgroundLoad();
-      }
     } catch (e) {
       window.__shopLoadError = (window.TixxPublic && window.TixxPublic.shopError()) || 'unavailable';
       if (metaEl) metaEl.textContent = 'Shop temporarily unavailable';
