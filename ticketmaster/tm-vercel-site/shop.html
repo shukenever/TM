@@ -2189,12 +2189,11 @@
     else st.textContent = res.data.error || 'Checkout unavailable';
   });
 
-  async function fetchShopListingsPage(offset, limit, q) {
-    var qs = '?limit=' + encodeURIComponent(limit) + '&offset=' + encodeURIComponent(offset);
-    if (q) qs += '&q=' + encodeURIComponent(q);
-    var r = await fetch(API + '/api/shop/listings' + qs, {
-      cache: 'no-store'
-    });
+  async function fetchEventListings(eventKey, offset, limit) {
+    var qs = '?event_key=' + encodeURIComponent(eventKey) +
+      '&limit=' + encodeURIComponent(limit || 500) +
+      '&offset=' + encodeURIComponent(offset || 0);
+    var r = await fetch(API + '/api/shop/listings' + qs, { cache: 'no-store' });
     var text = await r.text();
     var data = {};
     try { data = text ? JSON.parse(text) : {}; } catch (eJ) { throw new Error('bad_response'); }
@@ -2219,7 +2218,6 @@
     var ev = shopEventByKey(eventKey);
     if (!ev) return;
 
-    var q = buildEventSearchQuery(ev);
     listingsByEventKey[eventKey] = { loading: true, loaded: false, listings: [], error: '' };
     render();
 
@@ -2230,9 +2228,8 @@
       var seen = {};
       try {
         while (true) {
-          var chunk = await fetchShopListingsPage(offset, pageSize, q);
+          var chunk = await fetchEventListings(eventKey, offset, pageSize);
           var rows = (chunk.listings || []).map(normalizeListing).filter(function (l) {
-            if (l.event_key !== eventKey) return false;
             if (!l.listing_id || seen[l.listing_id]) return false;
             seen[l.listing_id] = true;
             return true;

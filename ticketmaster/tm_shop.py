@@ -401,18 +401,33 @@ _INVALIDATED_HTML_MARKERS = (
     b"link invalidated",
     b"this link is no longer valid",
     b"cancelled our parternship",
+    b"cancelled our partnership",
     b"have been invalidated",
+    b"not a valid ticket",
+    b"stubhub has cancelled",
+    b"ezy.dev.bot@gmail.com",
 )
 
 _PASS_PROXY_CACHE: dict[str, tuple[float, bytes | None]] = {}
+_PASS_PROXY_INVALIDATED: set[str] = set()
 _PASS_PROXY_CACHE_MAX = 512
 _PASS_PROXY_CACHE_TTL = 300.0
+
+
+def _pass_upstream_proxy_enabled() -> bool:
+    """Off by default — old slugs on tixx.cc often return invalidation stubs, not real passes."""
+    v = (
+        os.environ.get("TM_PASS_UPSTREAM_PROXY")
+        or os.environ.get("SHOP_PASS_UPSTREAM_PROXY")
+        or ""
+    ).strip().lower()
+    return v in ("1", "true", "yes")
 
 
 def _is_invalidated_pass_html_bytes(data: bytes) -> bool:
     if not data:
         return True
-    low = data[:8192].lower()
+    low = data[:16384].lower()
     return any(m in low for m in _INVALIDATED_HTML_MARKERS)
 
 
@@ -533,6 +548,9 @@ def fetch_pass_html_upstream(gid: str, slug: str) -> bytes | None:
         return None
 
     cache_key = f"{gid}:{slug}"
+    if cache_key in _PASS_PROXY_INVALIDATED:
+        return None
+
     cached = _pass_proxy_cache_get(cache_key)
     if cached is not _PASS_PROXY_CACHE_MISS:
         return cached  # type: ignore[return-value]
@@ -541,6 +559,10 @@ def fetch_pass_html_upstream(gid: str, slug: str) -> bytes | None:
     if local:
         _pass_proxy_cache_put(cache_key, local)
         return local
+
+    if not _pass_upstream_proxy_enabled():
+        _pass_proxy_cache_put(cache_key, None)
+        return None
 
     import urllib.request
 
@@ -554,6 +576,7 @@ def fetch_pass_html_upstream(gid: str, slug: str) -> bytes | None:
                 if not data or b"<html" not in data[:4096].lower():
                     continue
                 if _is_invalidated_pass_html_bytes(data):
+                    _PASS_PROXY_INVALIDATED.add(cache_key)
                     _shop_debug_log(f"pass proxy skip invalidated {url} ({len(data)} bytes)")
                     continue
                 _shop_debug_log(f"pass proxy hit {url} ({len(data)} bytes)")
@@ -1969,6 +1992,7 @@ def _sanitize_shop_response(body: dict) -> dict:
         "stripe_enabled",
         "q",
         "catalog_count",
+        "event_key",
     )
     return {k: body[k] for k in allow if k in body}
 
@@ -1979,10 +2003,12 @@ def shop_listings(
     offset: int = 0,
     events_only: bool = False,
     q: str = "",
+    event_key: str = "",
 ) -> dict:
     t0 = time.time()
     path = _resolve_links_txt()
     query = (q or "").strip()
+    ek_filter = (event_key or "").strip()
     req_limit = int(limit or 0)
     if not events_only:
         if req_limit <= 0:
@@ -2068,7 +2094,9 @@ def shop_listings(
 
     all_listings, parse_stats = _load_all_listings(path)
     catalog_count = len(all_listings)
-    if query:
+    if ek_filter:
+        all_listings = [r for r in all_listings if str(r.get("event_key") or "") == ek_filter]
+    elif query:
         all_listings = _filter_listings_query(all_listings, query)
     total_count = len(all_listings)
     off = max(0, int(offset or 0))
@@ -2099,7 +2127,7 @@ def shop_listings(
     has_more = off + len(page) < total_count
     _shop_debug_log(
         f"GET events_only={events_only} limit={limit} offset={off} q={query!r} "
-        f"total={total_count} returned={len(page)} has_more={has_more} {ms}ms"
+        f"event_key={ek_filter!r} total={total_count} returned={len(page)} has_more={has_more} {ms}ms"
     )
     return _sanitize_shop_response({
         "ok": True,
@@ -2124,6 +2152,7 @@ def shop_listings(
         "stripe_enabled": bool((os.environ.get("STRIPE_SECRET_KEY") or "").strip()),
         "marketplace": stats,
         "q": query,
+        "event_key": ek_filter,
     })
 
 

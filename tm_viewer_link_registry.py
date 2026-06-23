@@ -4184,7 +4184,13 @@ class _TmViewerApiHandler(BaseHTTPRequestHandler):
         offset = max(0, offset)
         events_only = (qs.get("events_only") or [""])[0].strip().lower() in ("1", "true", "yes")
         q = (qs.get("q") or [""])[0].strip()
-        self._write_json(200, mod.shop_listings(limit=limit, offset=offset, events_only=events_only, q=q))
+        event_key = (qs.get("event_key") or [""])[0].strip()
+        self._write_json(
+            200,
+            mod.shop_listings(
+                limit=limit, offset=offset, events_only=events_only, q=q, event_key=event_key
+            ),
+        )
 
     def _handle_shop_event_images(self) -> None:
         mod = _import_tm_shop_module()
