@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Tixx shop — list secure_pass_stock.csv and sell tickets on tixx.pw.
+Tixx shop — list inventory from links.txt and sell tickets on tixx.pw.
 
 Used by tm_viewer_link_registry HTTP API:
   GET  /api/shop/listings
@@ -8,7 +8,8 @@ Used by tm_viewer_link_registry HTTP API:
   POST /api/shop/checkout   Stripe Checkout (optional, needs STRIPE_SECRET_KEY)
 
 Env:
-  TM_STUBHUB_STOCK_CSV / STUBBY_BASE_DIR — stock file location
+  TM_LINKS_FILE / TM_VIEWER_LINKS_TXT — links.txt location (first path only; no merge)
+  TM_STUBHUB_STOCK_CSV parent — default links.txt beside stock CSV dir
   SHOP_DISCOUNT — fraction of face value (default 0.5 = 50% off face)
   SHOP_DEFAULT_PRICE_USD — when face unknown (default 35)
   SHOP_PURCHASE_SECRET — optional; if set, POST purchase/checkout require header X-Shop-Secret
@@ -137,9 +138,72 @@ def _resolve_stock_path() -> Path:
     return _script_roots()[0].parent / "secure_pass_stock.csv"
 
 
+def _resolve_links_txt() -> Path:
+    """Single inventory file: links.txt only (one path — no CSV, no multi-file merge)."""
+    for key in ("TM_LINKS_FILE", "TM_VIEWER_LINKS_TXT"):
+        raw = (os.environ.get(key) or "").strip()
+        if not raw:
+            continue
+        first = re.split(r"[;|,]+", raw)[0].strip()
+        if first:
+            return _resolve_links_txt_path(Path(first))
+
+    stock_parent = _resolve_stock_path().parent
+    for cand in (
+        stock_parent / "links.txt",
+        stock_parent / "tm.bz" / "links.txt",
+        Path.cwd() / "links.txt",
+    ):
+        if cand.is_file():
+            return cand.resolve()
+
+    for root in _script_roots():
+        for cand in (root / "links.txt", root.parent / "links.txt"):
+            if cand.is_file():
+                return cand.resolve()
+
+    extra = (os.environ.get("TM_VIEWER_LINKS_EXTRA") or "").strip()
+    if extra:
+        first = re.split(r"[;,\n|]+", extra)[0].strip()
+        if first:
+            return _resolve_links_txt_path(Path(first))
+
+    return stock_parent / "links.txt"
+
+
+def _resolve_links_txt_path(p: Path) -> Path:
+    try:
+        r = p.expanduser().resolve()
+    except OSError:
+        r = p.expanduser()
+    if r.is_dir():
+        return r / "links.txt"
+    return r
+
+
+def _stock_data_dir() -> Path:
+    return _resolve_links_txt().parent
+
+
+def _extract_viewer_link(text: str) -> str:
+    m = _RE_VIEWER.search(text or "")
+    return m.group(0) if m else ""
+
+
+def _pick_link_from_cells(cells: list[str], line: str) -> str:
+    if len(cells) > 11:
+        link = (cells[11] or "").strip()
+        if link.startswith("http") and _RE_VIEWER.search(link):
+            return link
+    for cell in reversed(cells):
+        c = (cell or "").strip()
+        if c.startswith("http") and _RE_VIEWER.search(c):
+            return c
+    return _extract_viewer_link(line)
+
+
 def _shop_log_path() -> Path:
-    stock = _resolve_stock_path()
-    return stock.parent / "shop_orders.jsonl"
+    return _stock_data_dir() / "shop_orders.jsonl"
 
 
 def _discount() -> float:
@@ -266,11 +330,11 @@ def _venue_label(raw: str) -> str:
 
 
 def _shop_event_images_cache_path() -> Path:
-    return _resolve_stock_path().parent / "shop_event_images.json"
+    return _stock_data_dir() / "shop_event_images.json"
 
 
 def _event_media_cache_paths() -> list[Path]:
-    stock_parent = _resolve_stock_path().parent
+    stock_parent = _stock_data_dir()
     paths: list[Path] = [
         _shop_event_images_cache_path(),
         stock_parent / "results" / "tm_event_media.json",
@@ -539,7 +603,7 @@ def shop_resolve_event_images(body: dict) -> dict:
     return {"ok": True, "images": images, "resolved": len(images)}
 
 
-def _parse_stock_line(raw_line: str) -> dict | None:
+def _parse_stock_line(raw_line: str, *, source: str = "") -> dict | None:
     line = raw_line.strip()
     if not line or line.startswith("#"):
         return None
@@ -549,7 +613,7 @@ def _parse_stock_line(raw_line: str) -> dict | None:
     cells = _csv_split(payload)
     if len(cells) < 12:
         return None
-    link = (cells[11] if len(cells) > 11 else "").strip()
+    link = _pick_link_from_cells(cells, line)
     if not link.startswith("http"):
         return None
     m = _RE_VIEWER.search(link)
@@ -578,6 +642,7 @@ def _parse_stock_line(raw_line: str) -> dict | None:
         "gid": gid,
         "slug": slug,
         "listing_id": slug,
+        "source_file": source,
     }
 
 
@@ -621,35 +686,88 @@ def _public_listing(row: dict) -> dict:
     }
 
 
-def shop_listings(limit: int = 500) -> dict:
-    path = _resolve_stock_path()
+def _event_summaries(listings: list[dict]) -> list[dict]:
+    groups: dict[str, dict] = {}
+    for row in listings:
+        ek = str(row.get("event_key") or row.get("event_name") or "")
+        if not ek:
+            continue
+        if ek not in groups:
+            groups[ek] = {
+                "event_key": ek,
+                "event_name": row.get("event_name") or "",
+                "event_id": row.get("event_id") or "",
+                "event_date_display": row.get("event_date_display") or "",
+                "venue": row.get("venue") or "",
+                "category": row.get("category") or "events",
+                "image_url": row.get("image_url") or "",
+                "ticket_count": 0,
+                "min_price_usd": row.get("price_usd") or 0,
+            }
+        g = groups[ek]
+        g["ticket_count"] += 1
+        price = row.get("price_usd") or 0
+        if price and (not g["min_price_usd"] or price < g["min_price_usd"]):
+            g["min_price_usd"] = price
+        if not g["image_url"] and (row.get("image_url") or "").startswith("http"):
+            g["image_url"] = row["image_url"]
+        if not g["event_id"] and row.get("event_id"):
+            g["event_id"] = row["event_id"]
+    out = list(groups.values())
+    out.sort(key=lambda x: (-(x.get("ticket_count") or 0), x.get("event_name") or ""))
+    return out
+
+
+def _load_listings(*, limit: int = 500) -> tuple[list[dict], Path, str | None]:
+    path = _resolve_links_txt()
     if not path.is_file():
-        return {
-            "ok": False,
-            "error": "stock_not_found",
-            "path": str(path),
-            "listings": [],
-            "count": 0,
-        }
+        return [], path, "links_txt_not_found"
     listings: list[dict] = []
+    seen_ids: set[str] = set()
     try:
         text = path.read_text(encoding="utf-8", errors="replace")
     except OSError as e:
-        return {"ok": False, "error": "stock_read_failed", "detail": str(e), "listings": [], "count": 0}
+        return [], path, f"links_txt_read_failed: {e}"
+    src = str(path)
     for line in text.splitlines():
-        row = _parse_stock_line(line)
-        if row:
-            listings.append(_public_listing(row))
+        row = _parse_stock_line(line, source=src)
+        if not row:
+            continue
+        lid = (row.get("listing_id") or row.get("slug") or "").strip()
+        if not lid or lid in seen_ids:
+            continue
+        seen_ids.add(lid)
+        pub = _public_listing(row)
+        listings.append(pub)
     listings.sort(key=lambda x: (x.get("event_date") or "", x.get("event_name") or ""))
     if limit > 0:
         listings = listings[:limit]
+    return listings, path, None
+
+
+def shop_listings(limit: int = 500) -> dict:
+    listings, path, err = _load_listings(limit=limit)
+    if err and not listings:
+        return {
+            "ok": False,
+            "error": err.split(":")[0] if err else "links_txt_not_found",
+            "detail": err,
+            "links_txt": str(path),
+            "listings": [],
+            "count": 0,
+            "event_count": 0,
+        }
     _attach_cached_images(listings)
     _db_upsert_listings_async(listings)
     stats = _db_stats()
+    events = _event_summaries(listings)
     return {
         "ok": True,
+        "links_txt": str(path),
         "stock_path": str(path),
         "count": len(listings),
+        "event_count": len(events),
+        "events": events,
         "listings": listings,
         "shop_email": "ezy.dev.bot@gmail.com",
         "email_purchase_enabled": (os.environ.get("SHOP_ALLOW_EMAIL_PURCHASE") or "").strip().lower()
@@ -732,18 +850,18 @@ def _pop_listing_by_id(listing_id: str) -> tuple[dict | None, str | None]:
     lid = (listing_id or "").strip()
     if not lid:
         return None, "listing_id_required"
-    path = _resolve_stock_path()
+    path = _resolve_links_txt()
     if not path.is_file():
-        return None, "stock_not_found"
+        return None, "links_txt_not_found"
     with _STOCK_LOCK:
         try:
             lines = path.read_text(encoding="utf-8", errors="replace").splitlines(keepends=True)
         except OSError as e:
-            return None, f"stock_read_failed: {e}"
+            return None, f"links_txt_read_failed: {e}"
         found_idx: int | None = None
         found_row: dict | None = None
         for idx, line in enumerate(lines):
-            row = _parse_stock_line(line)
+            row = _parse_stock_line(line, source=str(path))
             if not row:
                 continue
             if row["listing_id"] == lid or row["slug"] == lid:
@@ -757,7 +875,7 @@ def _pop_listing_by_id(listing_id: str) -> tuple[dict | None, str | None]:
         try:
             path.write_text("".join(new_lines), encoding="utf-8")
         except OSError as e:
-            return None, f"stock_write_failed: {e}"
+            return None, f"links_txt_write_failed: {e}"
         sold = path.parent / "sold_secure.txt"
         try:
             with sold.open("a", encoding="utf-8") as fh:
@@ -799,9 +917,9 @@ def shop_purchase(listing_id: str, buyer_email: str, buyer_name: str = "") -> tu
     _append_shop_log(entry)
     if not ok:
         # restore line on email failure
-        path = _resolve_stock_path()
+        restore_path = Path(row["source_file"]) if row.get("source_file") else _resolve_links_txt()
         try:
-            with path.open("a", encoding="utf-8") as fh:
+            with restore_path.open("a", encoding="utf-8") as fh:
                 fh.write(row["raw_line"])
         except OSError:
             pass
@@ -833,12 +951,16 @@ def shop_checkout(listing_id: str, buyer_email: str, buyer_name: str = "") -> tu
     if not _valid_email(buyer_email):
         return 400, {"ok": False, "error": "invalid_email"}
     # Reserve: verify listing exists without popping yet
-    path = _resolve_stock_path()
+    path = _resolve_links_txt()
     if not path.is_file():
-        return 503, {"ok": False, "error": "stock_not_found"}
+        return 404, {"ok": False, "error": "links_txt_not_found"}
     row: dict | None = None
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-        parsed = _parse_stock_line(line)
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return 503, {"ok": False, "error": "links_txt_read_failed"}
+    for line in text.splitlines():
+        parsed = _parse_stock_line(line, source=str(path))
         if parsed and (parsed["listing_id"] == listing_id or parsed["slug"] == listing_id):
             row = parsed
             break
