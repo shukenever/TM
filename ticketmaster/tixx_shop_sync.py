@@ -26,10 +26,11 @@ import tm_shop  # noqa: E402
 
 def run_sync(*, image_batch: int = 20) -> dict:
     db.init_db()
-    payload = tm_shop.shop_listings(limit=10000)
-    if not payload.get("ok"):
-        return {"ok": False, "error": payload.get("error"), "detail": payload}
-    listings = payload.get("listings") or []
+    tm_shop.warm_shop_listings_cache()
+    path = tm_shop._resolve_links_txt()
+    listings, stats = tm_shop._load_all_listings(path)
+    if not listings and stats.get("error"):
+        return {"ok": False, "error": stats.get("error"), "detail": stats}
     n = db.upsert_listings_cache(listings)
     images = 0
     try:

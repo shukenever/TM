@@ -1102,7 +1102,7 @@
           <h2>Popular events</h2>
           <a href="#" class="carousel-see" data-see="popular">See all</a>
         </div>
-        <div class="carousel-wrap"><div class="carousel-track" id="carousel-popular"></div></div>
+        <div class="carousel-wrap"><div class="carousel-track" id="carousel-popular"><p class="carousel-empty">Loading inventory…</p></div></div>
       </section>
       <section class="carousel-section" id="sec-concerts">
         <div class="carousel-head">
@@ -1222,12 +1222,34 @@
     </div>
   </div>
 
+  <script src="/public/tixx-public.js"></script>
   <script src="/public/tixx-stock.js"></script>
   <script src="/public/tixx-settings.js"></script>
+  <script>
+  (function () {
+    var base = String(location.origin || '').replace(/\/+$/, '');
+    if (!base) return;
+    window.__tixxShopEventsFetch = fetch(base + '/api/shop/listings?events_only=1&limit=0', { cache: 'no-store' })
+      .then(function (r) {
+        return r.text().then(function (text) {
+          var data = {};
+          try { data = text ? JSON.parse(text) : {}; } catch (eJ) { data = { ok: false, error: 'bad_response' }; }
+          if (!r.ok && !data.error) data.error = 'http_' + r.status;
+          return data;
+        });
+      })
+      .catch(function (e) { return { ok: false, error: String((e && e.message) || e || 'network') }; });
+  })();
+  </script>
   <script>
 (function () {
   var API = String(location.origin).replace(/\/+$/, '');
   var allListings = [];
+  var shopEvents = [];
+  var listingsLoadDone = false;
+  var listingsLoadGen = 0;
+  var listingsLoadStarted = false;
+  var serverSearchQ = '';
   var active = null;
   var state = {
     q: '',
@@ -1341,12 +1363,12 @@
       '<p class="carousel-card-meta">' + esc(ev.event_date_display) + '<br/>' + esc(ev.venue) + '</p>' +
       footer + '</div></button>';
   }
-  function fillCarousel(trackId, events, sectionId) {
+  function fillCarousel(trackId, events, sectionId, headEvents, catalogTotals) {
     var track = document.getElementById(trackId);
     var sec = sectionId ? document.getElementById(sectionId) : null;
     if (!track) return;
     if (!events.length) {
-      track.innerHTML = '<p class="carousel-empty">No listings in this category yet.</p>';
+      track.innerHTML = '<p class="carousel-empty">' + esc((window.TixxPublic && window.TixxPublic.MSG.categoryEmpty) || 'Nothing here yet.') + '</p>';
       if (sec) sec.hidden = false;
       return;
     }
@@ -1359,7 +1381,15 @@
       });
     });
     if (sec) sec.hidden = false;
-    if (window.TixxStock && sectionId) window.TixxStock.updateSectionHead(sectionId, events);
+    if (window.TixxStock && sectionId) {
+      window.TixxStock.updateSectionHead(sectionId, headEvents || events, catalogTotals || null);
+    }
+  }
+  function sectionCatalogTotals(categoryEvents) {
+    return {
+      tickets: window.__shopTotalCount || (window.TixxStock ? window.TixxStock.sumTickets(categoryEvents) : 0),
+      events: categoryEvents.length
+    };
   }
   function focusEvent(ev) {
     state.q = ev.event_name || '';
@@ -1391,30 +1421,42 @@
       return;
     }
     wrap.hidden = false;
-    if (!allListings.length) {
+    var allEv = allDiscoverEvents();
+    if (!allEv.length) {
       fillCarousel('carousel-popular', [], 'sec-popular');
       fillCarousel('carousel-concerts', [], 'sec-concerts');
       fillCarousel('carousel-sports', [], 'sec-sports');
       fillCarousel('carousel-shows', [], 'sec-shows');
-      var nearSec = document.getElementById('sec-near');
-      if (nearSec) nearSec.hidden = true;
+      var nearSec0 = document.getElementById('sec-near');
+      if (nearSec0) nearSec0.hidden = true;
       return;
     }
-    var allEv = groupEvents(allListings);
-    var popular = allEv.slice().sort(function (a, b) {
+    var catalogTickets = window.__shopCatalogCount || window.__shopTotalCount || (window.TixxStock ? window.TixxStock.sumTickets(allEv) : 0);
+    var catalogEvents = window.__shopEventCount || allEv.length;
+    var popularAll = allEv.slice().sort(function (a, b) {
       return (b.count + fameBoost(b.event_name)) - (a.count + fameBoost(a.event_name));
-    }).slice(0, 16);
-    var near = allEv.filter(locationMatch).slice(0, 14);
-    var concerts = allEv.filter(function (e) { return e.category === 'concerts'; }).slice(0, 14);
-    var sports = allEv.filter(function (e) { return e.category === 'sports'; }).slice(0, 14);
-    var shows = allEv.filter(function (e) { return e.category === 'events'; }).slice(0, 14);
-    fillCarousel('carousel-popular', popular, 'sec-popular');
-    fillCarousel('carousel-concerts', concerts, 'sec-concerts');
-    fillCarousel('carousel-sports', sports, 'sec-sports');
-    fillCarousel('carousel-shows', shows, 'sec-shows');
+    });
+    var popular = popularAll.slice(0, 24);
+    var nearAll = allEv.filter(locationMatch);
+    var near = nearAll.slice(0, 20);
+    var concertsAll = allEv.filter(function (e) { return e.category === 'concerts'; });
+    var sportsAll = allEv.filter(function (e) { return e.category === 'sports'; });
+    var showsAll = allEv.filter(function (e) {
+      return e.category === 'events' || e.category === 'parking';
+    });
+    var concerts = concertsAll.slice(0, 20);
+    var sports = sportsAll.slice(0, 20);
+    var shows = showsAll.slice(0, 20);
+    fillCarousel('carousel-popular', popular, 'sec-popular', popularAll, {
+      tickets: catalogTickets,
+      events: catalogEvents
+    });
+    fillCarousel('carousel-concerts', concerts, 'sec-concerts', concertsAll, sectionCatalogTotals(concertsAll));
+    fillCarousel('carousel-sports', sports, 'sec-sports', sportsAll, sectionCatalogTotals(sportsAll));
+    fillCarousel('carousel-shows', shows, 'sec-shows', showsAll, sectionCatalogTotals(showsAll));
     var nearSec = document.getElementById('sec-near');
     if (near.length && (userCity || state.location.trim())) {
-      fillCarousel('carousel-near', near, 'sec-near');
+      fillCarousel('carousel-near', near, 'sec-near', nearAll);
     } else if (nearSec) {
       nearSec.hidden = true;
     }
@@ -1425,7 +1467,82 @@
   }
   function money(n) {
     var x = Number(n);
-    return isFinite(x) ? '$' + x.toFixed(2) : '';
+    if (!isFinite(x) || x <= 0) x = 35;
+    return '$' + x.toFixed(2);
+  }
+  function evMinPrice(ev) {
+    var p = Number(ev.min_price || ev.min_price_usd || 0);
+    return p > 0 ? p : 35;
+  }
+  function apiEventsToCarousel(events) {
+    return (events || []).map(function (e) {
+      return {
+        key: e.event_key,
+        event_name: e.event_name,
+        event_id: e.event_id || '',
+        event_date: e.event_date || '',
+        event_date_display: e.event_date_display || '',
+        event_date_ts: e.event_date_ts || dateTsClient(e.event_date),
+        venue: e.venue || '',
+        category: e.category || 'events',
+        image_url: e.image_url || '',
+        count: e.ticket_count || 0,
+        min_price: evMinPrice(e),
+        min_price_usd: evMinPrice(e)
+      };
+    });
+  }
+  function eventSummaryAsListing(e) {
+    return {
+      category: e.category || 'events',
+      venue: e.venue || '',
+      event_name: e.event_name || '',
+      event_date_ts: e.event_date_ts || dateTsClient(e.event_date),
+      search_blob: [
+        e.event_name, e.venue, e.event_date_display, e.category
+      ].join(' ').toLowerCase()
+    };
+  }
+  function sortEventGroups(groups) {
+    var copy = groups.slice();
+    copy.sort(function (a, b) {
+      if (state.sort === 'price_asc') return a.min_price - b.min_price;
+      if (state.sort === 'price_desc') return b.min_price - a.min_price;
+      if (state.sort === 'name') return String(a.event_name).localeCompare(String(b.event_name));
+      return (a.event_date_ts || 0) - (b.event_date_ts || 0);
+    });
+    return copy;
+  }
+  function buildEventsForDisplay(list) {
+    if (isFiltered() || listingsLoadDone || !shopEvents.length) {
+      return sortEventGroups(groupEvents(list));
+    }
+    var partialByKey = {};
+    groupEvents(list).forEach(function (g) { partialByKey[g.key] = g; });
+    return sortEventGroups(shopEvents.map(function (e) {
+      var key = e.event_key;
+      if (!key) return null;
+      if (partialByKey[key]) return partialByKey[key];
+      return {
+        key: key,
+        event_name: e.event_name,
+        event_id: e.event_id || '',
+        event_date_display: e.event_date_display || formatDateClient(e.event_date),
+        event_date_ts: e.event_date_ts || dateTsClient(e.event_date),
+        venue: (e.venue && String(e.venue).toLowerCase() !== 'unknown') ? e.venue : 'Venue TBA',
+        category: e.category || 'events',
+        image_url: e.image_url || '',
+        listings: [],
+        count: e.ticket_count || 0,
+        min_price: evMinPrice(e),
+        seatsPending: true
+      };
+    }).filter(Boolean));
+  }
+  function allDiscoverEvents() {
+    if (shopEvents.length && !isFiltered()) return apiEventsToCarousel(shopEvents);
+    if (allListings.length) return groupEvents(allListings);
+    return apiEventsToCarousel(shopEvents);
   }
   function initials(name) {
     var p = String(name || 'E').trim().split(/\s+/);
@@ -1496,10 +1613,8 @@
   }
 
   function matchesFilters(l) {
-    var q = state.q.trim().toLowerCase();
     var loc = state.location.trim().toLowerCase();
     if (state.cat !== 'all' && l.category !== state.cat) return false;
-    if (q && (l.search_blob || '').indexOf(q) < 0) return false;
     if (loc) {
       var blob = ((l.venue || '') + ' ' + (l.event_name || '') + ' ' + (l.search_blob || '')).toLowerCase();
       if (blob.indexOf(loc) < 0) {
@@ -1560,7 +1675,12 @@
     var groups = Object.keys(map).map(function (k) { return map[k]; });
     groups.forEach(function (g) {
       g.listings.sort(function (a, b) { return (a.price_usd || 0) - (b.price_usd || 0); });
-      g.min_price = g.listings[0] ? g.listings[0].price_usd : 0;
+      var mp = 0;
+      g.listings.forEach(function (l) {
+        var p = Number(l.price_usd || 0);
+        if (p > 0 && (mp <= 0 || p < mp)) mp = p;
+      });
+      g.min_price = mp > 0 ? mp : 35;
       g.count = g.listings.length;
     });
     groups.sort(function (a, b) {
@@ -1598,22 +1718,27 @@
     if (load) load.hidden = true;
 
     var list = sortListings(filteredListings());
-    var events = groupEvents(list);
+    var events = buildEventsForDisplay(list);
+    var ticketTotal = window.__shopCatalogCount || window.__shopTotalCount || allListings.length || list.length;
+    var ticketShown = listingsLoadDone ? list.length : Math.max(list.length, ticketTotal);
 
     if (meta) {
-      var total = allListings.length;
-      var purch = allListings.filter(function (l) { return l.purchasable !== false; }).length;
-      var extra = (total !== list.length) ? ' (filtered)' : '';
-      meta.innerHTML = '<strong>' + list.length + '</strong> tickets · <strong>' + events.length + '</strong> events' + extra +
-        (window.__shopParseStats ? ' · <span style="color:#64748b">' + total + ' from links.txt</span>' : '');
+      var evN = isFiltered() ? events.length : (shopEvents.length || events.length);
+      var extra = isFiltered() ? ' (filtered)' : '';
+      var loading = !listingsLoadDone && ticketTotal > allListings.length ? ' · loading seats…' : '';
+      meta.innerHTML = '<strong>' + ticketShown + '</strong> tickets · <strong>' + evN + '</strong> events' + extra + loading;
     }
 
-    if (!list.length) {
+    if (!events.length && !list.length) {
       if (empty) {
-        empty.hidden = false;
-        if (!allListings.length && window.__shopLoadError) {
-          empty.innerHTML = esc(window.__shopLoadError) +
-            '<br/><br/>Check that the registry is running and <code>TM_LINKS_FILE</code> points to your links.txt on the VPS.';
+        if (shopEvents.length && !listingsLoadDone && !window.__shopLoadError) {
+          empty.hidden = false;
+          empty.textContent = (window.TixxPublic && window.TixxPublic.MSG.ticketsLoading) || 'Loading tickets…';
+        } else if (!allListings.length && window.__shopLoadError) {
+          empty.hidden = false;
+          empty.textContent = (window.TixxPublic && window.TixxPublic.shopError()) || 'The shop is temporarily unavailable.';
+        } else {
+          empty.hidden = !!shopEvents.length;
         }
       }
       if (eg) eg.hidden = true;
@@ -1651,7 +1776,9 @@
     if (eg) {
       eg.hidden = false;
       eg.innerHTML = events.map(function (ev) {
-        var seats = ev.listings.map(function (l) {
+        var seats = ev.seatsPending && !ev.listings.length
+          ? '<p class="seat-pending" style="padding:.75rem 1rem;color:#64748b;font-size:.9rem">Loading available seats…</p>'
+          : ev.listings.map(function (l) {
           var face = l.face_value_usd ? '<span class="seat-face">' + esc(money(l.face_value_usd)) + '</span>' : '';
           var buyBtn = l.purchasable === false
             ? '<button type="button" class="btn-buy btn-unavail" disabled title="No viewer link yet">Unavailable</button>'
@@ -1689,43 +1816,59 @@
     renderDiscover();
   }
 
+  async function applyEventImages(images) {
+    if (!images) return;
+    Object.keys(images).forEach(function (k) {
+      var url = images[k];
+      if (!url) return;
+      shopEvents.forEach(function (e) {
+        if (e.event_key === k) e.image_url = url;
+      });
+      allListings.forEach(function (l) {
+        if (l.event_key === k) l.image_url = url;
+      });
+    });
+    render();
+  }
+
+  function collectEventsNeedingImages(limit) {
+    var seen = {};
+    var out = [];
+    function add(ev) {
+      var key = ev.key || ev.event_key;
+      if (!key || seen[key] || (ev.image_url || '').trim().startsWith('http')) return;
+      seen[key] = true;
+      out.push({
+        event_key: key,
+        event_name: ev.event_name || '',
+        event_id: ev.event_id || '',
+        category: ev.category || 'events'
+      });
+    }
+    (shopEvents || []).forEach(function (e) { add(e); });
+    groupEvents(allListings).forEach(add);
+    return out.slice(0, limit || 25);
+  }
+
   async function resolveMissingImages() {
     var rounds = 0;
-    while (rounds < 5) {
-      var events = groupEvents(allListings);
-      var missing = events.filter(function (e) { return !(e.image_url || '').trim(); }).slice(0, 16);
+    while (rounds < 12) {
+      var missing = collectEventsNeedingImages(25);
       if (!missing.length) break;
       try {
         var r = await fetch(API + '/api/shop/event-images', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            events: missing.map(function (e) {
-              return {
-                event_key: e.key,
-                event_name: e.event_name,
-                event_id: e.event_id || '',
-                category: e.category || 'events'
-              };
-            })
-          })
+          body: JSON.stringify({ events: missing, limit: 25 })
         });
         var data = await r.json();
-        if (!data.ok || !data.images) break;
-        var keys = Object.keys(data.images);
-        if (!keys.length) break;
-        keys.forEach(function (k) {
-          var url = data.images[k];
-          allListings.forEach(function (l) {
-            if (l.event_key === k) l.image_url = url;
-          });
-        });
-        render();
+        if (!data.ok || !data.images || !Object.keys(data.images).length) break;
+        await applyEventImages(data.images);
       } catch (err) {
         break;
       }
       rounds += 1;
-      await new Promise(function (res) { setTimeout(res, 200); });
+      await new Promise(function (res) { setTimeout(res, 180); });
     }
   }
 
@@ -1811,12 +1954,17 @@
     state.location = document.getElementById('f-location').value;
     state.date = document.getElementById('f-date').value;
     flashFilter();
+    if (searchReloadTimer) clearTimeout(searchReloadTimer);
+    listingsLoadDone = false;
+    listingsLoadStarted = false;
+    ensureListingsBackgroundLoad();
     render();
   });
   document.getElementById('f-q').addEventListener('input', function () {
     state.q = this.value;
     flashFilter();
     scheduleRender();
+    scheduleSearchReload();
   });
   var locChip = document.getElementById('loc-chip');
   if (locChip) {
@@ -1894,6 +2042,7 @@
       document.querySelectorAll('.view-toggle button').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
       state.view = btn.getAttribute('data-view');
+      if (state.view === 'listings') ensureListingsBackgroundLoad();
       flashFilter();
       render();
     });
@@ -1939,7 +2088,7 @@
       setTimeout(closeBuy, 2200);
     } else {
       if (st) {
-        st.textContent = res.data.error || res.data.detail || 'Purchase failed. Try again or email support.';
+        st.textContent = (window.TixxPublic && window.TixxPublic.MSG.purchaseFail) || 'Purchase could not be completed. Please try again or contact support.';
         st.className = 'buy-status err';
       }
       if (confirmBtn) confirmBtn.disabled = false;
@@ -1961,23 +2110,109 @@
     else st.textContent = res.data.error || 'Checkout unavailable';
   });
 
-  async function fetchShopListings() {
-    var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 28000) : null;
+  async function fetchShopListingsPage(offset, limit, q) {
+    var qs = '?limit=' + encodeURIComponent(limit) + '&offset=' + encodeURIComponent(offset);
+    if (q) qs += '&q=' + encodeURIComponent(q);
+    var r = await fetch(API + '/api/shop/listings' + qs, {
+      cache: 'no-store'
+    });
+    var text = await r.text();
+    var data = {};
+    try { data = text ? JSON.parse(text) : {}; } catch (eJ) { throw new Error('bad_response'); }
+    if (!r.ok && !data.error) data.error = 'http_' + r.status;
+    if (!data.ok) throw new Error((window.TixxPublic && window.TixxPublic.fromApi(data)) || 'unavailable');
+    return data;
+  }
+
+  async function loadAllListingsBackground() {
+    var pageSize = 1000;
+    var offset = 0;
+    var total = 0;
+    var seenIds = {};
+    var q = state.q.trim();
+    serverSearchQ = q;
+    var gen = ++listingsLoadGen;
+    listingsLoadDone = false;
+    allListings = [];
     try {
-      var r = await fetch(API + '/api/shop/listings?limit=10000', {
-        cache: 'no-store',
-        signal: ctrl ? ctrl.signal : undefined
-      });
-      var data = {};
-      try { data = await r.json(); } catch (eJ) {
-        throw new Error('bad_response');
+      while (true) {
+        if (gen !== listingsLoadGen) return;
+        var chunk = await fetchShopListingsPage(offset, pageSize, q);
+        if (gen !== listingsLoadGen) return;
+        total = chunk.count || total;
+        window.__shopTotalCount = total;
+        window.__shopCatalogCount = chunk.catalog_count || window.__shopCatalogCount || total;
+        if (chunk.event_count) window.__shopEventCount = chunk.event_count;
+        var rows = (chunk.listings || []).map(normalizeListing).filter(function (l) {
+          if (!l.listing_id || seenIds[l.listing_id]) return false;
+          seenIds[l.listing_id] = true;
+          return true;
+        });
+        if (!rows.length && !chunk.has_more && offset >= total) break;
+        if (rows.length) {
+          allListings = allListings.concat(rows);
+          offset += rows.length;
+          render();
+        } else if (!chunk.has_more) {
+          break;
+        } else {
+          offset += pageSize;
+        }
+        if (offset >= total) break;
+        var more = chunk.has_more === true || (rows.length >= pageSize && offset < total);
+        if (!more && rows.length < pageSize) break;
+        await new Promise(function (res) { setTimeout(res, 0); });
       }
-      if (!r.ok && !data.error) data.error = 'http_' + r.status;
-      return data;
-    } finally {
-      if (timer) clearTimeout(timer);
+      if (gen !== listingsLoadGen) return;
+      listingsLoadDone = true;
+      window.__shopEmailBuy = window.__shopEmailBuy !== false;
+      render();
+      resolveMissingImages();
+    } catch (e) {
+      if (gen !== listingsLoadGen) return;
+      if (!allListings.length && !shopEvents.length) {
+        window.__shopLoadError = String((e && e.message) || e || 'load_failed');
+      }
+      render();
     }
+  }
+
+  function ensureListingsBackgroundLoad() {
+    if (listingsLoadStarted && !listingsLoadDone) return;
+    if (listingsLoadDone) return;
+    listingsLoadStarted = true;
+    loadAllListingsBackground();
+  }
+
+  function scheduleListingsBackgroundLoad() {
+    setTimeout(function () {
+      ensureListingsBackgroundLoad();
+    }, 120);
+  }
+
+  var searchReloadTimer = null;
+  function scheduleSearchReload() {
+    if (searchReloadTimer) clearTimeout(searchReloadTimer);
+    searchReloadTimer = setTimeout(function () {
+      searchReloadTimer = null;
+      listingsLoadDone = false;
+      listingsLoadStarted = false;
+      ensureListingsBackgroundLoad();
+    }, 350);
+  }
+
+  async function fetchShopEventsFast() {
+    if (window.__tixxShopEventsFetch) {
+      var data = await window.__tixxShopEventsFetch;
+      window.__tixxShopEventsFetch = null;
+      return data && typeof data === 'object' ? data : { ok: false, error: 'bad_response' };
+    }
+    var r = await fetch(API + '/api/shop/listings?events_only=1&limit=0', { cache: 'no-store' });
+    var text = await r.text();
+    var data = {};
+    try { data = text ? JSON.parse(text) : {}; } catch (eJ) { data = { ok: false, error: 'bad_response' }; }
+    if (!r.ok && !data.error) data.error = 'http_' + r.status;
+    return data;
   }
 
   (async function init() {
@@ -2007,28 +2242,37 @@
           a.classList.toggle('active', a.getAttribute('data-disc-cat') === state.cat);
         });
       }
-      var data = await fetchShopListings();
+      var data = await fetchShopEventsFast();
       if (!data.ok) {
-        window.__shopLoadError = data.error || data.detail || 'Inventory unavailable';
+        window.__shopLoadError = (window.TixxPublic && window.TixxPublic.fromApi(data)) || 'unavailable';
         throw new Error(window.__shopLoadError);
       }
       window.__shopLoadError = '';
-      allListings = (data.listings || []).map(normalizeListing);
+      shopEvents = data.events || [];
       window.__shopEmailBuy = data.email_purchase_enabled !== false;
       window.__shopStripe = !!data.stripe_enabled;
       window.__shopParseStats = data.parse_stats || null;
-      if (data.parse_stats && data.parse_stats.lines_read) {
+      window.__shopTotalCount = data.count || 0;
+      window.__shopCatalogCount = data.catalog_count || data.count || 0;
+      window.__shopEventCount = data.event_count || shopEvents.length || 0;
+      if (loadEl) loadEl.hidden = true;
+      if (data.parse_stats && data.parse_stats.lines_read && !state.q.trim()) {
         var title = document.getElementById('discover-title');
-        if (title && !state.q.trim()) {
-          title.textContent = data.event_count + ' events · ' + data.count + ' tickets available';
+        if (title) {
+          title.textContent = (window.__shopEventCount || shopEvents.length) + ' events · ' +
+            (window.__shopCatalogCount || data.count || 0) + ' tickets available';
         }
       }
+      renderDiscover();
       render();
       resolveMissingImages();
       loadSavedLocation();
+      if ((window.__shopCatalogCount || data.count || 0) > 0 || shopEvents.length) {
+        scheduleListingsBackgroundLoad();
+      }
     } catch (e) {
-      window.__shopLoadError = String(e.message || e || 'load_failed');
-      if (metaEl) metaEl.textContent = 'Could not load inventory';
+      window.__shopLoadError = (window.TixxPublic && window.TixxPublic.shopError()) || 'unavailable';
+      if (metaEl) metaEl.textContent = 'Shop temporarily unavailable';
       showBanner(window.__shopLoadError, false);
       render();
     } finally {

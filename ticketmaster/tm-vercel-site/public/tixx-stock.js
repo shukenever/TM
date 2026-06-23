@@ -36,22 +36,29 @@
   }
 
   function cardFooterHtml(ev, esc, money) {
-    var count = Number(ev.count) || (ev.listings ? ev.listings.length : 0) || 0;
+    var count = Number(ev.count) || (ev.listings ? ev.listings.length : 0) || Number(ev.ticket_count) || 0;
+    var price = Number(ev.min_price || ev.min_price_usd || 0);
+    if (price <= 0) price = 35;
     return '<p class="tixx-stock-row">' +
       '<span class="tixx-stock-pill">' + esc(formatStock(count)) + '</span>' +
-      '<span class="tixx-stock-price">From ' + esc(money(ev.min_price)) + '</span></p>';
+      '<span class="tixx-stock-price">From ' + esc(money(price)) + '</span></p>';
   }
 
-  function updateSectionHead(sectionId, events) {
+  function updateSectionHead(sectionId, events, catalogTotals) {
     var sec = document.getElementById(sectionId);
-    if (!sec || !events || !events.length) return;
+    if (!sec) return;
     var head = sec.querySelector('.home-section-head, .carousel-head');
     if (!head) return;
     var h2 = head.querySelector('h2');
     if (!h2) return;
     var base = h2.getAttribute('data-title-base') || h2.textContent.replace(/\s*·.*$/, '').trim();
     if (!h2.getAttribute('data-title-base')) h2.setAttribute('data-title-base', base);
-    var meta = sectionMeta(sumTickets(events), events.length);
+    var meta = '';
+    if (catalogTotals && (catalogTotals.tickets || catalogTotals.events)) {
+      meta = sectionMeta(catalogTotals.tickets || 0, catalogTotals.events || 0);
+    } else if (events && events.length) {
+      meta = sectionMeta(sumTickets(events), events.length);
+    }
     h2.textContent = meta ? base + ' · ' + meta : base;
   }
 

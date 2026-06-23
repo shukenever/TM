@@ -38,12 +38,12 @@ module.exports = async (req, res) => {
         allowBody: true,
       });
     }
-    return writeJson(res, 404, { ok: false, error: "not_found", route: key });
+    return writeJson(res, 404, { ok: false, error: "not_found" });
   } catch (e) {
     return writeJson(res, 502, {
       ok: false,
-      error: "upstream_unreachable",
-      detail: (e && e.message) || String(e),
+      error: "unavailable",
+      message: "Events are temporarily unavailable. Please try again shortly.",
     });
   }
 };

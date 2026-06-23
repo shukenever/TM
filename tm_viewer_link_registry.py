@@ -668,36 +668,120 @@ def _resolve_pass_html_file(root_r: Path, gid: str, slug: str) -> tuple[Path | N
 
 _PASS_SLUG_REDIRECT_MTIME: dict[str, float] = {}
 _PASS_SLUG_REDIRECT_MAP: dict[str, dict[str, str]] = {}
+_RESLUG_REDIRECT_MTIME: dict[str, float] = {}
+_RESLUG_REDIRECT_MAP: dict[str, dict[str, str]] = {}
 
 
-def _pass_slug_redirects_for_root(root_r: Path) -> dict[str, str]:
-    p = root_r / "tm_viewer_pass_slug_aliases.json"
+def _import_reslug_map_module():
+    try:
+        from ticketmaster import tm_reslug_map as rsm  # type: ignore
+
+        return rsm
+    except ImportError:
+        pass
+    try:
+        import tm_reslug_map as rsm  # type: ignore
+
+        return rsm
+    except ImportError:
+        return None
+
+
+def _reslug_map_search_dirs(root_r: Path) -> list[Path]:
+    out: list[Path] = []
+    seen: set[str] = set()
+
+    def _add(p: Path) -> None:
+        try:
+            key = str(p.resolve())
+        except OSError:
+            key = str(p)
+        if key not in seen:
+            seen.add(key)
+            out.append(p)
+
+    _add(root_r)
+    _add(root_r.parent)
+    reg = _registry_path()
+    if reg:
+        _add(reg.parent)
+    links = (os.environ.get("TM_VIEWER_LINKS_TXT") or os.environ.get("TM_LINKS_FILE") or "").strip()
+    if links:
+        try:
+            _add(Path(links.split(";")[0].split(",")[0].strip()).expanduser().resolve().parent)
+        except OSError:
+            pass
+    return out
+
+
+def _reslug_redirects_for_root(root_r: Path) -> dict[str, str]:
+    rsm = _import_reslug_map_module()
+    if not rsm:
+        return {}
     try:
         key = str(root_r.resolve())
     except OSError:
         return {}
-    try:
-        st = p.stat().st_mtime
-    except OSError:
-        _PASS_SLUG_REDIRECT_MAP.pop(key, None)
-        _PASS_SLUG_REDIRECT_MTIME.pop(key, None)
+    map_path = rsm.find_latest_reslug_map(*_reslug_map_search_dirs(root_r))
+    if not map_path:
+        _RESLUG_REDIRECT_MAP.pop(key, None)
+        _RESLUG_REDIRECT_MTIME.pop(key, None)
         return {}
-    if _PASS_SLUG_REDIRECT_MTIME.get(key) == st:
-        return _PASS_SLUG_REDIRECT_MAP.get(key, {})
-    out: dict[str, str] = {}
     try:
-        raw = json.loads(p.read_text(encoding="utf-8", errors="replace"))
-        if isinstance(raw, dict):
-            r = raw.get("redirects")
-            if isinstance(r, dict):
-                for a, b in r.items():
-                    if a and b:
-                        out[str(a).strip()] = str(b).strip().replace("\\", "/")
-    except (OSError, json.JSONDecodeError, TypeError):
-        pass
-    _PASS_SLUG_REDIRECT_MAP[key] = out
-    _PASS_SLUG_REDIRECT_MTIME[key] = st
+        st = map_path.stat().st_mtime
+    except OSError:
+        return {}
+    cache_key = f"{key}|{map_path}"
+    if _RESLUG_REDIRECT_MTIME.get(cache_key) == st:
+        return _RESLUG_REDIRECT_MAP.get(cache_key, {})
+    out = rsm.load_reslug_redirects(*_reslug_map_search_dirs(root_r))
+    _RESLUG_REDIRECT_MAP[cache_key] = out
+    _RESLUG_REDIRECT_MTIME[cache_key] = st
     return out
+
+
+def _pass_slug_redirects_for_root(root_r: Path) -> dict[str, str]:
+    try:
+        key = str(root_r.resolve())
+    except OSError:
+        return {}
+
+    rsm = _import_reslug_map_module()
+    map_path = rsm.find_latest_reslug_map(*_reslug_map_search_dirs(root_r)) if rsm else None
+    reslug_st = 0.0
+    if map_path:
+        try:
+            reslug_st = map_path.stat().st_mtime
+        except OSError:
+            map_path = None
+
+    alias_path = root_r / "tm_viewer_pass_slug_aliases.json"
+    alias_st = 0.0
+    try:
+        alias_st = alias_path.stat().st_mtime
+    except OSError:
+        pass
+
+    cache_tag = (alias_st, str(map_path or ""), reslug_st)
+    if _PASS_SLUG_REDIRECT_MTIME.get(key) == cache_tag:
+        return _PASS_SLUG_REDIRECT_MAP.get(key, {})
+
+    merged = dict(_reslug_redirects_for_root(root_r))
+    if alias_path.is_file():
+        try:
+            raw = json.loads(alias_path.read_text(encoding="utf-8", errors="replace"))
+            if isinstance(raw, dict):
+                r = raw.get("redirects")
+                if isinstance(r, dict):
+                    for a, b in r.items():
+                        if a and b:
+                            merged[str(a).strip()] = str(b).strip().replace("\\", "/")
+        except (OSError, json.JSONDecodeError, TypeError):
+            pass
+
+    _PASS_SLUG_REDIRECT_MAP[key] = merged
+    _PASS_SLUG_REDIRECT_MTIME[key] = cache_tag
+    return merged
 
 
 def _resolve_pass_html_via_slug_redirect(root_r: Path, slug: str) -> tuple[Path | None, str]:
@@ -4071,11 +4155,21 @@ class _TmViewerApiHandler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         qs = urllib.parse.parse_qs(parsed.query)
         try:
-            limit = int((qs.get("limit") or ["10000"])[0])
+            limit = int((qs.get("limit") or ["2000"])[0])
         except (TypeError, ValueError):
-            limit = 10000
-        limit = max(0, min(limit, 25000))
-        self._write_json(200, mod.shop_listings(limit=limit))
+            limit = 2000
+        try:
+            offset = int((qs.get("offset") or ["0"])[0])
+        except (TypeError, ValueError):
+            offset = 0
+        if limit > 0:
+            limit = max(1, min(limit, 2000))
+        else:
+            limit = 2000
+        offset = max(0, offset)
+        events_only = (qs.get("events_only") or [""])[0].strip().lower() in ("1", "true", "yes")
+        q = (qs.get("q") or [""])[0].strip()
+        self._write_json(200, mod.shop_listings(limit=limit, offset=offset, events_only=events_only, q=q))
 
     def _handle_shop_event_images(self) -> None:
         mod = _import_tm_shop_module()
@@ -5104,6 +5198,23 @@ class _TmViewerApiHandler(BaseHTTPRequestHandler):
                         f"served {rel_only.as_posix()}"
                     )
         if resolved is None:
+            shop_mod = _import_tm_shop_module()
+            if shop_mod is not None and hasattr(shop_mod, "fetch_pass_html_upstream"):
+                try:
+                    proxied = shop_mod.fetch_pass_html_upstream(gid, slug)
+                except Exception:
+                    proxied = None
+                if proxied:
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html; charset=utf-8")
+                    self.send_header("Content-Length", str(len(proxied)))
+                    self.send_header("Cache-Control", "no-store")
+                    for k, v in _cors_headers().items():
+                        self.send_header(k, v)
+                    self.end_headers()
+                    self.wfile.write(proxied)
+                    _signin_log(f"[ticketmaster-pass] upstream proxy served /tickets/{gid}/{slug}")
+                    return True
             sample = ""
             tdir = root_r / "tickets" / gid
             pass_count = ""
@@ -5676,6 +5787,21 @@ class _TmViewerApiHandler(BaseHTTPRequestHandler):
         if req_path.rstrip("/") == "/tm_viewer_pass_slug_aliases.json":
             root = _passes_static_root()
             if root:
+                merged = _pass_slug_redirects_for_root(root)
+                if merged:
+                    try:
+                        payload = json.dumps({"redirects": merged}, ensure_ascii=False).encode("utf-8")
+                        self.send_response(200)
+                        self.send_header("Content-Type", "application/json; charset=utf-8")
+                        self.send_header("Content-Length", str(len(payload)))
+                        self.send_header("Cache-Control", "no-store")
+                        for k, v in _cors_headers().items():
+                            self.send_header(k, v)
+                        self.end_headers()
+                        self.wfile.write(payload)
+                        return
+                    except OSError:
+                        pass
                 ap = root / "tm_viewer_pass_slug_aliases.json"
                 if ap.is_file():
                     try:
@@ -5919,6 +6045,12 @@ def start_tm_viewer_api_background(host: str = "0.0.0.0", port: int = 3919) -> b
     _api_server = srv
     _api_thread = th
     _start_shop_sync_loop()
+    try:
+        mod = _import_tm_shop_module()
+        if mod is not None and hasattr(mod, "warm_shop_listings_cache"):
+            mod.warm_shop_listings_cache()
+    except Exception:
+        pass
     # Windows: 0.0.0.0:port can bind while 127.0.0.1:port is already taken — loopback then hits the other process.
     hnorm = (host or "").strip()
     if hnorm in ("0.0.0.0", "::"):
@@ -5984,6 +6116,12 @@ def run_tm_viewer_api_forever(host: str = "0.0.0.0", port: int = 3919) -> None:
             "that contains tickets/0/*.html (or keep registry + sufg output in the same folder as this script)."
         )
     _log_viewer_outbound_email_from_banner()
+    try:
+        mod = _import_tm_shop_module()
+        if mod is not None and hasattr(mod, "warm_shop_listings_cache"):
+            mod.warm_shop_listings_cache()
+    except Exception:
+        pass
     srv.serve_forever()
 
 
