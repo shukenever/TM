@@ -622,6 +622,21 @@ def _passes_static_root() -> Path | None:
     return r if r.is_dir() else None
 
 
+def _pass_html_path_is_live(path: Path) -> bool:
+    if not path.is_file():
+        return False
+    try:
+        head = path.read_bytes()[:8192]
+    except OSError:
+        return False
+    low = head.lower()
+    return (
+        b"link invalidated" not in low
+        and b"have been invalidated" not in low
+        and b"cancelled our parternship" not in low
+    )
+
+
 def _resolve_pass_html_file(root_r: Path, gid: str, slug: str) -> tuple[Path | None, str]:
     """Resolve tickets/<gid>/<slug>.html under root_r; tolerate legacy SMP / wrong gid.
 
@@ -637,7 +652,7 @@ def _resolve_pass_html_file(root_r: Path, gid: str, slug: str) -> tuple[Path | N
             pr.relative_to(root_r)
         except (OSError, ValueError):
             return None
-        return pr if pr.is_file() else None
+        return pr if pr.is_file() and _pass_html_path_is_live(pr) else None
 
     primary = root_r / "tickets" / gid / f"{slug}.html"
     hit = _under_root(primary)
@@ -796,7 +811,7 @@ def _resolve_pass_html_via_slug_redirect(root_r: Path, slug: str) -> tuple[Path 
         cand.relative_to(root_r.resolve())
     except (OSError, ValueError):
         return None, ""
-    if cand.is_file():
+    if cand.is_file() and _pass_html_path_is_live(cand):
         return cand, f"slug_redirect {slug!r} → {rel}"
     return None, ""
 

@@ -397,42 +397,172 @@ def _reslug_gid_slug(gid: str, slug: str) -> tuple[str, str]:
     return m.group(1), rsm.normalize_slug(m.group(2))
 
 
+_INVALIDATED_HTML_MARKERS = (
+    b"link invalidated",
+    b"this link is no longer valid",
+    b"cancelled our parternship",
+    b"have been invalidated",
+)
+
+_PASS_PROXY_CACHE: dict[str, tuple[float, bytes | None]] = {}
+_PASS_PROXY_CACHE_MAX = 512
+_PASS_PROXY_CACHE_TTL = 300.0
+
+
+def _is_invalidated_pass_html_bytes(data: bytes) -> bool:
+    if not data:
+        return True
+    low = data[:8192].lower()
+    return any(m in low for m in _INVALIDATED_HTML_MARKERS)
+
+
+def _local_pass_candidate_paths(root: Path, gid: str, slug: str) -> list[Path]:
+    g = str(gid or "").strip()
+    s = str(slug or "").strip()
+    if not s:
+        return []
+    out: list[Path] = []
+    seen: set[str] = set()
+
+    def _add(p: Path) -> None:
+        try:
+            key = str(p.resolve())
+        except OSError:
+            key = str(p)
+        if key not in seen:
+            seen.add(key)
+            out.append(p)
+
+    alias = _pass_slug_alias_target(root, s)
+    if alias is not None:
+        _add(alias)
+    gid_r, slug_r = _reslug_gid_slug(g, s)
+    for gg, ss in dict.fromkeys(((g, s), (gid_r, slug_r))):
+        if gg:
+            _add(root / "tickets" / gg / f"{ss}.html")
+        if gg == "1":
+            _add(root / "tickets" / "0" / f"{ss}.html")
+    try:
+        troot = root / "tickets"
+        if troot.is_dir():
+            for p in troot.glob(f"*/{s}.html"):
+                if p.is_file():
+                    _add(p)
+            if slug_r != s:
+                for p in troot.glob(f"*/{slug_r}.html"):
+                    if p.is_file():
+                        _add(p)
+    except OSError:
+        pass
+    return out
+
+
+def _read_local_pass_bytes(gid: str, slug: str) -> bytes | None:
+    root = _passes_static_root()
+    if not root:
+        return None
+    for cand in _local_pass_candidate_paths(root, gid, slug):
+        if not cand.is_file():
+            continue
+        try:
+            data = cand.read_bytes()
+        except OSError:
+            continue
+        if data and not _is_invalidated_pass_html_bytes(data):
+            return data
+    return None
+
+
+def _pass_proxy_cache_get(key: str) -> bytes | None | object:
+    row = _PASS_PROXY_CACHE.get(key)
+    if not row:
+        return _PASS_PROXY_CACHE_MISS
+    if time.time() - row[0] > _PASS_PROXY_CACHE_TTL:
+        _PASS_PROXY_CACHE.pop(key, None)
+        return _PASS_PROXY_CACHE_MISS
+    return row[1]
+
+
+_PASS_PROXY_CACHE_MISS = object()
+
+
+def _pass_proxy_cache_put(key: str, data: bytes | None) -> None:
+    if len(_PASS_PROXY_CACHE) >= _PASS_PROXY_CACHE_MAX:
+        oldest = min(_PASS_PROXY_CACHE.items(), key=lambda kv: kv[1][0])[0]
+        _PASS_PROXY_CACHE.pop(oldest, None)
+    _PASS_PROXY_CACHE[key] = (time.time(), data)
+
+
+def _pass_proxy_urls(gid: str, slug: str) -> list[str]:
+    """Minimal upstream URLs — reslug target first, then links.txt; avoid gid/origin fanout."""
+    gid = str(gid or "").strip()
+    slug = (slug or "").strip()
+    gid_r, slug_r = _reslug_gid_slug(gid, slug)
+    urls: list[str] = []
+    seen: set[str] = set()
+
+    def _add(url: str) -> None:
+        u = (url or "").strip().rstrip("/")
+        if not u or u in seen:
+            return
+        seen.add(u)
+        urls.append(u)
+
+    for try_slug in dict.fromkeys((slug_r, slug)):
+        from_links = _find_links_txt_viewer_url(try_slug)
+        if from_links:
+            remapped = from_links
+            rsm = _import_reslug_map()
+            if rsm:
+                remapped = rsm.rewrite_viewer_link(from_links, _reslug_redirects())
+            _add(remapped)
+
+    bases = _pass_proxy_origins()
+    for base in bases:
+        for try_gid, try_slug in dict.fromkeys(((gid_r, slug_r), (gid, slug))):
+            if try_gid and try_slug:
+                _add(f"{base}/tickets/{try_gid}/{try_slug}")
+    return urls
+
+
 def fetch_pass_html_upstream(gid: str, slug: str) -> bytes | None:
-    """Fetch pass HTML from links.txt URL or configured proxy origins when local file missing."""
+    """Fetch pass HTML locally or from links.txt / proxy origins when local file missing."""
     slug = (slug or "").strip()
     gid = str(gid or "").strip()
     if not slug:
         return None
-    gid_r, slug_r = _reslug_gid_slug(gid, slug)
-    urls: list[str] = []
-    for try_slug in dict.fromkeys((slug_r, slug)):
-        from_links = _find_links_txt_viewer_url(try_slug)
-        if from_links:
-            urls.append(from_links)
-    for base in _pass_proxy_origins():
-        for try_gid, try_slug in dict.fromkeys(((gid_r, slug_r), (gid, slug))):
-            for g in (try_gid, "0", "1"):
-                if g:
-                    urls.append(f"{base}/tickets/{g}/{try_slug}")
-                    urls.append(f"{base}/tickets/{g}/{try_slug}.html")
-    seen: set[str] = set()
+
+    cache_key = f"{gid}:{slug}"
+    cached = _pass_proxy_cache_get(cache_key)
+    if cached is not _PASS_PROXY_CACHE_MISS:
+        return cached  # type: ignore[return-value]
+
+    local = _read_local_pass_bytes(gid, slug)
+    if local:
+        _pass_proxy_cache_put(cache_key, local)
+        return local
+
     import urllib.request
 
-    for url in urls:
-        if url in seen:
-            continue
-        seen.add(url)
+    for url in _pass_proxy_urls(gid, slug):
         try:
             req = urllib.request.Request(url, headers={"Accept": "text/html", "User-Agent": "TixxPassProxy/1"})
-            with urllib.request.urlopen(req, timeout=12) as resp:
+            with urllib.request.urlopen(req, timeout=8) as resp:
                 if int(getattr(resp, "status", 200) or 200) != 200:
                     continue
                 data = resp.read()
-                if data and b"<html" in data[:4096].lower():
-                    _shop_debug_log(f"pass proxy hit {url} ({len(data)} bytes)")
-                    return data
+                if not data or b"<html" not in data[:4096].lower():
+                    continue
+                if _is_invalidated_pass_html_bytes(data):
+                    _shop_debug_log(f"pass proxy skip invalidated {url} ({len(data)} bytes)")
+                    continue
+                _shop_debug_log(f"pass proxy hit {url} ({len(data)} bytes)")
+                _pass_proxy_cache_put(cache_key, data)
+                return data
         except Exception:
             continue
+
+    _pass_proxy_cache_put(cache_key, None)
     return None
 
 

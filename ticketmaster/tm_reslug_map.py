@@ -156,4 +156,12 @@ def redirect_target_path(root: Path, slug: str, redirects: dict[str, str]) -> Pa
         cand.relative_to(root.resolve())
     except (OSError, ValueError):
         return None
-    return cand if cand.is_file() else None
+    if not cand.is_file():
+        return None
+    try:
+        head = cand.read_bytes()[:8192].lower()
+        if b"link invalidated" in head or b"have been invalidated" in head:
+            return None
+    except OSError:
+        return None
+    return cand
