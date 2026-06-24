@@ -4192,6 +4192,27 @@ class _TmViewerApiHandler(BaseHTTPRequestHandler):
             ),
         )
 
+    def _handle_shop_home(self) -> None:
+        mod = _import_tm_shop_module()
+        if mod is None:
+            self._write_json(503, {"ok": False, "error": "shop_module_missing"})
+            return
+        parsed = urllib.parse.urlparse(self.path)
+        qs = urllib.parse.parse_qs(parsed.query)
+        refresh = (qs.get("refresh") or [""])[0].strip().lower() in ("1", "true", "yes")
+        if refresh:
+            secret = (os.environ.get("SHOP_SYNC_SECRET") or os.environ.get("SHOP_PURCHASE_SECRET") or "").strip()
+            if secret:
+                got = (self.headers.get("X-Shop-Secret") or self.headers.get("x-shop-secret") or "").strip()
+                qsec = (qs.get("secret") or [""])[0].strip()
+                if got != secret and qsec != secret:
+                    self._write_json(403, {"ok": False, "error": "forbidden"})
+                    return
+        if not hasattr(mod, "shop_home"):
+            self._write_json(503, {"ok": False, "error": "home_unavailable"})
+            return
+        self._write_json(200, mod.shop_home(refresh=refresh))
+
     def _handle_shop_event_images(self) -> None:
         mod = _import_tm_shop_module()
         if mod is None:
@@ -5870,6 +5891,9 @@ class _TmViewerApiHandler(BaseHTTPRequestHandler):
             return
         if req_path.rstrip("/") == "/api/shop/listings":
             self._handle_shop_listings()
+            return
+        if req_path.rstrip("/") == "/api/shop/home":
+            self._handle_shop_home()
             return
         if req_path.rstrip("/") == "/api/shop/orders":
             self._handle_shop_orders()

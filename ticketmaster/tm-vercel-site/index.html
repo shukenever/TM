@@ -2145,6 +2145,19 @@
       color: var(--muted);
       padding: 0.25rem 0 0.75rem;
     }
+    .home-grid-section { margin: 1.65rem 0; }
+    .home-event-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+    @media (min-width: 640px) {
+      .home-event-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    .home-event-grid .home-event-card {
+      flex: none;
+      width: auto;
+    }
     .home-shop-banner {
       margin: 2rem 0 0.5rem;
       padding: 1.35rem 1.25rem;
@@ -2896,7 +2909,7 @@
   <header class="topbar topbar--tm topbar--simple" role="banner"><div class="tm-simple-bar"><a class="tm-brand-lockup tm-brand-lockup--simple tixx-brand" href="/" aria-label="Tixx home"><img class="tixx-logo tixx-logo--on-dark" src="/public/tixx-logo-header-sm.png" srcset="/public/tixx-logo-header-sm.png 1x, /public/tixx-logo-header.png 2x" alt="tixx.pw" width="100" height="32" style="height:32px;width:auto;display:block"/></a><nav class="tm-nav-links tm-home-nav" aria-label="Primary"><a href="/shop.html">Shop</a><a href="/my-tickets">My tickets</a><button type="button" class="tixx-settings-btn-nav" data-tixx-settings title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></nav><div id="tm-topbar-guest" class="tm-topbar-account-slot"><button type="button" class="tm-topbar-login-btn" id="tm-topbar-login">Log in</button></div><div id="tm-topbar-signed" class="tm-topbar-account-slot" hidden><div class="tm-account-wrap"><button type="button" class="tm-topbar-account-trigger" id="tm-topbar-account-btn" aria-expanded="false" aria-haspopup="true"><svg class="tm-account-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/></svg><span id="tm-topbar-account-label" class="tm-topbar-account-label">Account</span></button><div id="tm-account-menu" class="tm-account-menu" hidden role="menu"><div class="tm-account-menu-header"><p class="tm-account-menu-email" id="tm-account-menu-email"></p></div><div class="tm-account-menu-body"><a href="/my-tickets" class="tm-account-menu-item" id="tm-menu-my-tickets" role="menuitem">My tickets</a><button type="button" class="tm-account-menu-item" data-tixx-settings role="menuitem">Settings</button><p class="tm-account-menu-hint">Account, orders, addresses &amp; preferences.</p></div><div class="tm-account-menu-sep" aria-hidden="true"></div><button type="button" class="tm-account-menu-item tm-account-menu-signout" id="tm-menu-sign-out" role="menuitem">Sign out</button></div></div></div></div></header>
 
   <main>
-    <div class="tm-home-wrap tm-home-retail"><section class="tm-retail-hero" aria-label="Spotlight"><img class="tm-retail-hero-img" src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&amp;fit=crop&amp;w=2000&amp;q=80" alt="" loading="eager" decoding="async"/><div class="tm-retail-hero-overlay"><p class="tm-retail-kicker">Spotlight</p><h1>Live music, sports, and shows — one marketplace</h1><p class="tm-retail-sub">Verified TM passes · Instant email delivery · Up to 50% off face value. Browse concerts, sports, and shows near you.</p><a class="tm-retail-cta" href="#home-discover">Browse events</a></div></section><div class="tm-search-strip-wrap"><form class="tm-search-strip" id="tm-home-search-form" action="/shop.html" method="get" role="search"><div class="tm-search-seg"><svg class="tm-sico" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="currentColor" stroke-width="2"/><path d="M12 21s7-4.35 7-10a7 7 0 1 0-14 0c0 5.65 7 10 7 10Z" stroke="currentColor" stroke-width="2"/></svg><label class="tm-slab" for="home-loc">Location</label><input id="home-loc" name="location" type="search" placeholder="City or Zip Code" autocomplete="off"/></div><div class="tm-search-seg"><svg class="tm-sico" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><label class="tm-slab" for="home-date">Date</label><select id="home-date" name="date" aria-label="Date filter"><option value="all">All dates</option><option value="week">Next 7 days</option><option value="month">Next 30 days</option><option value="future">Upcoming only</option></select></div><div class="tm-search-seg tm-search-seg--grow"><svg class="tm-sico" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><label class="tm-slab" for="home-q">Search</label><input id="home-q" name="q" type="search" placeholder="Artist, event, or venue" autocomplete="off"/></div><button type="submit" class="tm-search-go" aria-label="Search tickets"><svg class="tm-search-go-ico" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="tm-sr-only">Search</span></button></form></div><div class="home-content"><div class="home-trust" aria-label="Why Tixx"><span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>Verified TM passes</span><span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4h16v16H4z" stroke="currentColor" stroke-width="2"/><path d="m4 8 8 5 8-5" stroke="currentColor" stroke-width="2"/></svg>Instant email delivery</span><span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Up to 50% off face value</span></div><section class="home-categories" aria-label="Browse by category"><div class="home-section-head"><h2>Browse by category</h2><a class="home-section-link" href="/shop.html">See all events</a></div><div class="home-cat-grid"><a class="home-cat-tile" href="/shop.html"><img src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="" loading="lazy" decoding="async"/><strong>All events</strong><span>Popular &amp; near you</span></a><a class="home-cat-tile" href="/shop.html?cat=concerts"><img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="" loading="lazy" decoding="async"/><strong>Concerts</strong><span>Live music &amp; tours</span></a><a class="home-cat-tile" href="/shop.html?cat=sports"><img src="https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="" loading="lazy" decoding="async"/><strong>Sports</strong><span>Games &amp; matches</span></a><a class="home-cat-tile" href="/shop.html?cat=events"><img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="" loading="lazy" decoding="async"/><strong>Shows</strong><span>Theater &amp; comedy</span></a></div></section><div id="home-discover" class="home-discover"><p id="home-load" class="home-load">Loading events…</p><section class="home-carousel-section" id="home-sec-popular" hidden><div class="home-section-head"><h2>Popular events</h2><a class="home-section-link" href="/shop.html">See all</a></div><div class="home-carousel-track" id="home-carousel-popular"></div></section><section class="home-carousel-section" id="home-sec-concerts" hidden><div class="home-section-head"><h2>Concerts</h2><a class="home-section-link" href="/shop.html?cat=concerts">See all</a></div><div class="home-carousel-track" id="home-carousel-concerts"></div></section><section class="home-carousel-section" id="home-sec-sports" hidden><div class="home-section-head"><h2>Sports</h2><a class="home-section-link" href="/shop.html?cat=sports">See all</a></div><div class="home-carousel-track" id="home-carousel-sports"></div></section><section class="home-carousel-section" id="home-sec-shows" hidden><div class="home-section-head"><h2>Shows &amp; theater</h2><a class="home-section-link" href="/shop.html?cat=events">See all</a></div><div class="home-carousel-track" id="home-carousel-shows"></div></section><div class="home-shop-banner" id="home-shop-banner"><div><h3 id="home-shop-banner-title">Thousands of verified listings</h3><p>Search by artist, venue, or city — filter by date and category on the shop.</p></div><a href="/shop.html">Open full shop</a></div></div><div id="home-guest-strip" class="home-guest-strip">Already bought on Tixx? <a href="/login" id="home-guest-signin">Sign in</a> to view your tickets.</div></div><section id="tm-ticket-list" class="tm-ticket-list-section tm-login-gate-section" hidden aria-label="Your tickets"><h2 class="tm-section-heading">Your tickets</h2><div id="tm-home-login-teaser" hidden><p class="tm-login-gate-lead">Your passes appear here after you authenticate with the email on your order.</p><p class="tm-email-hint tm-login-gate-hint">Open the secure sign-in page to receive a one-time code, then return to this home screen.</p><p class="tm-login-gate-actions"><a class="tm-login-gate-cta" id="tm-login-redirect" href="/login">Sign in</a></p></div><div id="tm-viewer-ticket-grid" class="tm-ticket-grid" hidden></div><div id="tm-viewer-empty-tickets" class="tm-viewer-empty-tickets" hidden><p>You&rsquo;re signed in. There are no passes linked to this email yet. If you just ordered, they may appear after delivery updates.</p></div><div id="tm-transfer-modal" class="tm-transfer-modal" hidden aria-hidden="true"><div class="tm-transfer-modal__backdrop" id="tm-transfer-backdrop"></div><div class="tm-transfer-modal__panel" role="dialog" aria-labelledby="tm-transfer-title"><h3 id="tm-transfer-title">Transfer to buyer</h3><p class="tm-muted">Sends a transfer email with the accept link. Add an optional personal note below to include the &ldquo;Message from&hellip;&rdquo; block.</p><div class="tm-transfer-field"><label for="tm-transfer-buyer-email">Buyer email</label><input type="email" id="tm-transfer-buyer-email" autocomplete="email" placeholder="buyer@email.com" /></div><div class="tm-transfer-field"><label for="tm-transfer-buyer-name">Buyer first name <span style="font-weight:400">(optional)</span></label><input type="text" id="tm-transfer-buyer-name" autocomplete="given-name" placeholder="First name" /></div><div class="tm-transfer-field"><label for="tm-transfer-personal-from">Message from <span style="font-weight:400">(optional, default Chris)</span></label><input type="text" id="tm-transfer-personal-from" maxlength="120" placeholder="Chris" autocomplete="off" /></div><div class="tm-transfer-field"><label for="tm-transfer-personal-msg">Personal message <span style="font-weight:400">(optional)</span></label><textarea id="tm-transfer-personal-msg" rows="3" maxlength="4000" placeholder="e.g. For @alex — enjoy the show!"></textarea></div><p id="tm-transfer-status" role="status"></p><div class="tm-transfer-modal__actions"><button type="button" id="tm-transfer-cancel">Cancel</button><button type="button" id="tm-transfer-send">Send transfer</button></div></div></div></section><script src="tm_viewer_api_base.js"></script>
+    <div class="tm-home-wrap tm-home-retail"><section class="tm-retail-hero" aria-label="Spotlight"><img class="tm-retail-hero-img" src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&amp;fit=crop&amp;w=2000&amp;q=80" alt="" loading="eager" decoding="async"/><div class="tm-retail-hero-overlay"><p class="tm-retail-kicker">Spotlight</p><h1>Live music, sports, and shows — one marketplace</h1><p class="tm-retail-sub">Verified TM passes · Instant email delivery · Up to 50% off face value. Browse concerts, sports, and shows near you.</p><a class="tm-retail-cta" href="#home-discover">Browse events</a></div></section><div class="tm-search-strip-wrap"><form class="tm-search-strip" id="tm-home-search-form" action="/shop.html" method="get" role="search"><div class="tm-search-seg"><svg class="tm-sico" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="currentColor" stroke-width="2"/><path d="M12 21s7-4.35 7-10a7 7 0 1 0-14 0c0 5.65 7 10 7 10Z" stroke="currentColor" stroke-width="2"/></svg><label class="tm-slab" for="home-loc">Location</label><input id="home-loc" name="location" type="search" placeholder="City or Zip Code" autocomplete="off"/></div><div class="tm-search-seg"><svg class="tm-sico" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><label class="tm-slab" for="home-date">Date</label><select id="home-date" name="date" aria-label="Date filter"><option value="all">All dates</option><option value="week">Next 7 days</option><option value="month">Next 30 days</option><option value="future">Upcoming only</option></select></div><div class="tm-search-seg tm-search-seg--grow"><svg class="tm-sico" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><label class="tm-slab" for="home-q">Search</label><input id="home-q" name="q" type="search" placeholder="Artist, event, or venue" autocomplete="off"/></div><button type="submit" class="tm-search-go" aria-label="Search tickets"><svg class="tm-search-go-ico" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="tm-sr-only">Search</span></button></form></div><div class="home-content"><div class="home-trust" aria-label="Why Tixx"><span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/></svg>Verified TM passes</span><span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4h16v16H4z" stroke="currentColor" stroke-width="2"/><path d="m4 8 8 5 8-5" stroke="currentColor" stroke-width="2"/></svg>Instant email delivery</span><span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Up to 50% off face value</span></div><section class="home-categories" aria-label="Browse by category"><div class="home-section-head"><h2>Browse by category</h2><a class="home-section-link" href="/shop.html">See all events</a></div><div class="home-cat-grid"><a class="home-cat-tile" href="/shop.html"><img src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="" loading="lazy" decoding="async"/><strong>All events</strong><span>Popular &amp; near you</span></a><a class="home-cat-tile" href="/shop.html?cat=concerts"><img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="" loading="lazy" decoding="async"/><strong>Concerts</strong><span>Live music &amp; tours</span></a><a class="home-cat-tile" href="/shop.html?cat=sports"><img src="https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="" loading="lazy" decoding="async"/><strong>Sports</strong><span>Games &amp; matches</span></a><a class="home-cat-tile" href="/shop.html?cat=events"><img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="" loading="lazy" decoding="async"/><strong>Shows</strong><span>Theater &amp; comedy</span></a></div></section><div id="home-discover" class="home-discover"><p id="home-load" class="home-load">Loading events…</p><section class="home-carousel-section" id="home-sec-popular" hidden><div class="home-section-head"><h2>Popular events</h2><a class="home-section-link" href="/shop.html">See all</a></div><div class="home-carousel-track" id="home-carousel-popular"></div></section><section class="home-carousel-section" id="home-sec-concerts" hidden><div class="home-section-head"><h2>Concerts</h2><a class="home-section-link" href="/shop.html?cat=concerts">See all</a></div><div class="home-carousel-track" id="home-carousel-concerts"></div></section><section class="home-carousel-section" id="home-sec-sports" hidden><div class="home-section-head"><h2>Sports</h2><a class="home-section-link" href="/shop.html?cat=sports">See all</a></div><div class="home-carousel-track" id="home-carousel-sports"></div></section><section class="home-carousel-section home-grid-section" id="home-sec-shows" hidden><div class="home-section-head"><h2>Shows &amp; theater</h2><a class="home-section-link" href="/shop.html?cat=events">See all</a></div><div class="home-event-grid" id="home-grid-shows"></div></section><div class="home-shop-banner" id="home-shop-banner"><div><h3 id="home-shop-banner-title">Thousands of verified listings</h3><p>Search by artist, venue, or city — filter by date and category on the shop.</p></div><a href="/shop.html">Open full shop</a></div></div><div id="home-guest-strip" class="home-guest-strip">Already bought on Tixx? <a href="/login" id="home-guest-signin">Sign in</a> to view your tickets.</div></div><section id="tm-ticket-list" class="tm-ticket-list-section tm-login-gate-section" hidden aria-label="Your tickets"><h2 class="tm-section-heading">Your tickets</h2><div id="tm-home-login-teaser" hidden><p class="tm-login-gate-lead">Your passes appear here after you authenticate with the email on your order.</p><p class="tm-email-hint tm-login-gate-hint">Open the secure sign-in page to receive a one-time code, then return to this home screen.</p><p class="tm-login-gate-actions"><a class="tm-login-gate-cta" id="tm-login-redirect" href="/login">Sign in</a></p></div><div id="tm-viewer-ticket-grid" class="tm-ticket-grid" hidden></div><div id="tm-viewer-empty-tickets" class="tm-viewer-empty-tickets" hidden><p>You&rsquo;re signed in. There are no passes linked to this email yet. If you just ordered, they may appear after delivery updates.</p></div><div id="tm-transfer-modal" class="tm-transfer-modal" hidden aria-hidden="true"><div class="tm-transfer-modal__backdrop" id="tm-transfer-backdrop"></div><div class="tm-transfer-modal__panel" role="dialog" aria-labelledby="tm-transfer-title"><h3 id="tm-transfer-title">Transfer to buyer</h3><p class="tm-muted">Sends a transfer email with the accept link. Add an optional personal note below to include the &ldquo;Message from&hellip;&rdquo; block.</p><div class="tm-transfer-field"><label for="tm-transfer-buyer-email">Buyer email</label><input type="email" id="tm-transfer-buyer-email" autocomplete="email" placeholder="buyer@email.com" /></div><div class="tm-transfer-field"><label for="tm-transfer-buyer-name">Buyer first name <span style="font-weight:400">(optional)</span></label><input type="text" id="tm-transfer-buyer-name" autocomplete="given-name" placeholder="First name" /></div><div class="tm-transfer-field"><label for="tm-transfer-personal-from">Message from <span style="font-weight:400">(optional, default Chris)</span></label><input type="text" id="tm-transfer-personal-from" maxlength="120" placeholder="Chris" autocomplete="off" /></div><div class="tm-transfer-field"><label for="tm-transfer-personal-msg">Personal message <span style="font-weight:400">(optional)</span></label><textarea id="tm-transfer-personal-msg" rows="3" maxlength="4000" placeholder="e.g. For @alex — enjoy the show!"></textarea></div><p id="tm-transfer-status" role="status"></p><div class="tm-transfer-modal__actions"><button type="button" id="tm-transfer-cancel">Cancel</button><button type="button" id="tm-transfer-send">Send transfer</button></div></div></div></section><script src="tm_viewer_api_base.js"></script>
 <script>window.TM_VIEWER_MAIL_API_BASE = typeof window.TM_VIEWER_MAIL_API_BASE === 'string' ? window.TM_VIEWER_MAIL_API_BASE : '';</script>
 <script src="/public/tixx-public.js"></script>
 <script src="/public/tixx-stock.js"></script>
@@ -2904,7 +2917,7 @@
 (function () {
   var base = String(location.origin || '').replace(/\/+$/, '');
   if (!base) return;
-  window.__tixxHomeFetch = fetch(base + '/api/shop/listings?events_only=1&limit=0', { cache: 'no-store' })
+  window.__tixxHomeFetch = fetch(base + '/api/shop/home', { cache: 'default' })
     .then(function (r) {
       return r.text().then(function (text) {
         var data = {};
@@ -3239,7 +3252,7 @@
         '<p class="home-event-meta">' + esc(ev.event_date_display || '') + '<br/>' + esc(ev.venue || '') + '</p>' +
         footer + '</div></a>';
     }
-    function fillHomeCarousel(trackId, events, sectionId) {
+    function fillHomeCarousel(trackId, events, sectionId, catalogTotals) {
       var track = document.getElementById(trackId);
       var sec = sectionId ? document.getElementById(sectionId) : null;
       if (!track) return;
@@ -3250,7 +3263,35 @@
       }
       track.innerHTML = events.map(eventCardHtml).join('');
       if (sec) sec.hidden = false;
-      if (window.TixxStock && sectionId) window.TixxStock.updateSectionHead(sectionId, events);
+      if (window.TixxStock && sectionId) {
+        window.TixxStock.updateSectionHead(sectionId, events, catalogTotals || null);
+      }
+    }
+    function fillHomeGrid(gridId, events, sectionId, catalogTotals) {
+      fillHomeCarousel(gridId, events, sectionId, catalogTotals);
+    }
+    function applyHomeHero(data) {
+      var url = String((data && data.hero_image_url) || '').trim();
+      if (!url) return;
+      var img = document.querySelector('.tm-retail-hero-img');
+      if (img) {
+        img.src = url;
+        img.alt = String((data && data.hero_event_name) || 'Featured event');
+      }
+    }
+    function renderHomeSnapshot(data) {
+      var sections = (data && data.sections) || {};
+      var totals = (data && data.category_totals) || {};
+      function catTotals(key) {
+        var row = totals[key];
+        if (!row) return null;
+        return { tickets: row.tickets || 0, events: row.events || 0 };
+      }
+      fillHomeCarousel('home-carousel-popular', (sections.popular && sections.popular.events) || [], 'home-sec-popular', null);
+      fillHomeCarousel('home-carousel-concerts', (sections.concerts && sections.concerts.events) || [], 'home-sec-concerts', catTotals('concerts'));
+      fillHomeCarousel('home-carousel-sports', (sections.sports && sections.sports.events) || [], 'home-sec-sports', catTotals('sports'));
+      fillHomeGrid('home-grid-shows', (sections.shows && sections.shows.events) || [], 'home-sec-shows', catTotals('events'));
+      applyHomeHero(data);
     }
     function eventsToHomeGroups(events) {
       return (events || []).map(function (e) {
@@ -3335,10 +3376,10 @@
           var base = apiBase();
           if (!base) throw new Error('no_api');
           var ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-          var timer = ctrl ? setTimeout(function () { try { ctrl.abort(); } catch (eA) {} }, 22000) : null;
+          var timer = ctrl ? setTimeout(function () { try { ctrl.abort(); } catch (eA) {} }, 12000) : null;
           try {
-            var r = await fetch(base + '/api/shop/listings?events_only=1&limit=0', {
-              cache: 'no-store',
+            var r = await fetch(base + '/api/shop/home', {
+              cache: 'default',
               signal: ctrl ? ctrl.signal : undefined
             });
             var text = await r.text();
@@ -3351,9 +3392,9 @@
         if (!data || !data.ok) {
           throw new Error((window.TixxPublic && window.TixxPublic.fromApi(data)) || 'load_failed');
         }
-        var evCount = data.event_count || (data.events && data.events.length) || 0;
+        var evCount = data.event_count || 0;
         var ticketCount = data.count || 0;
-        renderHomeDiscoverFromGroups(eventsToHomeGroups(data.events || []));
+        renderHomeSnapshot(data);
         updateHomeStockBanner(ticketCount, evCount);
         if (loadEl) {
           if (!evCount) {
@@ -3363,7 +3404,7 @@
             loadEl.hidden = true;
           }
         }
-        if ((data.events || []).length) resolveHomeImagesFromEvents(data.events);
+        resolveHomeSnapshotImages(data);
       } catch (e) {
         if (loadEl) {
           loadEl.textContent = (window.TixxPublic && window.TixxPublic.MSG.loadFail) || 'Unable to load events right now. Please try again in a moment.';
@@ -3371,8 +3412,14 @@
         }
       }
     }
-    async function resolveHomeImagesFromEvents(events) {
-      var need = (events || []).filter(function (e) { return !(e.image_url || '').trim(); }).slice(0, 12);
+    async function resolveHomeSnapshotImages(data) {
+      var sections = (data && data.sections) || {};
+      var all = [];
+      ['popular', 'concerts', 'sports', 'shows'].forEach(function (key) {
+        var rows = (sections[key] && sections[key].events) || [];
+        rows.forEach(function (e) { all.push(e); });
+      });
+      var need = all.filter(function (e) { return !(e.image_url || '').trim(); }).slice(0, 12);
       if (!need.length) return;
       try {
         var base = apiBase();
@@ -3391,7 +3438,7 @@
         need.forEach(function (e) {
           if (payload.images[e.event_key]) e.image_url = payload.images[e.event_key];
         });
-        renderHomeDiscoverFromGroups(eventsToHomeGroups(events));
+        renderHomeSnapshot(data);
       } catch (e0) {}
     }
     loadHomeEvents();

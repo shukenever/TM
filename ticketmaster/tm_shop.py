@@ -2464,6 +2464,427 @@ def shop_account_save(email: str, body: dict) -> dict:
         return {"ok": False, "error": "account_save_failed", "detail": str(e)}
 
 
+HOME_SNAPSHOT_TTL_SEC = 86400
+HOME_POPULAR_LIMIT = 14
+HOME_CAROUSEL_LIMIT = 24
+HOME_SHOWS_GRID_LIMIT = 24
+
+_FAMOUS_KEYWORDS = (
+    "taylor swift",
+    "beyonce",
+    "drake",
+    "bad bunny",
+    "ed sheeran",
+    "coldplay",
+    "u2",
+    "metallica",
+    "harry styles",
+    "billie eilish",
+    "olivia rodrigo",
+    "zach bryan",
+    "my chemical romance",
+    "florence",
+    "chris stapleton",
+    "madison beer",
+    "paul mccartney",
+    "billy joel",
+    "bruce springsteen",
+    "adele",
+    "disney on ice",
+    "bailey zimmerman",
+    "forrest frank",
+    "the weeknd",
+    "post malone",
+    "morgan wallen",
+    "luke combs",
+    "travis scott",
+    "kendrick lamar",
+    "sabrina carpenter",
+)
+
+
+def _home_snapshot_path() -> Path:
+    return _stock_data_dir() / "shop_home_snapshot.json"
+
+
+def _resolve_openai_api_key() -> str:
+    """Same key sources as STUB.py: env STUBBY_OPENAI_API_KEY / OPENAI_API_KEY, then STUB.py fallback."""
+    for name in ("STUBBY_OPENAI_API_KEY", "OPENAI_API_KEY"):
+        key = (os.environ.get(name) or "").strip()
+        if key:
+            return key
+    for root in _script_roots():
+        for stub in (root.parent / "STUB.py", root / "STUB.py", root.parent.parent / "STUB.py"):
+            if not stub.is_file():
+                continue
+            try:
+                text = stub.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            m = re.search(r'_STUBBY_OPENAI_API_KEY[\s\S]*?\bor\s+"(sk-[^"]+)"', text)
+            if m:
+                key = m.group(1).strip()
+                if key.startswith("sk-"):
+                    return key
+    return ""
+
+
+def _fame_score(name: str) -> int:
+    n = (name or "").lower()
+    for kw in _FAMOUS_KEYWORDS:
+        if kw in n:
+            return 50
+    return 0
+
+
+def _popularity_score(event: dict) -> float:
+    tc = int(event.get("ticket_count") or 0)
+    fame = _fame_score(str(event.get("event_name") or ""))
+    ts = int(event.get("event_date_ts") or 0)
+    recency = 0.0
+    if ts > 0:
+        days = (ts - time.time()) / 86400.0
+        if 0 <= days <= 90:
+            recency = 15.0
+        elif -14 <= days < 0:
+            recency = 12.0
+    img = 5.0 if str(event.get("image_url") or "").startswith("http") else 0.0
+    return float(tc) + fame + recency + img
+
+
+def _slim_home_event(event: dict) -> dict:
+    return {
+        "event_key": event.get("event_key") or "",
+        "event_name": event.get("event_name") or "",
+        "event_id": event.get("event_id") or "",
+        "event_date_display": event.get("event_date_display") or "",
+        "venue": event.get("venue") or "",
+        "category": event.get("category") or "events",
+        "image_url": event.get("image_url") or "",
+        "ticket_count": int(event.get("ticket_count") or 0),
+        "min_price_usd": float(event.get("min_price_usd") or 0),
+    }
+
+
+def _home_events_to_cards(events: list[dict]) -> list[dict]:
+    out: list[dict] = []
+    for e in events:
+        slim = _slim_home_event(e)
+        slim["count"] = slim["ticket_count"]
+        slim["min_price"] = slim["min_price_usd"]
+        out.append(slim)
+    return out
+
+
+def _category_catalog_totals(events: list[dict]) -> dict[str, dict[str, int]]:
+    totals = {
+        "concerts": {"tickets": 0, "events": 0},
+        "sports": {"tickets": 0, "events": 0},
+        "events": {"tickets": 0, "events": 0},
+    }
+    for e in events:
+        cat = str(e.get("category") or "events")
+        if cat == "parking":
+            continue
+        bucket = cat if cat in totals else "events"
+        totals[bucket]["tickets"] += int(e.get("ticket_count") or 0)
+        totals[bucket]["events"] += 1
+    return totals
+
+
+def _parse_ai_event_keys(content: str) -> list[str] | None:
+    text = (content or "").strip()
+    if not text:
+        return None
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
+        text = re.sub(r"\s*```$", "", text)
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        m = re.search(r"\[[^\]]+\]", text, re.DOTALL)
+        if not m:
+            return None
+        try:
+            data = json.loads(m.group(0))
+        except json.JSONDecodeError:
+            return None
+    if isinstance(data, dict):
+        keys = data.get("event_keys") or data.get("keys") or data.get("popular")
+        if isinstance(keys, list):
+            return [str(k).strip() for k in keys if str(k).strip()]
+        return None
+    if isinstance(data, list):
+        return [str(k).strip() for k in data if str(k).strip()]
+    return None
+
+
+def _ai_rank_popular_event_keys(candidates: list[dict], *, limit: int = HOME_POPULAR_LIMIT) -> list[str] | None:
+    api_key = _resolve_openai_api_key()
+    if not api_key or len(candidates) < limit:
+        if not api_key:
+            _shop_debug_log("AI popular rank skipped: no OpenAI key (set STUBBY_OPENAI_API_KEY)")
+        return None
+    top = sorted(candidates, key=_popularity_score, reverse=True)[:80]
+    lines = [
+        f"- {e.get('event_key')}: {e.get('event_name')} ({int(e.get('ticket_count') or 0)} tickets)"
+        for e in top
+    ]
+    model = (os.environ.get("OPENAI_HOME_MODEL") or "gpt-4o-mini").strip()
+    payload = {
+        "model": model,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "You curate a ticket marketplace homepage. Pick the most famous, mainstream, "
+                    "in-demand live events (major artists, sports franchises, big tours, Disney on Ice, etc.). "
+                    'Reply with JSON only: {"event_keys":["key1","key2"]} using exact event_key values from the list.'
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    "Pick the "
+                    + str(limit)
+                    + " most famous / trending events fans would search for first.\n\n"
+                    + "\n".join(lines)
+                ),
+            },
+        ],
+        "temperature": 0.15,
+    }
+    req = urllib.request.Request(
+        "https://api.openai.com/v1/chat/completions",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=45) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+        content = ((body.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+        keys = _parse_ai_event_keys(content)
+        if not keys:
+            return None
+        valid = {str(e.get("event_key") or "") for e in candidates}
+        picked = [k for k in keys if k in valid]
+        if picked:
+            _shop_debug_log(f"AI popular rank ok picked={len(picked)} model={model}")
+        return picked[:limit] if len(picked) >= min(limit, 4) else None
+    except Exception as e:
+        _shop_debug_log(f"AI popular rank failed: {e!r}")
+        return None
+
+
+def _home_snapshot_stale(snap: dict, path: Path) -> bool:
+    if not snap.get("ok"):
+        return True
+    if float(snap.get("expires_at") or 0) <= time.time():
+        return True
+    mtime, size = _links_file_fingerprint(path)
+    if snap.get("links_mtime") != mtime or snap.get("links_size") != size:
+        return True
+    if snap.get("cache_version") != SHOP_LISTINGS_CACHE_VERSION:
+        return True
+    return False
+
+
+def _pick_popular_events(
+    events: list[dict],
+    *,
+    allow_ai: bool = True,
+    prev_popular_keys: list[str] | None = None,
+) -> tuple[list[dict], str]:
+    by_key = {str(e.get("event_key") or ""): e for e in events if e.get("event_key")}
+    ranking = "heuristic"
+    popular: list[dict] = []
+    seen: set[str] = set()
+
+    if allow_ai:
+        ai_keys = _ai_rank_popular_event_keys(events, limit=HOME_POPULAR_LIMIT)
+        if ai_keys:
+            ranking = "ai"
+            for key in ai_keys:
+                row = by_key.get(key)
+                if row and key not in seen:
+                    popular.append(row)
+                    seen.add(key)
+    elif prev_popular_keys:
+        for key in prev_popular_keys:
+            if len(popular) >= HOME_POPULAR_LIMIT:
+                break
+            row = by_key.get(key)
+            if row and key not in seen:
+                popular.append(row)
+                seen.add(key)
+        if popular:
+            ranking = "ai_cached"
+
+    scored = sorted(events, key=_popularity_score, reverse=True)
+    for row in scored:
+        if len(popular) >= HOME_POPULAR_LIMIT:
+            break
+        key = str(row.get("event_key") or "")
+        if key and key not in seen:
+            popular.append(row)
+            seen.add(key)
+    return popular[:HOME_POPULAR_LIMIT], ranking
+
+
+def _prev_popular_keys_from_snap(snap: dict | None) -> list[str]:
+    if not snap:
+        return []
+    sec = (snap.get("sections") or {}).get("popular") or {}
+    rows = sec.get("events") if isinstance(sec, dict) else []
+    if not isinstance(rows, list):
+        return []
+    out: list[str] = []
+    for row in rows:
+        if isinstance(row, dict):
+            k = str(row.get("event_key") or "").strip()
+            if k:
+                out.append(k)
+    return out
+
+
+def shop_build_home_snapshot(*, force: bool = False) -> dict:
+    t0 = time.time()
+    path = _resolve_links_txt()
+    if not path.is_file():
+        return {"ok": False, "error": "links_txt_not_found", "detail": str(path)}
+    snap_path = _home_snapshot_path()
+    prev_snap: dict | None = None
+    if snap_path.is_file():
+        try:
+            prev_snap = json.loads(snap_path.read_text(encoding="utf-8", errors="replace"))
+            if isinstance(prev_snap, dict) and not force and not _home_snapshot_stale(prev_snap, path):
+                prev_snap["cached"] = True
+                prev_snap["timing_ms"] = int((time.time() - t0) * 1000)
+                return prev_snap
+        except (OSError, json.JSONDecodeError, TypeError):
+            prev_snap = None
+
+    ev_disk = _read_events_disk_cache(path)
+    if not ev_disk:
+        listings, stats = _load_all_listings(path)
+        if not listings:
+            return {"ok": False, "error": "no_events", "parse_stats": stats}
+        events = _repair_events_cache(path, listings, stats)
+        catalog_count = len(listings)
+    else:
+        events, meta = ev_disk
+        catalog_count = int(meta.get("count") or 0)
+    _normalize_events_for_api(events)
+    _enrich_events_with_cached_images(events)
+
+    prev_ai_at = float((prev_snap or {}).get("ai_ranked_at") or 0)
+    allow_ai = force or (time.time() - prev_ai_at >= HOME_SNAPSHOT_TTL_SEC)
+    prev_keys = _prev_popular_keys_from_snap(prev_snap if isinstance(prev_snap, dict) else None)
+    popular, ranking = _pick_popular_events(
+        events,
+        allow_ai=allow_ai,
+        prev_popular_keys=prev_keys if not allow_ai else None,
+    )
+    ai_ranked_at = time.time() if ranking == "ai" else (prev_ai_at if prev_ai_at else 0)
+    concerts = sorted(
+        [e for e in events if e.get("category") == "concerts"],
+        key=lambda x: (-(x.get("ticket_count") or 0), x.get("event_name") or ""),
+    )[:HOME_CAROUSEL_LIMIT]
+    sports = sorted(
+        [e for e in events if e.get("category") == "sports"],
+        key=lambda x: (-(x.get("ticket_count") or 0), x.get("event_name") or ""),
+    )[:HOME_CAROUSEL_LIMIT]
+    shows = sorted(
+        [e for e in events if e.get("category") == "events"],
+        key=lambda x: (-(x.get("ticket_count") or 0), x.get("event_name") or ""),
+    )[:HOME_SHOWS_GRID_LIMIT]
+    cat_totals = _category_catalog_totals(events)
+    hero = popular[0] if popular else (events[0] if events else {})
+    mtime, size = _links_file_fingerprint(path)
+    now = time.time()
+    snapshot = {
+        "ok": True,
+        "generated_at": now,
+        "expires_at": now + HOME_SNAPSHOT_TTL_SEC,
+        "links_mtime": mtime,
+        "links_size": size,
+        "cache_version": SHOP_LISTINGS_CACHE_VERSION,
+        "count": catalog_count,
+        "event_count": len(events),
+        "ranking": ranking,
+        "ai_ranked_at": ai_ranked_at,
+        "hero_event_key": str(hero.get("event_key") or ""),
+        "hero_image_url": str(hero.get("image_url") or ""),
+        "hero_event_name": str(hero.get("event_name") or ""),
+        "category_totals": cat_totals,
+        "sections": {
+            "popular": {"events": _home_events_to_cards(popular)},
+            "concerts": {"events": _home_events_to_cards(concerts)},
+            "sports": {"events": _home_events_to_cards(sports)},
+            "shows": {"events": _home_events_to_cards(shows)},
+        },
+        "cached": False,
+        "timing_ms": int((time.time() - t0) * 1000),
+    }
+    try:
+        snap_path.write_text(json.dumps(snapshot, ensure_ascii=False), encoding="utf-8")
+        _shop_debug_log(
+            f"home snapshot built ranking={ranking} allow_ai={allow_ai} popular={len(popular)} "
+            f"events={len(events)} tickets={catalog_count} {snapshot['timing_ms']}ms"
+        )
+    except OSError as e:
+        _shop_debug_log(f"home snapshot write failed: {e!r}")
+    return snapshot
+
+
+def _sanitize_home_response(body: dict) -> dict:
+    if not body.get("ok"):
+        return {
+            "ok": False,
+            "error": "unavailable",
+            "message": "Events are temporarily unavailable. Please try again shortly.",
+            "count": 0,
+            "event_count": 0,
+            "sections": {},
+        }
+    allow = (
+        "ok",
+        "count",
+        "event_count",
+        "sections",
+        "category_totals",
+        "generated_at",
+        "expires_at",
+        "ranking",
+        "hero_event_key",
+        "hero_image_url",
+        "hero_event_name",
+        "cached",
+        "timing_ms",
+    )
+    return {k: body[k] for k in allow if k in body}
+
+
+def shop_home(*, refresh: bool = False) -> dict:
+    path = _resolve_links_txt()
+    snap_path = _home_snapshot_path()
+    if not refresh and snap_path.is_file():
+        try:
+            snap = json.loads(snap_path.read_text(encoding="utf-8", errors="replace"))
+            if isinstance(snap, dict) and snap.get("ok") and not _home_snapshot_stale(snap, path):
+                snap["cached"] = True
+                snap["age_sec"] = int(max(0, time.time() - float(snap.get("generated_at") or 0)))
+                return _sanitize_home_response(snap)
+        except (OSError, json.JSONDecodeError, TypeError):
+            pass
+    built = shop_build_home_snapshot(force=True)
+    return _sanitize_home_response(built)
+
+
 def shop_sync_inventory(*, image_batch: int = 20) -> dict:
     try:
         from ticketmaster.tixx_shop_sync import run_sync  # type: ignore

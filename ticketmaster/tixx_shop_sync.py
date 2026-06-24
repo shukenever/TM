@@ -70,7 +70,23 @@ def run_sync(*, image_batch: int = 20) -> dict:
                 db.upsert_listings_cache(listings)
     db.append_sync_log("inventory_sync", f"{n} listings, {images} images", n, images)
     stats = db.marketplace_stats()
-    return {"ok": True, "listings_synced": n, "images_resolved": images, "stats": stats}
+    home = {}
+    try:
+        home = tm_shop.shop_home(refresh=False)
+    except Exception as e:
+        home = {"ok": False, "error": str(e)}
+    return {
+        "ok": True,
+        "listings_synced": n,
+        "images_resolved": images,
+        "stats": stats,
+        "home_snapshot": {
+            "ok": bool(home.get("ok")),
+            "cached": bool(home.get("cached")),
+            "ranking": home.get("ranking"),
+            "expires_at": home.get("expires_at"),
+        },
+    }
 
 
 def main() -> None:

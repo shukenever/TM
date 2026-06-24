@@ -12,6 +12,7 @@ function routeKey(req) {
 
 const GET_ROUTES = {
   listings: "/api/shop/listings",
+  home: "/api/shop/home",
   orders: "/api/shop/orders",
   account: "/api/shop/account",
   health: "/api/shop/health",
@@ -30,7 +31,11 @@ module.exports = async (req, res) => {
   try {
     const key = routeKey(req);
     if (req.method === "GET" && GET_ROUTES[key]) {
-      return proxy(req, res, GET_ROUTES[key], { methods: "GET, OPTIONS" });
+      const cacheHome = key === "home";
+      return proxy(req, res, GET_ROUTES[key], {
+        methods: "GET, OPTIONS",
+        cacheControl: cacheHome ? "public, max-age=300, s-maxage=86400, stale-while-revalidate=3600" : "",
+      });
     }
     if ((req.method === "POST" || req.method === "PUT" || req.method === "PATCH") && POST_ROUTES[key]) {
       return proxy(req, res, POST_ROUTES[key], {
