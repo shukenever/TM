@@ -20,7 +20,7 @@ function escapeHtml(s) {
 }
 
 function publicOrigin() {
-  return String(process.env.TICKETS_PUBLIC_ORIGIN || "https://tixx.pw").replace(
+  return String(process.env.TICKETS_PUBLIC_ORIGIN || "https://securetixx.com").replace(
     /\/+$/,
     "",
   );

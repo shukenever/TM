@@ -6,7 +6,7 @@
  * Env:
  * - UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN — subscriber storage (free tier OK).
  * - RESEND_API_KEY, RESEND_FROM — sends reminders via Resend (verified domain).
- * - TICKETS_PUBLIC_ORIGIN — optional, base URL for unsubscribe links (default https://tixx.pw).
+ * - TICKETS_PUBLIC_ORIGIN — optional, base URL for unsubscribe links (default https://securetixx.com).
  * - REMINDER_REGISTER_SECRET or TM_REMINDER_REGISTER_SECRET — optional server-to-server auth only:
  *   if set, POST must send Authorization: Bearer <same>. Leave unset for normal browser registration from the gate.
  *

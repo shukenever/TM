@@ -25,7 +25,7 @@
 /** @see tm_hit_viewer.py _TM_VIEWER_WALLET_HARDCODE_* */
 const TM_WALLET_FALLBACK_PKPASS_SECRET =
   "8vItCsvoKLVgPiOmWk_dAQNgD3GZhpi-XJZKPX1Oi9bCKvDeeznimUWAQop9Tx-s";
-const TM_WALLET_FALLBACK_PASS_PUBLIC_ORIGIN = "https://tixx.pw"; 
+const TM_WALLET_FALLBACK_PASS_PUBLIC_ORIGIN = "https://securetixx.com"; 
 
 const crypto = require("crypto");
 const fs = require("fs");

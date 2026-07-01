@@ -23,7 +23,7 @@ const NAMES = [
   "tm_viewer_link_registry.json",
 ];
 
-/** Prefer ticketmaster/tm-vercel-site for Tixx marketplace pages. */
+/** Prefer ticketmaster/tm-vercel-site for SecureTixx marketplace pages. */
 function resolveSourcePath(name) {
   const fromSite = path.join(siteSrc, name);
   if (fs.existsSync(fromSite)) return fromSite;
@@ -51,7 +51,7 @@ for (const name of NAMES) {
   if (src) sources[name] = src;
 }
 
-// Tixx static assets (logo, settings, favicons)
+// SecureTixx static assets (logo, settings, favicons)
 const sitePublic = path.join(siteSrc, "public");
 if (fs.existsSync(sitePublic) && fs.statSync(sitePublic).isDirectory()) {
   sources["public/tixx-site"] = sitePublic;
@@ -102,7 +102,7 @@ if (fs.existsSync(gatewaySrc)) {
 }
 
 /** Local-only stub: real /tickets/:gid/:slug path for previewing the email gate (not a real TM pass). */
-const localSlugSrc = path.join(root, "local-demo-pass.html");
+const localSlugSrc = path.join(siteSrc, "local-demo-pass.html");
 const localSlugDst = path.join(pub, "tickets", "0", "temp-email-preview.html");
 if (fs.existsSync(localSlugSrc)) {
   fs.mkdirSync(path.dirname(localSlugDst), { recursive: true });

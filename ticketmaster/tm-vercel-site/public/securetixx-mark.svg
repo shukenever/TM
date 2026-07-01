@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" role="img" aria-label="SecureTixx">
+  <defs>
+    <linearGradient id="stx-m" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#34d399"/>
+      <stop offset="1" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="6" width="40" height="36" rx="10" fill="url(#stx-m)"/>
+  <path d="M24 12l10 6v8c0 5.5-4.5 9.5-10 11-5.5-1.5-10-5.5-10-11v-8l10-6Z" fill="#fff" opacity=".92"/>
+  <path d="M21 26l3 3 6-7" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

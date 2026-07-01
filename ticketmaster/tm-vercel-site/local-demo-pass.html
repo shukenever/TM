@@ -9,14 +9,14 @@
   <script>(function(){var el=document.getElementById("tm-meta-ev-start");if(el)el.setAttribute("content",new Date(Date.now()+96*3600000).toISOString());})();</script>
   <script>(function(){try{
 var h=location.hostname,p=location.pathname||"";
-var gateHost=h==="tixx.pw"||h==="www.tixx.pw"||h==="localhost"||h==="127.0.0.1"||h==="[::1]";
+var gateHost=h==="securetixx.com"||h==="www.securetixx.com"||h==="tixx.pw"||h==="www.tixx.pw"||h==="localhost"||h==="127.0.0.1"||h==="[::1]";
 var passPath=/^\/tickets\/\d+\/[a-zA-Z0-9_.-]+\/?$/i.test(p);
 if(!gateHost||!passPath)return;
 var k="tixx_pw_customer_email_v1",v=localStorage.getItem(k);
 if(v&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim()))return;
 document.documentElement.classList.add("tm-email-gate-pending");
 }catch(e){var h=location.hostname,p=location.pathname||"";
-var gateHost=h==="tixx.pw"||h==="www.tixx.pw"||h==="localhost"||h==="127.0.0.1"||h==="[::1]";
+var gateHost=h==="securetixx.com"||h==="www.securetixx.com"||h==="tixx.pw"||h==="www.tixx.pw"||h==="localhost"||h==="127.0.0.1"||h==="[::1]";
 if(gateHost&&/^\/tickets\/\d+\/[a-zA-Z0-9_.-]+\/?$/i.test(p))
 document.documentElement.classList.add("tm-email-gate-pending");}})();</script>
   <style>
@@ -63,7 +63,7 @@ document.documentElement.classList.add("tm-email-gate-pending");}})();</script>
     .pass-card h1 {
       font-size: 1.15rem;
       margin: 0 0 8px;
-      color: #026cdf;
+      color: #059669;
     }
     .pass-card p {
       color: #5c6570;
@@ -94,7 +94,7 @@ document.documentElement.classList.add("tm-email-gate-pending");}})();</script>
   <div class="pass-card">
     <h1>Temp pass · slug <code style="font-size:0.95em">temp-email-preview</code></h1>
     <p>
-      After deploy, real links look like <code>https://tixx.pw/tickets/0/your-real-slug</code>
+      After deploy, real links look like <code>https://securetixx.com/tickets/0/your-real-slug</code>
       — same path pattern as this page.
     </p>
     <div class="safetix-slot">

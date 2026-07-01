@@ -1,4 +1,4 @@
-/** Tixx account center — profile, orders, addresses, cards, preferences (local + API). */
+/** SecureTixx account center — profile, orders, addresses, cards, preferences (local + API). */
 (function () {
   var LOC_KEY = 'tixx_user_city';
   var REG_KEY = 'tixx_user_region';
@@ -383,7 +383,7 @@
 
       '<div class="tixx-settings-pane" data-pane="orders" hidden>' +
       '<h3 class="tixx-settings-pane-title">Order history</h3>' +
-      '<p class="tixx-settings-lead">Purchases on Tixx. Signed-in users see orders tied to their email.</p>' +
+      '<p class="tixx-settings-lead">Purchases on SecureTixx. Signed-in users see orders tied to their email.</p>' +
       '<div id="tixx-settings-orders"></div></div>' +
 
       '<div class="tixx-settings-pane" data-pane="addresses" hidden>' +
@@ -432,7 +432,7 @@
       '<label class="tixx-settings-check"><input type="checkbox" id="tixx-settings-email-updates"/> Email me about order updates</label>' +
       '<div class="tixx-settings-links">' +
       '<a href="/shop.html">Shop</a> · <a href="/my-tickets">My tickets</a> · ' +
-      '<a href="https://www.instagram.com/tixxpw/" target="_blank" rel="noopener noreferrer">Instagram</a></div>' +
+      '<a href="https://securetixx.com" target="_blank" rel="noopener noreferrer">Instagram</a></div>' +
       '</div>' +
 
       '</div></div>' +
@@ -563,7 +563,7 @@
       '.tixx-settings-tab{border:0;background:transparent;text-align:left;padding:.55rem .75rem;border-radius:8px;' +
       'font:inherit;font-size:.8125rem;font-weight:600;color:#475569;cursor:pointer}' +
       '.tixx-settings-tab:hover{background:#e2e8f0;color:#0f172a}' +
-      '.tixx-settings-tab.is-active{background:#fff;color:#026cdf;box-shadow:0 1px 4px rgba(0,0,0,.06)}' +
+      '.tixx-settings-tab.is-active{background:#fff;color:#059669;box-shadow:0 1px 4px rgba(0,0,0,.06)}' +
       '.tixx-settings-body{flex:1;overflow-y:auto;padding:1.1rem 1.25rem 1.25rem}' +
       '.tixx-settings-pane-title{margin:0 0 .35rem;font-size:1rem;font-weight:800;color:#0f172a}' +
       '.tixx-settings-lead{font-size:.8125rem;color:#64748b;line-height:1.45;margin:0 0 1rem}' +
@@ -573,14 +573,14 @@
       '.tixx-settings-field input,.tixx-settings-field select{width:100%;padding:.6rem .75rem;border:1px solid #e2e8f0;border-radius:8px;font:inherit;box-sizing:border-box}' +
       '.tixx-settings-readonly{margin:0;font-size:.875rem;font-weight:600;color:#0f172a}' +
       '.tixx-settings-hint{font-size:.75rem;color:#94a3b8;margin:.35rem 0 0}' +
-      '.tixx-settings-hint a{color:#026cdf;font-weight:600}' +
+      '.tixx-settings-hint a{color:#059669;font-weight:600}' +
       '.tixx-settings-row2{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}' +
       '.tixx-settings-actions-row{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}' +
       '.tixx-settings-btn{border:1px solid #e2e8f0;background:#fff;border-radius:8px;padding:.5rem .85rem;font:inherit;font-weight:600;cursor:pointer;font-size:.8125rem}' +
-      '.tixx-settings-btn--primary{background:#026cdf;color:#fff;border-color:#026cdf}' +
+      '.tixx-settings-btn--primary{background:#059669;color:#fff;border-color:#059669}' +
       '.tixx-settings-check{display:flex;align-items:center;gap:.5rem;font-size:.8125rem;margin:.75rem 0;cursor:pointer}' +
       '.tixx-settings-links{font-size:.8125rem;margin-top:1rem;padding-top:.75rem;border-top:1px solid #e2e8f0}' +
-      '.tixx-settings-links a{color:#026cdf;text-decoration:none;font-weight:600}' +
+      '.tixx-settings-links a{color:#059669;text-decoration:none;font-weight:600}' +
       '.tixx-settings-status{font-size:.8125rem;color:#059669;min-height:1.2em;margin:0;padding:.65rem 1.25rem;border-top:1px solid #e2e8f0;flex-shrink:0}' +
       '.tixx-settings-status--err{color:#dc2626}' +
       '.tixx-settings-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.5rem}' +
@@ -588,15 +588,15 @@
       'padding:.75rem;border:1px solid #e2e8f0;border-radius:10px;background:#fafbfc}' +
       '.tixx-settings-order-main{display:flex;flex-direction:column;gap:.2rem}' +
       '.tixx-settings-order-meta{font-size:.75rem;color:#64748b;font-weight:500}' +
-      '.tixx-settings-order-link{font-size:.75rem;font-weight:700;color:#026cdf;text-decoration:none;white-space:nowrap}' +
+      '.tixx-settings-order-link{font-size:.75rem;font-weight:700;color:#059669;text-decoration:none;white-space:nowrap}' +
       '.tixx-settings-item-meta{font-size:.75rem;color:#64748b;margin:.25rem 0 0;line-height:1.4}' +
-      '.tixx-settings-tag{font-size:.625rem;font-weight:800;text-transform:uppercase;color:#026cdf;background:rgba(2,108,223,.1);padding:.1rem .35rem;border-radius:4px;margin-left:.25rem}' +
+      '.tixx-settings-tag{font-size:.625rem;font-weight:800;text-transform:uppercase;color:#059669;background:rgba(5,150,105,.12);padding:.1rem .35rem;border-radius:4px;margin-left:.25rem}' +
       '.tixx-settings-icon-btn{border:0;background:#fee2e2;color:#b91c1c;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:1.1rem;line-height:1;flex-shrink:0}' +
       '.tixx-settings-empty{font-size:.8125rem;color:#64748b;margin:0}' +
-      '.tixx-settings-empty a{color:#026cdf;font-weight:600}' +
+      '.tixx-settings-empty a{color:#059669;font-weight:600}' +
       '.tixx-settings-loading{font-size:.8125rem;color:#94a3b8;margin:0}' +
       '.tixx-settings-add-form{margin-top:1rem;border:1px dashed #cbd5e1;border-radius:10px;padding:.65rem .85rem}' +
-      '.tixx-settings-add-form summary{cursor:pointer;font-weight:700;font-size:.8125rem;color:#026cdf}' +
+      '.tixx-settings-add-form summary{cursor:pointer;font-weight:700;font-size:.8125rem;color:#059669}' +
       '.tixx-settings-add-form[open]{padding-bottom:1rem}' +
       '@media(max-width:640px){.tixx-settings-layout{flex-direction:column}.tixx-settings-nav{flex-direction:row;flex-wrap:wrap;border-right:0;border-bottom:1px solid #e2e8f0;min-width:0}.tixx-settings-panel{max-height:92vh}}';
     document.head.appendChild(s);

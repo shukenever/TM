@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <meta name="theme-color" content="#026cdf"/>
-  <title>Tixx Shop — Verified tickets marketplace</title>
+  <meta name="theme-color" content="#059669"/>
+  <title>SecureTixx Shop — Verified tickets marketplace</title>
   <link rel="icon" href="/public/favicon-32.png" type="image/png" sizes="32x32"/>
   <link rel="apple-touch-icon" href="/public/apple-touch-icon.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -12,15 +12,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --tm-blue: #026cdf;
-      --tm-blue-dark: #0153a3;
-      --tm-blue-glow: rgba(2,108,223,.45);
+      --tm-blue: #059669;
+      --tm-blue-dark: #047857;
+      --tm-blue-glow: rgba(5,150,105,.45);
       --bg: #f4f6f9;
       --surface: #fff;
       --border: #e2e8f0;
       --text: #121212;
       --muted: #5c6570;
-      --accent: #026cdf;
+      --accent: #059669;
       --navy: #0f172a;
       --ease-out: cubic-bezier(.22, 1, .36, 1);
       --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
@@ -147,7 +147,7 @@
     .tm-nav-links a:hover { background: rgba(255,255,255,.1); color: #fff; transform: translateY(-1px); }
     .tm-nav-links a.active {
       color: #fff;
-      background: rgba(2,108,223,.35);
+      background: rgba(15,118,110,.35);
       box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
     }
     .tm-nav-links .tixx-settings-btn-nav { margin-left: .15rem; }
@@ -195,7 +195,7 @@
       position: absolute;
       width: 300px; height: 300px;
       bottom: -60px; left: 10%;
-      background: radial-gradient(circle, rgba(2,108,223,.4) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(15,118,110,.4) 0%, transparent 70%);
       border-radius: 50%;
       animation: orbFloat 18s ease-in-out infinite reverse;
       z-index: 2;
@@ -262,7 +262,7 @@
       transition: box-shadow .35s var(--ease-out), transform .35s var(--ease-out);
     }
     .search-strip:focus-within {
-      box-shadow: 0 24px 60px rgba(2,108,223,.18), 0 0 0 3px rgba(2,108,223,.12);
+      box-shadow: 0 24px 60px rgba(15,118,110,.18), 0 0 0 3px rgba(15,118,110,.12);
       transform: translateY(-2px);
     }
     .search-seg {
@@ -327,8 +327,8 @@
     .trust-pill:nth-child(3) { animation-delay: .75s; }
     .trust-pill:hover {
       transform: translateY(-3px);
-      box-shadow: 0 10px 24px rgba(2,108,223,.12);
-      border-color: rgba(2,108,223,.25);
+      box-shadow: 0 10px 24px rgba(15,118,110,.12);
+      border-color: rgba(15,118,110,.25);
     }
     .trust-pill svg {
       width: 16px; height: 16px; color: var(--tm-blue); flex-shrink: 0;
@@ -395,7 +395,7 @@
     }
     .view-toggle button.active {
       background: var(--tm-blue); color: #fff;
-      box-shadow: 0 2px 8px rgba(2,108,223,.35);
+      box-shadow: 0 2px 8px rgba(15,118,110,.35);
     }
 
     .cat-row {
@@ -417,20 +417,20 @@
     .cat-pill::before {
       content: '';
       position: absolute; inset: 0;
-      background: linear-gradient(135deg, rgba(2,108,223,.12), rgba(56,189,248,.08));
+      background: linear-gradient(135deg, rgba(15,118,110,.12), rgba(56,189,248,.08));
       opacity: 0;
       transition: opacity .25s;
     }
     .cat-pill:hover {
-      border-color: rgba(2,108,223,.3);
+      border-color: rgba(15,118,110,.3);
       color: var(--tm-blue);
       transform: translateY(-1px);
     }
     .cat-pill.active {
-      background: linear-gradient(135deg, rgba(2,108,223,.14), rgba(56,189,248,.1));
-      border-color: rgba(2,108,223,.4);
+      background: linear-gradient(135deg, rgba(15,118,110,.14), rgba(56,189,248,.1));
+      border-color: rgba(15,118,110,.4);
       color: var(--tm-blue);
-      box-shadow: 0 4px 14px rgba(2,108,223,.12);
+      box-shadow: 0 4px 14px rgba(15,118,110,.12);
     }
     .cat-pill.active::before { opacity: 1; }
 
@@ -460,13 +460,13 @@
     }
     .event-card.is-visible { opacity: 1; }
     .event-card:hover {
-      box-shadow: 0 16px 40px rgba(2,108,223,.12);
-      border-color: rgba(2,108,223,.28);
+      box-shadow: 0 16px 40px rgba(15,118,110,.12);
+      border-color: rgba(15,118,110,.28);
       transform: translateY(-3px);
     }
     .event-card.open {
-      border-color: rgba(2,108,223,.4);
-      box-shadow: 0 12px 36px rgba(2,108,223,.14);
+      border-color: rgba(15,118,110,.4);
+      box-shadow: 0 12px 36px rgba(15,118,110,.14);
     }
     .event-card-head {
       display: grid;
@@ -478,7 +478,7 @@
       user-select: none;
       transition: background .2s;
     }
-    .event-card-head:hover { background: linear-gradient(90deg, rgba(2,108,223,.03), transparent); }
+    .event-card-head:hover { background: linear-gradient(90deg, rgba(15,118,110,.03), transparent); }
     @media (max-width: 640px) {
       .event-card-head { grid-template-columns: 72px 1fr; }
       .event-card-price { grid-column: 1 / -1; text-align: left; display: flex; align-items: center; gap: 1rem; }
@@ -531,7 +531,7 @@
     .thumb-concerts { background: linear-gradient(135deg, #7c3aed, #4f46e5); }
     .thumb-sports { background: linear-gradient(135deg, #059669, #047857); }
     .thumb-parking { background: linear-gradient(135deg, #d97706, #b45309); }
-    .thumb-events { background: linear-gradient(135deg, #026cdf, #0153a3); }
+    .thumb-events { background: linear-gradient(135deg, #059669, #047857); }
     .event-title {
       font-family: 'Sora', sans-serif;
       font-weight: 800;
@@ -608,18 +608,18 @@
     .seat-face { font-size: .75rem; color: var(--muted); text-decoration: line-through; }
     .btn-buy {
       border: 0;
-      background: linear-gradient(145deg, #0284f5, #026cdf);
+      background: linear-gradient(145deg, #0284f5, #059669);
       color: #fff;
       font-weight: 700; font-size: .8125rem;
       padding: .52rem 1.1rem; border-radius: 10px;
       cursor: pointer; font-family: inherit;
       transition: transform .25s var(--ease-spring), box-shadow .25s, filter .25s;
-      box-shadow: 0 4px 14px rgba(2,108,223,.25);
+      box-shadow: 0 4px 14px rgba(15,118,110,.25);
     }
     .btn-buy:hover {
       filter: brightness(1.06);
       transform: translateY(-2px);
-      box-shadow: 0 8px 22px rgba(2,108,223,.35);
+      box-shadow: 0 8px 22px rgba(15,118,110,.35);
     }
     .btn-buy:active { transform: translateY(0) scale(.98); }
 
@@ -641,8 +641,8 @@
     }
     .listing-card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 14px 32px rgba(2,108,223,.1);
-      border-color: rgba(2,108,223,.25);
+      box-shadow: 0 14px 32px rgba(5,150,105,.12);
+      border-color: rgba(15,118,110,.25);
     }
 
     .empty, #load {
@@ -709,8 +709,8 @@
       margin: .75rem 0 1rem;
       padding: .85rem .9rem;
       border-radius: 12px;
-      background: linear-gradient(135deg, rgba(2,108,223,.08), rgba(2,108,223,.02));
-      border: 1px solid rgba(2,108,223,.14);
+      background: linear-gradient(135deg, rgba(15,118,110,.08), rgba(15,118,110,.02));
+      border: 1px solid rgba(15,118,110,.14);
     }
     .buy-event-title {
       font-family: 'Sora', sans-serif;
@@ -762,7 +762,7 @@
       flex-wrap: wrap;
     }
     .btn-buy.btn-primary {
-      background: linear-gradient(135deg, #026cdf, #0153a3);
+      background: linear-gradient(135deg, #059669, #047857);
       flex: 1 1 100%;
       order: -1;
       padding: .85rem 1rem;
@@ -852,14 +852,14 @@
     .loc-chip {
       display: inline-flex; align-items: center; gap: .4rem;
       padding: .4rem .85rem;
-      background: rgba(2,108,223,.08);
-      border: 1px solid rgba(2,108,223,.2);
+      background: rgba(15,118,110,.08);
+      border: 1px solid rgba(15,118,110,.2);
       border-radius: 999px;
       font-size: .8125rem; font-weight: 600; color: var(--tm-blue);
       cursor: pointer;
       transition: background .2s, transform .2s;
     }
-    .loc-chip:hover { background: rgba(2,108,223,.12); transform: translateY(-1px); }
+    .loc-chip:hover { background: rgba(15,118,110,.12); transform: translateY(-1px); }
     .loc-chip svg { width: 16px; height: 16px; flex-shrink: 0; }
     .discover-cats {
       display: flex; flex-wrap: wrap; gap: .35rem .15rem;
@@ -871,7 +871,7 @@
       transition: background .15s, color .15s;
     }
     .discover-cats a:hover { background: #f1f5f9; color: var(--tm-blue); }
-    .discover-cats a.active { color: var(--tm-blue); background: rgba(2,108,223,.1); }
+    .discover-cats a.active { color: var(--tm-blue); background: rgba(5,150,105,.12); }
     .discover-search-hero {
       max-width: 720px; margin: 0 auto 1rem;
     }
@@ -884,7 +884,7 @@
     }
     .search-strip--hero {
       border-radius: 999px;
-      box-shadow: 0 8px 32px rgba(2,108,223,.12);
+      box-shadow: 0 8px 32px rgba(15,118,110,.12);
     }
     .search-strip--hero .search-seg { border-right: none; }
     .search-strip--hero .search-seg--grow { flex: 1 1 200px; }
@@ -943,8 +943,8 @@
     }
     .carousel-card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 12px 28px rgba(2,108,223,.12);
-      border-color: rgba(2,108,223,.25);
+      box-shadow: 0 12px 28px rgba(15,118,110,.12);
+      border-color: rgba(15,118,110,.25);
     }
     .carousel-card-art {
       aspect-ratio: 4/3;
@@ -990,7 +990,7 @@
       padding: .18rem .45rem; border-radius: 999px;
       font-size: .625rem; font-weight: 800; letter-spacing: .02em;
       text-transform: uppercase;
-      background: rgba(2, 108, 223, .1); color: #0153a3;
+      background: rgba(15, 118, 110, .1); color: #047857;
     }
     .tixx-stock-art-pill {
       position: absolute; top: .45rem; right: .45rem; z-index: 3;
@@ -1014,7 +1014,7 @@
       font-size: .875rem; color: var(--muted);
       padding: .5rem 0 1rem;
     }
-    .all-events-heading {
+    .all-events {
       font-family: 'Sora', sans-serif;
       font-size: 1.2rem; font-weight: 800;
       margin: 0 0 .5rem; color: #0f172a;
@@ -1029,11 +1029,11 @@
 <body>
   <header class="topbar">
     <div class="tm-simple-bar">
-      <a class="tixx-brand" href="/" aria-label="Tixx home">
+      <a class="tixx-brand" href="/" aria-label="SecureTixx home">
         <img class="tixx-logo tixx-logo--on-dark"
-             src="/public/tixx-logo-header-sm.png"
-             srcset="/public/tixx-logo-header-sm.png 1x, /public/tixx-logo-header.png 2x"
-             alt="tixx.pw" width="100" height="32"/>
+             src="/public/securetixx-logo-header.svg"
+            
+             alt="SecureTixx" width="168" height="32"/>
       </a>
       <nav class="tm-nav-links">
         <a href="/">Home</a>
@@ -1128,7 +1128,7 @@
     </div>
 
     <div class="filters-sticky" id="filters-sticky">
-    <h2 class="all-events-heading" id="all-events-heading">All events</h2>
+    <h2 class="all-events" id="all-events">All events</h2>
     <div class="cat-row" id="cat-row">
       <button type="button" class="cat-pill active" data-cat="all">All</button>
       <button type="button" class="cat-pill" data-cat="concerts">Concerts</button>
@@ -1180,13 +1180,13 @@
   <footer>
     <div class="footer-inner">
       <div class="footer-brand">
-        <img class="tixx-logo" src="/public/tixx-logo-sm.png" alt="tixx.pw" width="87" height="28"/>
+        <img class="tixx-logo" src="/public/securetixx-logo.svg" alt="SecureTixx" width="140" height="28"/>
         <span>Verified ticket marketplace</span>
       </div>
       <div class="footer-links">
-        <a class="footer-social" href="https://www.instagram.com/tixxpw/" target="_blank" rel="noopener noreferrer" aria-label="Tixx on Instagram (@tixxpw)">
+        <a class="footer-social" href="https://securetixx.com" target="_blank" rel="noopener noreferrer" aria-label="SecureTixx website">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
-          @tixxpw
+          securetixx.com
         </a>
         <span>
           <a href="mailto:ezy.dev.bot@gmail.com">Support</a>
@@ -1360,7 +1360,7 @@
       '<p class="carousel-card-meta">' + esc(ev.event_date_display) + '<br/>' + esc(ev.venue) + '</p>' +
       footer + '</div></button>';
   }
-  function fillCarousel(trackId, events, sectionId, headEvents, catalogTotals) {
+  function fillCarousel(trackId, events, sectionId) {
     var track = document.getElementById(trackId);
     var sec = sectionId ? document.getElementById(sectionId) : null;
     if (!track) return;
@@ -1379,14 +1379,24 @@
     });
     if (sec) sec.hidden = false;
     if (window.TixxStock && sectionId) {
-      window.TixxStock.updateSectionHead(sectionId, headEvents || events, catalogTotals || null);
+      window.TixxStock.updateSectionHead(sectionId, events, null, { showCounts: false });
     }
   }
-  function sectionCatalogTotals(categoryEvents) {
-    return {
-      tickets: window.__shopTotalCount || (window.TixxStock ? window.TixxStock.sumTickets(categoryEvents) : 0),
-      events: categoryEvents.length
-    };
+  function scrollToAllEvents() {
+    var h = document.getElementById('all-events');
+    if (h) h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function applyCategoryFilter(cat) {
+    state.cat = cat || 'all';
+    document.querySelectorAll('.cat-pill').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-cat') === state.cat);
+    });
+    document.querySelectorAll('.discover-cats a').forEach(function (x) {
+      x.classList.toggle('active', x.getAttribute('data-disc-cat') === state.cat);
+    });
+    flashFilter();
+    render();
+    scrollToAllEvents();
   }
   function focusEvent(ev) {
     state.q = ev.event_name || '';
@@ -1410,7 +1420,7 @@
         card.classList.add('open');
         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } else {
-        document.getElementById('all-events-heading').scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('all-events').scrollIntoView({ behavior: 'smooth' });
       }
     }, 80);
   }
@@ -1432,8 +1442,6 @@
       if (nearSec0) nearSec0.hidden = true;
       return;
     }
-    var catalogTickets = window.__shopCatalogCount || window.__shopTotalCount || (window.TixxStock ? window.TixxStock.sumTickets(allEv) : 0);
-    var catalogEvents = window.__shopEventCount || allEv.length;
     var popularAll = allEv.slice().sort(function (a, b) {
       return (b.count + fameBoost(b.event_name)) - (a.count + fameBoost(a.event_name));
     });
@@ -1448,16 +1456,13 @@
     var concerts = concertsAll.slice(0, 20);
     var sports = sportsAll.slice(0, 20);
     var shows = showsAll.slice(0, 20);
-    fillCarousel('carousel-popular', popular, 'sec-popular', popularAll, {
-      tickets: catalogTickets,
-      events: catalogEvents
-    });
-    fillCarousel('carousel-concerts', concerts, 'sec-concerts', concertsAll, sectionCatalogTotals(concertsAll));
-    fillCarousel('carousel-sports', sports, 'sec-sports', sportsAll, sectionCatalogTotals(sportsAll));
-    fillCarousel('carousel-shows', shows, 'sec-shows', showsAll, sectionCatalogTotals(showsAll));
+    fillCarousel('carousel-popular', popular, 'sec-popular');
+    fillCarousel('carousel-concerts', concerts, 'sec-concerts');
+    fillCarousel('carousel-sports', sports, 'sec-sports');
+    fillCarousel('carousel-shows', shows, 'sec-shows');
     var nearSec = document.getElementById('sec-near');
     if (near.length && (userCity || state.location.trim())) {
-      fillCarousel('carousel-near', near, 'sec-near', nearAll);
+      fillCarousel('carousel-near', near, 'sec-near');
     } else if (nearSec) {
       nearSec.hidden = true;
     }
@@ -1660,7 +1665,7 @@
       : '';
     return '<div class="' + cls + '" aria-hidden="true">' + photoHtml +
       '<span class="event-thumb-initials">' + esc(initials(ev.event_name)) + '</span>' +
-      '<img class="event-thumb-mark" src="/public/tixx-mark.png" alt="" width="22" height="22"/>' +
+      '<img class="event-thumb-mark" src="/public/securetixx-mark.svg" alt="" width="22" height="22"/>' +
       '</div>';
   }
   function showBanner(text, ok) {
@@ -2064,38 +2069,22 @@
   document.querySelectorAll('.discover-cats a').forEach(function (a) {
     a.addEventListener('click', function (e) {
       e.preventDefault();
-      var cat = a.getAttribute('data-disc-cat') || 'all';
-      document.querySelectorAll('.discover-cats a').forEach(function (x) { x.classList.remove('active'); });
-      a.classList.add('active');
-      document.querySelectorAll('.cat-pill').forEach(function (b) {
-        b.classList.toggle('active', b.getAttribute('data-cat') === cat);
-      });
-      state.cat = cat;
-      flashFilter();
-      render();
-      document.getElementById('all-events-heading').scrollIntoView({ behavior: 'smooth' });
+      applyCategoryFilter(a.getAttribute('data-disc-cat') || 'all');
     });
   });
   document.querySelectorAll('.carousel-see').forEach(function (a) {
     a.addEventListener('click', function (e) {
       e.preventDefault();
       var kind = a.getAttribute('data-see');
-      if (kind === 'concerts') state.cat = 'concerts';
-      else if (kind === 'sports') state.cat = 'sports';
-      else if (kind === 'shows') state.cat = 'events';
-      else if (kind === 'near' && (userCity || state.location)) state.location = state.location || userCity;
-      else state.cat = 'all';
-      document.querySelectorAll('.cat-pill').forEach(function (b) {
-        b.classList.toggle('active', b.getAttribute('data-cat') === state.cat);
-      });
-      document.querySelectorAll('.discover-cats a').forEach(function (x) {
-        x.classList.toggle('active', x.getAttribute('data-disc-cat') === state.cat);
-      });
-      var locIn = document.getElementById('f-location');
-      if (locIn) locIn.value = state.location;
-      flashFilter();
-      render();
-      document.getElementById('all-events-heading').scrollIntoView({ behavior: 'smooth' });
+      if (kind === 'concerts') applyCategoryFilter('concerts');
+      else if (kind === 'sports') applyCategoryFilter('sports');
+      else if (kind === 'shows') applyCategoryFilter('events');
+      else if (kind === 'near' && (userCity || state.location)) {
+        state.location = state.location || userCity;
+        var locIn = document.getElementById('f-location');
+        if (locIn) locIn.value = state.location;
+        applyCategoryFilter('all');
+      } else applyCategoryFilter('all');
     });
   });
   document.getElementById('f-date').addEventListener('change', function () {
@@ -2332,6 +2321,9 @@
       render();
       resolveMissingImages();
       loadSavedLocation();
+      if ((qs.get('cat') && qs.get('cat') !== 'all') || location.hash === '#all-events') {
+        setTimeout(scrollToAllEvents, 200);
+      }
     } catch (e) {
       window.__shopLoadError = (window.TixxPublic && window.TixxPublic.shopError()) || 'unavailable';
       if (metaEl) metaEl.textContent = 'Shop temporarily unavailable';
