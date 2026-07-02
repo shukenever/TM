@@ -18,18 +18,18 @@
  * Disable with TM_EMAIL_GATE_DISABLE=1 on Vercel if you don't want the overlay on proxied passes.
  */
 
-/** Gate on pass URLs (/tickets/:gid/:slug): securetixx.com prod + legacy tixx.pw + localhost preview. */
+/** Gate on pass URLs (/tickets/:gid/:slug): tixx.pw prod + localhost loopback for slug preview stub. */
 const EMAIL_GATE_HEAD_SNIPPET = `
 <script>(function(){try{
 var h=location.hostname,p=location.pathname||"";
-var gateHost=h==="securetixx.com"||h==="www.securetixx.com"||h==="tixx.pw"||h==="www.tixx.pw"||h==="localhost"||h==="127.0.0.1"||h==="[::1]";
+var gateHost=h==="tixx.pw"||h==="www.tixx.pw"||h==="localhost"||h==="127.0.0.1"||h==="[::1]";
 var passPath=/^\\/tickets\\/\\d+\\/[a-zA-Z0-9_.-]+\\/?$/i.test(p);
 if(!gateHost||!passPath)return;
 var k="tixx_pw_customer_email_v1",v=localStorage.getItem(k);
 if(v&&/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(v).trim()))return;
 document.documentElement.classList.add("tm-email-gate-pending");
 }catch(e){var h=location.hostname,p=location.pathname||"";
-var gateHost=h==="securetixx.com"||h==="www.securetixx.com"||h==="tixx.pw"||h==="www.tixx.pw"||h==="localhost"||h==="127.0.0.1"||h==="[::1]";
+var gateHost=h==="tixx.pw"||h==="www.tixx.pw"||h==="localhost"||h==="127.0.0.1"||h==="[::1]";
 if(gateHost&&/^\\/tickets\\/\\d+\\/[a-zA-Z0-9_.-]+\\/?$/i.test(p))
 document.documentElement.classList.add("tm-email-gate-pending");}})();</script>
 <style>.tm-email-gate-pending .safetix-slot,.tm-email-gate-pending .barcode-frame{visibility:hidden!important}</style>

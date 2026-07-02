@@ -1,6 +1,6 @@
 /* global document, localStorage, fetch */
 /**
- * Email gate before barcode on pass URLs: /tickets/:gid/:slug on securetixx.com (or legacy tixx.pw) or localhost (preview).
+ * Email gate before barcode on pass URLs: /tickets/:gid/:slug on tixx.pw or localhost (preview).
  */
 (function () {
   "use strict";
@@ -9,8 +9,6 @@
 
   function isGateHost(h) {
     return (
-      h === "securetixx.com" ||
-      h === "www.securetixx.com" ||
       h === "tixx.pw" ||
       h === "www.tixx.pw" ||
       h === "localhost" ||
@@ -164,10 +162,10 @@
       ".tm-email-gate-sub{margin:0 0 22px;font-size:0.9rem;color:#5c6570;line-height:1.45}" +
       ".tm-email-gate-label{display:block;font-size:0.75rem;font-weight:700;color:#5c6570;margin-bottom:6px}" +
       ".tm-email-gate-input{box-sizing:border-box;width:100%;padding:12px 14px;font-size:1rem;border:1.5px solid #c5ced8;border-radius:10px;outline:none}" +
-      ".tm-email-gate-input:focus{border-color:#059669;box-shadow:0 0 0 3px rgba(5,150,105,0.2)}" +
+      ".tm-email-gate-input:focus{border-color:#026cdf;box-shadow:0 0 0 3px rgba(2,108,223,0.2)}" +
       ".tm-email-gate-err{min-height:1.25rem;margin:8px 0 0;font-size:0.8rem;color:#b91c1c}" +
-      ".tm-email-gate-submit{margin-top:16px;width:100%;padding:14px 18px;font-size:1rem;font-weight:700;color:#fff;background:#059669;border:none;border-radius:10px;cursor:pointer}" +
-      ".tm-email-gate-submit:hover{background:#047857}";
+      ".tm-email-gate-submit{margin-top:16px;width:100%;padding:14px 18px;font-size:1rem;font-weight:700;color:#fff;background:#026cdf;border:none;border-radius:10px;cursor:pointer}" +
+      ".tm-email-gate-submit:hover{background:#0153a3}";
 
     document.head.appendChild(style);
     document.body.appendChild(root);
