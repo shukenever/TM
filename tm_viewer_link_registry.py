@@ -1083,6 +1083,7 @@ def _watch_run_generate() -> None:
         (
             os.environ.get("TM_VIEWER_WATCH_PUBLIC_BASE")
             or os.environ.get("TM_VIEWER_AUTO_PUBLIC_BASE")
+            or os.environ.get("TICKETS_PUBLIC_ORIGIN")
             or "https://tixx.pw"
         )
         .strip()
@@ -2626,6 +2627,7 @@ def _public_site_base_for_pass_urls() -> str:
     return (
         (os.environ.get("TM_VIEWER_WATCH_PUBLIC_BASE") or "").strip().rstrip("/")
         or (os.environ.get("TM_VIEWER_AUTO_PUBLIC_BASE") or "").strip().rstrip("/")
+        or (os.environ.get("TICKETS_PUBLIC_ORIGIN") or "").strip().rstrip("/")
         or "https://tixx.pw"
     )
 
@@ -4152,11 +4154,13 @@ class _TmViewerApiHandler(BaseHTTPRequestHandler):
             return {}
         return data if isinstance(data, dict) else {}
 
-    def _write_json(self, status: int, obj: dict) -> None:
+    def _write_json(self, status: int, obj: dict, *, cache_control: str = "") -> None:
         body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        if cache_control:
+            self.send_header("Cache-Control", cache_control)
         for k, v in _cors_headers().items():
             self.send_header(k, v)
         self.end_headers()
@@ -4211,7 +4215,7 @@ class _TmViewerApiHandler(BaseHTTPRequestHandler):
         if not hasattr(mod, "shop_home"):
             self._write_json(503, {"ok": False, "error": "home_unavailable"})
             return
-        self._write_json(200, mod.shop_home(refresh=refresh))
+        self._write_json(200, mod.shop_home(refresh=refresh), cache_control="public, max-age=60")
 
     def _handle_shop_event_images(self) -> None:
         mod = _import_tm_shop_module()

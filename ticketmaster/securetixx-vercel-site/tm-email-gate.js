@@ -13,8 +13,6 @@
       h === "www.securetixx.com" ||
       h === "tixx.pw" ||
       h === "www.tixx.pw" ||
-      h === "securetixx.com" ||
-      h === "www.securetixx.com" ||
       h === "localhost" ||
       h === "127.0.0.1" ||
       h === "[::1]"

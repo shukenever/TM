@@ -6,7 +6,7 @@
   },
   "scripts": {
     "build": "node scripts/write-viewer-login-url.js && node scripts/write-viewer-api-base.js && node scripts/write-viewer-mail-api-base.js && node scripts/sync-public.js",
-    "build:securetixx": "node scripts/write-viewer-login-url.js && node scripts/write-viewer-api-base.js && node scripts/write-viewer-mail-api-base.js && node scripts/sync-public-securetixx.js"
+    "build:securetixx": "node scripts/build-with-site.js securetixx-vercel-site"
   },
   "dependencies": {
     "@upstash/redis": "^1.37.0",
