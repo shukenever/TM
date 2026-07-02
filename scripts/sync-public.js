@@ -12,7 +12,25 @@ const path = require("path");
 
 const root = path.join(__dirname, "..");
 const pub = path.join(root, "public");
-const siteFolder = (process.env.TM_VERCEL_SITE || "tm-vercel-site").trim();
+
+function resolveSiteFolder() {
+  const explicit = (process.env.TM_VERCEL_SITE || "").trim();
+  if (explicit) return explicit;
+  if (process.env.VERCEL === "1") {
+    const proj = (process.env.VERCEL_PROJECT_NAME || "").toLowerCase();
+    const url = (process.env.VERCEL_URL || "").toLowerCase();
+    if (
+      proj === "tmnew" ||
+      proj.includes("securetixx") ||
+      url.includes("securetixx")
+    ) {
+      return "securetixx-vercel-site";
+    }
+  }
+  return "tm-vercel-site";
+}
+
+const siteFolder = resolveSiteFolder();
 const siteSrc = path.join(root, "ticketmaster", siteFolder);
 
 const NAMES = [
