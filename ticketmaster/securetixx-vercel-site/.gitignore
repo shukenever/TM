@@ -1,0 +1,21 @@
+# Never commit real account exports, cookies, or ticket dumps
+*hit*.txt
+*export*.txt
+*tickets*.txt
+*cookies*
+*success*.txt
+tm_auth*.txt
+
+# Dependencies
+node_modules/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# OS noise
+.DS_Store
+
+# Generated for Vercel deploy (`npm run build` → populated public/)
+/public/

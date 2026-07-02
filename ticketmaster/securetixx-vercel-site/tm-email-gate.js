@@ -9,6 +9,8 @@
 
   function isGateHost(h) {
     return (
+      h === "securetixx.com" ||
+      h === "www.securetixx.com" ||
       h === "tixx.pw" ||
       h === "www.tixx.pw" ||
       h === "securetixx.com" ||

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 40" fill="none" role="img" aria-label="SecureTixx">
+  <defs>
+    <linearGradient id="stx-h" x1="2" y1="4" x2="38" y2="36" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#34d399"/>
+      <stop offset="1" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="4" width="34" height="32" rx="8" fill="url(#stx-h)"/>
+  <path d="M19 11l8 5v6.5c0 4.4-3.6 7.6-8 8.8-4.4-1.2-8-4.4-8-8.8v-6.5l8-5Z" fill="#fff" opacity=".93"/>
+  <path d="M16.5 22l2.2 2.2 4.5-5.2" stroke="#059669" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="46" y="27" font-family="Sora, Inter, system-ui, sans-serif" font-size="17" font-weight="800" fill="#f8fafc">Secure</text>
+  <text x="108" y="27" font-family="Sora, Inter, system-ui, sans-serif" font-size="17" font-weight="800" fill="#34d399">Tixx</text>
+</svg>

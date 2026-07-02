@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>/tickets/0/temp-email-preview · local</title>
+  <meta name="tm-event-title" content="Demo concert (local preview)"/>
+  <meta name="tm-event-start" content="" id="tm-meta-ev-start"/>
+  <script>(function(){var el=document.getElementById("tm-meta-ev-start");if(el)el.setAttribute("content",new Date(Date.now()+96*3600000).toISOString());})();</script>
+  <script>(function(){try{
+var h=location.hostname,p=location.pathname||"";
+var gateHost=h==="securetixx.com"||h==="www.securetixx.com"||h==="tixx.pw"||h==="www.tixx.pw"||h==="localhost"||h==="127.0.0.1"||h==="[::1]";
+var passPath=/^\/tickets\/\d+\/[a-zA-Z0-9_.-]+\/?$/i.test(p);
+if(!gateHost||!passPath)return;
+var k="tixx_pw_customer_email_v1",v=localStorage.getItem(k);
+if(v&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim()))return;
+document.documentElement.classList.add("tm-email-gate-pending");
+}catch(e){var h=location.hostname,p=location.pathname||"";
+var gateHost=h==="securetixx.com"||h==="www.securetixx.com"||h==="tixx.pw"||h==="www.tixx.pw"||h==="localhost"||h==="127.0.0.1"||h==="[::1]";
+if(gateHost&&/^\/tickets\/\d+\/[a-zA-Z0-9_.-]+\/?$/i.test(p))
+document.documentElement.classList.add("tm-email-gate-pending");}})();</script>
+  <style>
+    .tm-email-gate-pending .safetix-slot,
+    .tm-email-gate-pending .barcode-frame {
+      visibility: hidden !important;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f6f7f8;
+      padding: 1rem;
+      min-height: 100vh;
+    }
+    .preview-banner {
+      max-width: 520px;
+      margin: 0 auto 1rem;
+      background: #02121f;
+      color: #cbd5e1;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .preview-banner strong { color: #fff; }
+    .preview-banner code {
+      display: block;
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 6px;
+      color: #f1f5f9;
+      word-break: break-all;
+      font-size: 12px;
+    }
+    .pass-card {
+      max-width: 420px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 22px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    }
+    .pass-card h1 {
+      font-size: 1.15rem;
+      margin: 0 0 8px;
+      color: #059669;
+    }
+    .pass-card p {
+      color: #5c6570;
+      margin: 0 0 18px;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .barcode-frame {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      background: #fff;
+    }
+    .barcode-placeholder {
+      color: #64748b;
+      font-size: 13px;
+    }
+  </style>
+  <script src="/tm-email-gate.js" defer></script>
+</head>
+<body>
+  <div class="preview-banner">
+    <strong>Same URL shape as production</strong> (temporary slug for local preview).<br/>
+    Clear gate: remove <code>tixx_pw_customer_email_v1</code> in Local Storage.
+    <code id="tm-slug-preview-url"></code>
+  </div>
+  <div class="pass-card">
+    <h1>Temp pass · slug <code style="font-size:0.95em">temp-email-preview</code></h1>
+    <p>
+      After deploy, real links look like <code>https://securetixx.com/tickets/0/your-real-slug</code>
+      — same path pattern as this page.
+    </p>
+    <div class="safetix-slot">
+      <div class="barcode-frame">
+        <div class="barcode-placeholder">Barcode placeholder — visible after email</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var el = document.getElementById("tm-slug-preview-url");
+      if (el) el.textContent = location.origin + "/tickets/0/temp-email-preview";
+    })();
+  </script>
+</body>
+</html>

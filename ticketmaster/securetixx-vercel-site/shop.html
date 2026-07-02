@@ -1,0 +1,2355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#059669"/>
+  <title>SecureTixx Shop — Verified tickets marketplace</title>
+  <link rel="icon" href="/public/favicon-32.png" type="image/png" sizes="32x32"/>
+  <link rel="apple-touch-icon" href="/public/apple-touch-icon.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --tm-blue: #059669;
+      --tm-blue-dark: #047857;
+      --tm-blue-glow: rgba(2,108,223,.45);
+      --bg: #f4f6f9;
+      --surface: #fff;
+      --border: #e2e8f0;
+      --text: #121212;
+      --muted: #5c6570;
+      --accent: #059669;
+      --navy: #0f172a;
+      --ease-out: cubic-bezier(.22, 1, .36, 1);
+      --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes heroZoom {
+      from { transform: scale(1.08); }
+      to { transform: scale(1); }
+    }
+    @keyframes heroShimmer {
+      0%, 100% { opacity: .55; transform: translateX(-8%) scale(1.1); }
+      50% { opacity: .75; transform: translateX(8%) scale(1.15); }
+    }
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(12px, -18px) scale(1.05); }
+      66% { transform: translate(-8px, 10px) scale(.96); }
+    }
+    @keyframes pulseRing {
+      0% { box-shadow: 0 0 0 0 rgba(59,130,246,.45); }
+      70% { box-shadow: 0 0 0 12px rgba(59,130,246,0); }
+      100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @keyframes slideDown {
+      from { opacity: 0; max-height: 0; }
+      to { opacity: 1; max-height: 800px; }
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(.94) translateY(12px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @keyframes backdropIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes trustPop {
+      from { opacity: 0; transform: translateY(10px) scale(.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes iconBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
+    * { box-sizing: border-box; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .topbar {
+      background: linear-gradient(90deg, #0b1320 0%, #141e30 52%, #1f2d46 100%);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      box-shadow: 0 4px 20px rgba(5,9,17,.35);
+      padding-top: env(safe-area-inset-top, 0);
+      transition: box-shadow .35s var(--ease-out), backdrop-filter .35s;
+    }
+    .topbar.is-scrolled {
+      box-shadow: 0 8px 32px rgba(5,9,17,.5);
+      backdrop-filter: blur(12px);
+    }
+    .tm-simple-bar {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: .85rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .tixx-brand {
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+      color: #fff;
+      transition: transform .25s var(--ease-spring), filter .25s;
+    }
+    .tixx-brand:hover { transform: scale(1.03); filter: brightness(1.08); }
+    .tixx-logo {
+      height: 32px;
+      width: auto;
+      display: block;
+    }
+    .tixx-logo--on-dark {
+      height: 32px;
+      width: auto;
+      display: block;
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.35));
+    }
+    .tm-nav-links {
+      display: flex; align-items: center; gap: .15rem;
+      font-size: .8125rem; font-weight: 600;
+    }
+    .tm-nav-links a {
+      color: rgba(255,255,255,.88);
+      text-decoration: none;
+      padding: .4rem .65rem;
+      border-radius: 6px;
+      transition: background .2s var(--ease-out), color .2s, transform .2s var(--ease-spring);
+    }
+    .tm-nav-links a:hover { background: rgba(255,255,255,.1); color: #fff; transform: translateY(-1px); }
+    .tm-nav-links a.active {
+      color: #fff;
+      background: rgba(2,108,223,.35);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+    }
+    .tm-nav-links .tixx-settings-btn-nav { margin-left: .15rem; }
+    .tm-login-btn {
+      padding: .48rem 1.05rem;
+      font-size: .6875rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #0f172a;
+      background: linear-gradient(180deg, #f8fcff 0%, #e3edf8 100%);
+      border: 1px solid rgba(15,23,42,.12);
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: none;
+      margin-left: .35rem;
+      transition: transform .25s var(--ease-spring), box-shadow .25s, filter .25s;
+    }
+    .tm-login-btn:hover {
+      filter: brightness(1.02);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255,255,255,.15);
+    }
+
+    .shop-hero {
+      position: relative;
+      min-height: 320px;
+      background: radial-gradient(120% 120% at 8% 0%, #63b0ff 0%, #1a4a87 40%, #0a1322 100%);
+      overflow: hidden;
+    }
+    .shop-hero::before {
+      content: '';
+      position: absolute;
+      width: 420px; height: 420px;
+      top: -120px; right: -80px;
+      background: radial-gradient(circle, rgba(56,189,248,.35) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: orbFloat 14s ease-in-out infinite;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .shop-hero::after {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      bottom: -60px; left: 10%;
+      background: radial-gradient(circle, rgba(2,108,223,.4) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: orbFloat 18s ease-in-out infinite reverse;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .shop-hero img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; object-position: center 30%;
+      animation: heroZoom 1.8s var(--ease-out) forwards;
+      will-change: transform;
+    }
+    .shop-hero-overlay {
+      position: relative; z-index: 3;
+      min-height: 320px;
+      max-width: 1200px; margin: 0 auto;
+      padding: 2.25rem 1rem 2.75rem;
+      background: linear-gradient(180deg, rgba(4,10,21,.12) 0%, rgba(4,10,21,.82) 100%);
+      display: flex; flex-direction: column; justify-content: flex-end;
+    }
+    .shop-kicker {
+      margin: 0 0 .35rem;
+      font-size: .625rem; font-weight: 700;
+      letter-spacing: .2em; text-transform: uppercase;
+      color: #cde4ff;
+      animation: fadeUp .7s var(--ease-out) .1s both;
+    }
+    .shop-hero h1 {
+      margin: 0 0 .45rem;
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(1.5rem, 4.5vw, 2.35rem);
+      font-weight: 800; color: #fff; line-height: 1.1;
+      max-width: 24ch;
+      animation: fadeUp .7s var(--ease-out) .2s both;
+    }
+    .shop-hero h1 em {
+      font-style: normal;
+      background: linear-gradient(90deg, #7dd3fc, #38bdf8, #fff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .shop-hero p {
+      margin: 0;
+      font-size: .9rem; line-height: 1.45;
+      color: rgba(255,255,255,.92);
+      max-width: 42ch;
+      animation: fadeUp .7s var(--ease-out) .35s both;
+    }
+
+    .search-wrap {
+      max-width: 960px;
+      margin: -1.75rem auto 0;
+      padding: 0 1rem 1.25rem;
+      position: relative; z-index: 5;
+      animation: fadeUp .75s var(--ease-out) .45s both;
+    }
+    .search-strip {
+      display: flex; flex-wrap: wrap; align-items: stretch;
+      background: rgba(255,255,255,.97);
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,.28);
+      box-shadow: 0 20px 50px rgba(2,6,23,.22), 0 0 0 1px rgba(255,255,255,.6) inset;
+      overflow: hidden;
+      transition: box-shadow .35s var(--ease-out), transform .35s var(--ease-out);
+    }
+    .search-strip:focus-within {
+      box-shadow: 0 24px 60px rgba(2,108,223,.18), 0 0 0 3px rgba(2,108,223,.12);
+      transform: translateY(-2px);
+    }
+    .search-seg {
+      flex: 1 1 140px;
+      padding: 10px 14px 12px;
+      display: flex; flex-direction: column; gap: 4px;
+      border-right: 1px solid #eef2f6;
+      min-width: 0;
+    }
+    .search-seg--grow { flex: 2 1 200px; }
+    .search-seg label {
+      font-size: .5625rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: #6b7280;
+    }
+    .search-seg input, .search-seg select {
+      border: 0; outline: none; background: transparent;
+      font: inherit; font-size: .875rem; font-weight: 500;
+      color: var(--text); width: 100%; min-width: 0;
+      transition: color .2s;
+    }
+    .search-seg:focus-within label { color: var(--tm-blue); }
+    .search-seg select { cursor: pointer; }
+    .search-go {
+      flex: 0 0 56px;
+      border: 0;
+      background: linear-gradient(145deg, #3b82f6, #1d4ed8);
+      color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: filter .25s, transform .25s var(--ease-spring);
+      position: relative;
+    }
+    .search-go:hover {
+      filter: brightness(1.08);
+      transform: scale(1.02);
+    }
+    .search-go:active { transform: scale(.96); }
+    .search-go svg { transition: transform .3s var(--ease-spring); }
+    .search-go:hover svg { transform: scale(1.1) rotate(-8deg); }
+
+    .trust-row {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 1rem 1.25rem;
+      display: flex; flex-wrap: wrap; gap: .65rem;
+      justify-content: center;
+    }
+    .trust-pill {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .5rem .95rem;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: .75rem; font-weight: 600;
+      color: #334155;
+      box-shadow: 0 4px 14px rgba(15,23,42,.06);
+      animation: trustPop .6s var(--ease-out) both;
+      transition: transform .25s var(--ease-spring), box-shadow .25s, border-color .25s;
+    }
+    .trust-pill:nth-child(1) { animation-delay: .55s; }
+    .trust-pill:nth-child(2) { animation-delay: .65s; }
+    .trust-pill:nth-child(3) { animation-delay: .75s; }
+    .trust-pill:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(2,108,223,.12);
+      border-color: rgba(2,108,223,.25);
+    }
+    .trust-pill svg {
+      width: 16px; height: 16px; color: var(--tm-blue); flex-shrink: 0;
+      transition: transform .3s var(--ease-spring);
+    }
+    .trust-pill:hover svg { animation: iconBounce .5s ease; }
+
+    .filters-sticky {
+      position: sticky;
+      top: 56px;
+      z-index: 20;
+      background: rgba(246,247,248,.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: .75rem 0 .25rem;
+      margin: 0 -1rem;
+      padding-left: 1rem;
+      padding-right: 1rem;
+      border-bottom: 1px solid transparent;
+    }
+    .filters-sticky.is-stuck {
+      border-bottom-color: var(--border);
+      box-shadow: 0 4px 16px rgba(15,23,42,.06);
+    }
+
+    .shop-main {
+      flex: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 1rem 3rem;
+    }
+
+    .toolbar {
+      display: flex; flex-wrap: wrap; align-items: center;
+      justify-content: space-between; gap: .75rem 1rem;
+      margin: 1.25rem 0 1rem;
+    }
+    .results-meta {
+      font-size: .875rem; color: var(--muted);
+      transition: opacity .2s;
+    }
+    .results-meta strong { color: var(--tm-blue); }
+    .toolbar-right {
+      display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
+    }
+    .toolbar-right select {
+      padding: .45rem .65rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font: inherit; font-size: .8125rem;
+      background: #fff;
+    }
+    .view-toggle {
+      display: flex; border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden; background: #fff;
+    }
+    .view-toggle button {
+      border: 0; background: transparent;
+      padding: .45rem .75rem; font: inherit;
+      font-size: .75rem; font-weight: 700;
+      cursor: pointer; color: var(--muted);
+      transition: all .25s var(--ease-out);
+    }
+    .view-toggle button.active {
+      background: var(--tm-blue); color: #fff;
+      box-shadow: 0 2px 8px rgba(2,108,223,.35);
+    }
+
+    .cat-row {
+      display: flex; flex-wrap: wrap; gap: .5rem;
+      margin-bottom: 1.25rem;
+    }
+    .cat-pill {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 999px;
+      padding: .45rem .95rem;
+      font-size: .8125rem; font-weight: 600;
+      cursor: pointer; color: var(--muted);
+      font-family: inherit;
+      transition: all .25s var(--ease-out);
+      position: relative;
+      overflow: hidden;
+    }
+    .cat-pill::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(2,108,223,.12), rgba(56,189,248,.08));
+      opacity: 0;
+      transition: opacity .25s;
+    }
+    .cat-pill:hover {
+      border-color: rgba(2,108,223,.3);
+      color: var(--tm-blue);
+      transform: translateY(-1px);
+    }
+    .cat-pill.active {
+      background: linear-gradient(135deg, rgba(2,108,223,.14), rgba(56,189,248,.1));
+      border-color: rgba(2,108,223,.4);
+      color: var(--tm-blue);
+      box-shadow: 0 4px 14px rgba(2,108,223,.12);
+    }
+    .cat-pill.active::before { opacity: 1; }
+
+    .banner {
+      padding: .75rem 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      font-size: .875rem;
+      animation: fadeUp .4s var(--ease-out);
+    }
+    .banner.ok { background: #ecfdf5; color: #065f46; }
+    .banner.err { background: #fef2f2; color: #991b1b; }
+
+    .event-grid {
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+    .event-grid.is-filtering { opacity: .6; pointer-events: none; transition: opacity .2s; }
+    .event-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(15,23,42,.05);
+      transition: box-shadow .35s var(--ease-out), border-color .35s, transform .35s var(--ease-out);
+      opacity: 0;
+      animation: fadeUp .55s var(--ease-out) forwards;
+    }
+    .event-card.is-visible { opacity: 1; }
+    .event-card:hover {
+      box-shadow: 0 16px 40px rgba(2,108,223,.12);
+      border-color: rgba(2,108,223,.28);
+      transform: translateY(-3px);
+    }
+    .event-card.open {
+      border-color: rgba(2,108,223,.4);
+      box-shadow: 0 12px 36px rgba(2,108,223,.14);
+    }
+    .event-card-head {
+      display: grid;
+      grid-template-columns: 100px 1fr auto;
+      gap: 1rem;
+      padding: 1.1rem 1.25rem;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      transition: background .2s;
+    }
+    .event-card-head:hover { background: linear-gradient(90deg, rgba(2,108,223,.03), transparent); }
+    @media (max-width: 640px) {
+      .event-card-head { grid-template-columns: 72px 1fr; }
+      .event-card-price { grid-column: 1 / -1; text-align: left; display: flex; align-items: center; gap: 1rem; }
+      .skeleton-card { grid-template-columns: 72px 1fr; }
+      .skeleton-price { display: none; }
+    }
+    .event-thumb {
+      width: 100%; aspect-ratio: 1;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+      transition: transform .4s var(--ease-spring);
+    }
+    .event-card:hover .event-thumb { transform: scale(1.04) rotate(-1deg); }
+    .event-thumb::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 35%, rgba(0,0,0,.35) 100%);
+    }
+    .event-thumb::before {
+      content: '';
+      position: absolute; inset: -50%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+      transform: translateX(-100%);
+      transition: transform .6s;
+    }
+    .event-card:hover .event-thumb::before { transform: translateX(100%); }
+    .event-thumb img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; opacity: .15;
+    }
+    .event-thumb-photo {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; z-index: 0; opacity: 1;
+    }
+    .event-thumb.has-photo .event-thumb-initials { display: none; }
+    .event-thumb.has-photo .event-thumb-mark { opacity: .92; }
+    .event-thumb-mark {
+      position: absolute; right: 6px; bottom: 6px; z-index: 2;
+      width: 22px; height: 22px; opacity: .85;
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,.25));
+    }
+    .event-thumb-initials {
+      position: relative; z-index: 1;
+      font-family: 'Sora', sans-serif;
+      font-weight: 800; font-size: 1.1rem;
+      color: rgba(255,255,255,.95);
+      text-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .thumb-concerts { background: linear-gradient(135deg, #7c3aed, #4f46e5); }
+    .thumb-sports { background: linear-gradient(135deg, #059669, #047857); }
+    .thumb-parking { background: linear-gradient(135deg, #d97706, #b45309); }
+    .thumb-events { background: linear-gradient(135deg, #059669, #047857); }
+    .event-title {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      font-size: 1.05rem;
+      line-height: 1.25;
+      margin: 0 0 .35rem;
+    }
+    .event-meta {
+      font-size: .8125rem; color: var(--muted);
+      line-height: 1.45;
+    }
+    .event-meta .venue { font-weight: 600; color: #334155; }
+    .event-badge {
+      display: inline-block;
+      margin-top: .35rem;
+      font-size: .6875rem; font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: .2rem .5rem;
+      border-radius: 4px;
+      background: #f1f5f9; color: #475569;
+    }
+    .event-badge.cat-concerts { background: #ede9fe; color: #6d28d9; }
+    .event-badge.cat-sports { background: #dcfce7; color: #15803d; }
+    .event-badge.cat-parking { background: #fef3c7; color: #b45309; }
+    .event-card-price { text-align: right; }
+    .event-chevron {
+      display: inline-block;
+      margin-left: .35rem;
+      font-size: .75rem;
+      color: var(--muted);
+      transition: transform .2s;
+    }
+    .event-card.open .event-chevron { transform: rotate(180deg); }
+    .from-price {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      font-size: 1.4rem;
+      color: var(--tm-blue);
+      transition: transform .3s var(--ease-spring);
+    }
+    .event-card:hover .from-price { transform: scale(1.04); }
+    .from-label { font-size: .75rem; color: var(--muted); }
+    .ticket-count {
+      font-size: .8125rem; font-weight: 600; color: #059669; margin-top: .25rem;
+      display: flex; align-items: center; justify-content: flex-end; gap: .25rem;
+    }
+
+    .seat-list {
+      border-top: 1px solid #f1f5f9;
+      padding: 0 1rem;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height .45s var(--ease-out), opacity .35s, padding .35s;
+    }
+    .event-card.open .seat-list {
+      max-height: 600px;
+      opacity: 1;
+      padding: .5rem 1rem 1rem;
+    }
+    .seat-row {
+      display: flex; flex-wrap: wrap;
+      align-items: center; justify-content: space-between;
+      gap: .5rem 1rem;
+      padding: .7rem 0;
+      border-bottom: 1px solid #f8fafc;
+      animation: fadeUp .35s var(--ease-out) both;
+    }
+    .seat-row:last-child { border-bottom: 0; }
+    .seat-info { font-size: .875rem; font-weight: 600; }
+    .seat-price-wrap { display: flex; align-items: baseline; gap: .65rem; }
+    .seat-price { font-family: 'Sora', sans-serif; font-weight: 800; color: var(--tm-blue); }
+    .seat-face { font-size: .75rem; color: var(--muted); text-decoration: line-through; }
+    .btn-buy {
+      border: 0;
+      background: linear-gradient(145deg, #34d399, #059669);
+      color: #fff;
+      font-weight: 700; font-size: .8125rem;
+      padding: .52rem 1.1rem; border-radius: 10px;
+      cursor: pointer; font-family: inherit;
+      transition: transform .25s var(--ease-spring), box-shadow .25s, filter .25s;
+      box-shadow: 0 4px 14px rgba(2,108,223,.25);
+    }
+    .btn-buy:hover {
+      filter: brightness(1.06);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(2,108,223,.35);
+    }
+    .btn-buy:active { transform: translateY(0) scale(.98); }
+
+    .listing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .listing-grid.is-filtering { opacity: .6; pointer-events: none; transition: opacity .2s; }
+    .listing-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.1rem;
+      display: flex; flex-direction: column; gap: .35rem;
+      opacity: 0;
+      animation: fadeUp .5s var(--ease-out) forwards;
+      transition: transform .3s var(--ease-out), box-shadow .3s, border-color .3s;
+    }
+    .listing-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 32px rgba(5,150,105,.12);
+      border-color: rgba(2,108,223,.25);
+    }
+
+    .empty, #load {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--muted);
+    }
+    .empty { animation: fadeUp .5s var(--ease-out); }
+
+    /* Skeleton loaders */
+    .skeleton-grid {
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+    .skeleton-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.1rem 1.25rem;
+      display: grid;
+      grid-template-columns: 100px 1fr 100px;
+      gap: 1rem;
+      align-items: center;
+    }
+    .skeleton-block {
+      background: linear-gradient(90deg, #eef2f6 25%, #f8fafc 50%, #eef2f6 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s ease-in-out infinite;
+      border-radius: 8px;
+    }
+    .skeleton-thumb { width: 100%; aspect-ratio: 1; border-radius: 14px; }
+    .skeleton-line { height: 14px; margin-bottom: 8px; }
+    .skeleton-line.short { width: 60%; }
+    .skeleton-line.med { width: 80%; }
+    .skeleton-price { height: 28px; width: 70px; margin-left: auto; border-radius: 6px; }
+
+    .modal {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem; z-index: 100;
+      animation: backdropIn .25s ease;
+    }
+    .modal[hidden] { display: none; }
+    .panel {
+      background: #fff; border-radius: 20px;
+      max-width: 440px; width: 100%;
+      max-height: min(92vh, 640px);
+      overflow: auto;
+      padding: 1.5rem;
+      box-shadow: 0 32px 80px rgba(0,0,0,.25);
+      animation: modalIn .4s var(--ease-out);
+      position: relative;
+    }
+    .buy-close {
+      position: absolute; top: .85rem; right: .85rem;
+      width: 2rem; height: 2rem; border: 0; border-radius: 999px;
+      background: #f1f5f9; color: #64748b; font-size: 1.35rem; line-height: 1;
+      cursor: pointer;
+    }
+    .buy-close:hover { background: #e2e8f0; color: #0f172a; }
+    .buy-event-card {
+      margin: .75rem 0 1rem;
+      padding: .85rem .9rem;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(2,108,223,.08), rgba(2,108,223,.02));
+      border: 1px solid rgba(2,108,223,.14);
+    }
+    .buy-event-title {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      font-size: .95rem;
+      line-height: 1.35;
+      margin: 0 0 .35rem;
+      color: #0f172a;
+    }
+    .buy-event-meta {
+      font-size: .8125rem;
+      color: var(--muted);
+      line-height: 1.45;
+      margin: 0 0 .55rem;
+    }
+    .buy-price-row {
+      display: flex; align-items: baseline; justify-content: space-between; gap: .75rem;
+    }
+    .buy-price-main {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      font-size: 1.35rem;
+      color: var(--tm-blue);
+    }
+    .buy-price-face {
+      font-size: .75rem;
+      color: #94a3b8;
+      text-decoration: line-through;
+    }
+    .buy-status {
+      min-height: 1.25rem;
+      font-size: .8125rem;
+      margin: .65rem 0 0;
+      color: var(--muted);
+    }
+    .buy-status.ok { color: #059669; font-weight: 600; }
+    .buy-status.err { color: #dc2626; font-weight: 600; }
+    .buy-fine-print {
+      margin: .85rem 0 0;
+      font-size: .6875rem;
+      color: #94a3b8;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .panel-actions.buy-actions {
+      position: sticky; bottom: 0;
+      background: #fff;
+      padding-top: .35rem;
+      flex-wrap: wrap;
+    }
+    .btn-buy.btn-primary {
+      background: linear-gradient(135deg, #059669, #047857);
+      flex: 1 1 100%;
+      order: -1;
+      padding: .85rem 1rem;
+      font-size: .9375rem;
+    }
+    .btn-buy.btn-primary:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-buy.btn-unavail {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+    .panel h2 {
+      font-family: 'Sora', sans-serif;
+      margin: 0 0 .5rem;
+      font-size: 1.15rem;
+    }
+    .panel label {
+      display: block; font-size: .8125rem;
+      font-weight: 600; margin: .85rem 0 .35rem;
+    }
+    .panel input {
+      width: 100%; padding: .65rem .75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px; font: inherit;
+    }
+    .panel-actions {
+      display: flex; gap: .5rem; margin-top: 1.1rem;
+    }
+    .panel-actions .btn-buy { flex: 1; }
+    .btn-ghost {
+      background: #fff; color: var(--tm-blue);
+      border: 1px solid var(--border);
+    }
+
+    footer {
+      margin-top: auto;
+      background: linear-gradient(180deg, #131c2e 0%, #0f172a 100%);
+      color: #94a3b8;
+      padding: 2rem 1rem 1.5rem;
+      font-size: .8125rem;
+      position: relative;
+      overflow: hidden;
+    }
+    footer::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(56,189,248,.4), transparent);
+    }
+    .footer-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; flex-wrap: wrap;
+      align-items: center; justify-content: space-between;
+      gap: 1rem;
+    }
+    .footer-brand { display: flex; align-items: center; gap: .65rem; }
+    .footer-brand .tixx-logo { height: 28px; color: #e2e8f0; }
+    footer a { color: #7dd3fc; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    .footer-links {
+      display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem;
+    }
+    .footer-social {
+      display: inline-flex; align-items: center; gap: .4rem;
+      color: #e2e8f0; font-weight: 600;
+      transition: color .2s, transform .2s var(--ease-spring);
+    }
+    .footer-social:hover { color: #f472b6; text-decoration: none; transform: translateY(-1px); }
+    .footer-social svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* —— StubHub-style discover —— */
+    .shop-discover {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 1rem 1.5rem;
+    }
+    .discover-inner { max-width: 1200px; margin: 0 auto; }
+    .discover-top {
+      display: flex; flex-wrap: wrap; align-items: center;
+      justify-content: space-between; gap: .75rem 1rem;
+      margin-bottom: 1rem;
+    }
+    .loc-chip {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .4rem .85rem;
+      background: rgba(2,108,223,.08);
+      border: 1px solid rgba(2,108,223,.2);
+      border-radius: 999px;
+      font-size: .8125rem; font-weight: 600; color: var(--tm-blue);
+      cursor: pointer;
+      transition: background .2s, transform .2s;
+    }
+    .loc-chip:hover { background: rgba(2,108,223,.12); transform: translateY(-1px); }
+    .loc-chip svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .discover-cats {
+      display: flex; flex-wrap: wrap; gap: .35rem .15rem;
+      font-size: .8125rem; font-weight: 600;
+    }
+    .discover-cats a {
+      color: #334155; text-decoration: none;
+      padding: .35rem .65rem; border-radius: 6px;
+      transition: background .15s, color .15s;
+    }
+    .discover-cats a:hover { background: #f1f5f9; color: var(--tm-blue); }
+    .discover-cats a.active { color: var(--tm-blue); background: rgba(5,150,105,.12); }
+    .discover-search-hero {
+      max-width: 720px; margin: 0 auto 1rem;
+    }
+    .discover-search-hero h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(1.35rem, 3.5vw, 1.75rem);
+      font-weight: 800; text-align: center;
+      margin: 0 0 .85rem; color: #0f172a;
+      letter-spacing: -.02em;
+    }
+    .search-strip--hero {
+      border-radius: 999px;
+      box-shadow: 0 8px 32px rgba(2,108,223,.12);
+    }
+    .search-strip--hero .search-seg { border-right: none; }
+    .search-strip--hero .search-seg--grow { flex: 1 1 200px; }
+    .search-strip--hero .search-go {
+      flex: 0 0 52px;
+      border-radius: 0 999px 999px 0;
+      margin: 4px 4px 4px 0;
+      width: 52px; height: calc(100% - 8px);
+      align-self: center;
+    }
+
+    .discover-sections { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+    .discover-sections[hidden] { display: none !important; }
+    .carousel-section { margin: 1.75rem 0; }
+    .carousel-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 1rem; margin-bottom: .85rem;
+    }
+    .carousel-head h2 {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.2rem; font-weight: 800;
+      margin: 0; color: #0f172a;
+      flex: 1; min-width: 0;
+    }
+    .carousel-see {
+      font-size: .8125rem; font-weight: 700; color: var(--tm-blue);
+      text-decoration: none; white-space: nowrap;
+    }
+    .carousel-see:hover { text-decoration: underline; }
+    .carousel-wrap { position: relative; }
+    .carousel-track {
+      display: flex; gap: 1rem;
+      overflow-x: auto; overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      padding: .25rem .15rem 1rem;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
+    .carousel-track::-webkit-scrollbar { height: 6px; }
+    .carousel-track::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+    .carousel-card {
+      flex: 0 0 200px;
+      scroll-snap-align: start;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform .25s var(--ease-out), box-shadow .25s;
+      text-align: left;
+      font: inherit;
+      padding: 0;
+      color: inherit;
+    }
+    .carousel-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(2,108,223,.12);
+      border-color: rgba(2,108,223,.25);
+    }
+    .carousel-card-art {
+      aspect-ratio: 4/3;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .carousel-card-photo {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; z-index: 0;
+    }
+    .carousel-card-art.has-photo .carousel-card-initials { display: none; }
+    .carousel-card-art::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,.35) 100%);
+    }
+    .carousel-card-initials {
+      position: relative; z-index: 1;
+      font-family: 'Sora', sans-serif; font-weight: 800;
+      font-size: 1.5rem; color: #fff;
+      text-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+    .carousel-card-body { padding: .75rem .85rem .9rem; }
+    .carousel-card-title {
+      font-weight: 700; font-size: .875rem; line-height: 1.3;
+      margin: 0 0 .35rem;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .carousel-card-meta {
+      font-size: .75rem; color: var(--muted); line-height: 1.4;
+      margin: 0 0 .45rem;
+    }
+    .carousel-card-price {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800; font-size: .9375rem; color: var(--tm-blue);
+    }
+    .tixx-stock-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: .45rem; margin: 0;
+    }
+    .tixx-stock-pill {
+      display: inline-flex; align-items: center;
+      padding: .18rem .45rem; border-radius: 999px;
+      font-size: .625rem; font-weight: 800; letter-spacing: .02em;
+      text-transform: uppercase;
+      background: rgba(2, 108, 223, .1); color: #047857;
+    }
+    .tixx-stock-art-pill {
+      position: absolute; top: .45rem; right: .45rem; z-index: 3;
+      padding: .2rem .5rem; border-radius: 999px;
+      font-size: .625rem; font-weight: 800;
+      background: rgba(15, 23, 42, .72); color: #fff;
+    }
+    .tixx-stock-price {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800; font-size: .9375rem; color: var(--tm-blue);
+      white-space: nowrap;
+    }
+    .carousel-card-badge {
+      position: absolute; top: 8px; left: 8px; z-index: 2;
+      font-size: .625rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: .2rem .45rem; border-radius: 4px;
+      background: rgba(255,255,255,.92); color: #334155;
+    }
+    .carousel-empty {
+      font-size: .875rem; color: var(--muted);
+      padding: .5rem 0 1rem;
+    }
+    .all-events-heading {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.2rem; font-weight: 800;
+      margin: 0 0 .5rem; color: #0f172a;
+    }
+    @media (max-width: 640px) {
+      .carousel-card { flex: 0 0 168px; }
+      .search-strip--hero { border-radius: 16px; }
+      .search-strip--hero .search-go { border-radius: 0 12px 12px 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="tm-simple-bar">
+      <a class="tixx-brand" href="/" aria-label="SecureTixx home">
+        <img class="tixx-logo tixx-logo--on-dark"
+             src="/public/tixx-logo-header-sm.png"
+             srcset="/public/tixx-logo-header-sm.png 1x, /public/tixx-logo-header.png 2x"
+             alt="SecureTixx" width="100" height="32"/>
+      </a>
+      <nav class="tm-nav-links">
+        <a href="/">Home</a>
+        <a href="/shop.html" class="active">Shop</a>
+        <a href="/my-tickets">My tickets</a>
+        <button type="button" class="tixx-settings-btn-nav" data-tixx-settings title="Settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <a class="tm-login-btn" href="/login">Log in</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="shop-discover" aria-label="Search tickets">
+    <div class="discover-inner">
+      <div class="discover-top">
+        <button type="button" class="loc-chip" id="loc-chip" title="Change location">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="currentColor" stroke-width="2"/><path d="M12 21s7-4.35 7-10a7 7 0 1 0-14 0c0 5.65 7 10 7 10Z" stroke="currentColor" stroke-width="2"/></svg>
+          <span id="loc-label">Detecting location…</span>
+        </button>
+        <nav class="discover-cats" aria-label="Categories">
+          <a href="#" data-disc-cat="all" class="active">All</a>
+          <a href="#" data-disc-cat="concerts">Concerts</a>
+          <a href="#" data-disc-cat="sports">Sports</a>
+          <a href="#" data-disc-cat="events">Theater &amp; shows</a>
+          <a href="#" data-disc-cat="parking">Parking</a>
+        </nav>
+      </div>
+      <div class="discover-search-hero">
+        <h1 id="discover-title">Search events, artists, and venues</h1>
+        <form class="search-strip search-strip--hero" id="search-form" role="search">
+          <div class="search-seg search-seg--grow">
+            <label for="f-q">Search</label>
+            <input id="f-q" type="search" placeholder="Artist, event, or venue" autocomplete="off"/>
+          </div>
+          <button type="submit" class="search-go" aria-label="Search">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </form>
+      </div>
+      <form id="search-advanced" hidden>
+        <input id="f-location" type="hidden"/>
+      </form>
+    </div>
+  </section>
+
+  <div class="trust-row" aria-label="Trust badges">
+    <span class="trust-pill"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 9.5-8 10-4.5-.5-8-5-8-10V6l8-4Z" stroke="currentColor" stroke-width="2"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Verified TM passes</span>
+    <span class="trust-pill"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Instant email delivery</span>
+    <span class="trust-pill"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>50% off face value</span>
+  </div>
+
+  <main class="shop-main">
+    <div id="banner" class="banner" hidden></div>
+
+    <div id="discover-sections" class="discover-sections">
+      <section class="carousel-section" id="sec-near" hidden>
+        <div class="carousel-head">
+          <h2>Events near you</h2>
+          <a href="#" class="carousel-see" data-see="near">See all</a>
+        </div>
+        <div class="carousel-wrap"><div class="carousel-track" id="carousel-near"></div></div>
+      </section>
+      <section class="carousel-section" id="sec-popular">
+        <div class="carousel-head">
+          <h2>Popular events</h2>
+          <a href="#" class="carousel-see" data-see="popular">See all</a>
+        </div>
+        <div class="carousel-wrap"><div class="carousel-track" id="carousel-popular"><p class="carousel-empty">Loading inventory…</p></div></div>
+      </section>
+      <section class="carousel-section" id="sec-concerts">
+        <div class="carousel-head">
+          <h2>Concerts</h2>
+          <a href="#" class="carousel-see" data-see="concerts">See all</a>
+        </div>
+        <div class="carousel-wrap"><div class="carousel-track" id="carousel-concerts"></div></div>
+      </section>
+      <section class="carousel-section" id="sec-sports">
+        <div class="carousel-head">
+          <h2>Sports</h2>
+          <a href="#" class="carousel-see" data-see="sports">See all</a>
+        </div>
+        <div class="carousel-wrap"><div class="carousel-track" id="carousel-sports"></div></div>
+      </section>
+      <section class="carousel-section" id="sec-shows">
+        <div class="carousel-head">
+          <h2>Shows &amp; theater</h2>
+          <a href="#" class="carousel-see" data-see="shows">See all</a>
+        </div>
+        <div class="carousel-wrap"><div class="carousel-track" id="carousel-shows"></div></div>
+      </section>
+    </div>
+
+    <div class="filters-sticky" id="filters-sticky">
+    <h2 class="all-events-heading" id="all-events-heading">All events</h2>
+    <div class="cat-row" id="cat-row">
+      <button type="button" class="cat-pill active" data-cat="all">All</button>
+      <button type="button" class="cat-pill" data-cat="concerts">Concerts</button>
+      <button type="button" class="cat-pill" data-cat="sports">Sports</button>
+      <button type="button" class="cat-pill" data-cat="parking">Parking</button>
+      <button type="button" class="cat-pill" data-cat="events">More events</button>
+    </div>
+
+    <div class="toolbar">
+      <p class="results-meta" id="results-meta">Loading…</p>
+      <div class="toolbar-right">
+        <select id="f-date" aria-label="Date">
+          <option value="all">All dates</option>
+          <option value="week">Next 7 days</option>
+          <option value="month">Next 30 days</option>
+          <option value="future">Upcoming only</option>
+        </select>
+        <select id="f-sort" aria-label="Sort">
+          <option value="date">Sort: Date</option>
+          <option value="price_asc">Price: low to high</option>
+          <option value="price_desc">Price: high to low</option>
+          <option value="name">Name A–Z</option>
+        </select>
+        <div class="view-toggle">
+          <button type="button" class="active" data-view="events">Events</button>
+          <button type="button" data-view="listings">All seats</button>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div id="load">
+      <div class="skeleton-grid" aria-hidden="true">
+        <div class="skeleton-card"><div class="skeleton-block skeleton-thumb"></div><div><div class="skeleton-block skeleton-line med"></div><div class="skeleton-block skeleton-line short"></div></div><div class="skeleton-block skeleton-price"></div></div>
+        <div class="skeleton-card"><div class="skeleton-block skeleton-thumb"></div><div><div class="skeleton-block skeleton-line med"></div><div class="skeleton-block skeleton-line short"></div></div><div class="skeleton-block skeleton-price"></div></div>
+        <div class="skeleton-card"><div class="skeleton-block skeleton-thumb"></div><div><div class="skeleton-block skeleton-line med"></div><div class="skeleton-block skeleton-line short"></div></div><div class="skeleton-block skeleton-price"></div></div>
+      </div>
+      <p style="margin-top:1rem;font-size:.875rem">Loading marketplace…</p>
+    </div>
+    <div id="event-grid" class="event-grid" hidden></div>
+    <div id="listing-grid" class="listing-grid" hidden></div>
+    <div id="empty" class="empty" hidden>
+      No tickets match your search.
+      <br/><br/>
+      <a href="mailto:ezy.dev.bot@gmail.com">ezy.dev.bot@gmail.com</a>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img class="tixx-logo" src="/public/securetixx-logo.svg" alt="SecureTixx" width="87" height="28"/>
+        <span>Verified ticket marketplace</span>
+      </div>
+      <div class="footer-links">
+        <a class="footer-social" href="https://securetixx.com" target="_blank" rel="noopener noreferrer" aria-label="SecureTixx website">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+          securetixx.com
+        </a>
+        <span>
+          <a href="mailto:ezy.dev.bot@gmail.com">Support</a>
+          · <a href="/">Home</a>
+        </span>
+      </div>
+    </div>
+  </footer>
+
+  <div id="modal" class="modal" hidden>
+    <div class="panel buy-panel" role="dialog" aria-labelledby="buy-title">
+      <button type="button" class="buy-close" id="buy-cancel-x" aria-label="Close">&times;</button>
+      <h2 id="buy-title">Complete purchase</h2>
+      <div class="buy-event-card" id="buy-event-card">
+        <p class="buy-event-title" id="buy-event-title"></p>
+        <p class="buy-event-meta" id="buy-event-meta"></p>
+        <div class="buy-price-row">
+          <span class="buy-price-main" id="buy-price-main"></span>
+          <span class="buy-price-face" id="buy-price-face" hidden></span>
+        </div>
+      </div>
+      <label for="buy-email">Email — ticket sent here instantly</label>
+      <input type="email" id="buy-email" autocomplete="email" placeholder="you@email.com"/>
+      <label for="buy-name">Name on order (optional)</label>
+      <input type="text" id="buy-name" autocomplete="name" placeholder="First name"/>
+      <p id="buy-status" class="buy-status" role="status"></p>
+      <div class="panel-actions buy-actions">
+        <button type="button" class="btn-buy btn-primary" id="buy-confirm">Confirm &amp; get ticket</button>
+        <button type="button" class="btn-buy btn-ghost" id="buy-cancel">Cancel</button>
+        <button type="button" class="btn-buy" id="buy-pay" hidden>Pay with card</button>
+      </div>
+      <p class="buy-fine-print">Verified TM pass · Instant email delivery · Up to 50% off face value</p>
+    </div>
+  </div>
+
+  <script src="/public/tixx-public.js"></script>
+  <script src="/public/tixx-stock.js"></script>
+  <script src="/public/tixx-settings.js"></script>
+  <script>
+  (function () {
+    var base = String(location.origin || '').replace(/\/+$/, '');
+    if (!base) return;
+    window.__tixxShopEventsFetch = fetch(base + '/api/shop/listings?events_only=1&limit=0', { cache: 'no-store' })
+      .then(function (r) {
+        return r.text().then(function (text) {
+          var data = {};
+          try { data = text ? JSON.parse(text) : {}; } catch (eJ) { data = { ok: false, error: 'bad_response' }; }
+          if (!r.ok && !data.error) data.error = 'http_' + r.status;
+          return data;
+        });
+      })
+      .catch(function (e) { return { ok: false, error: String((e && e.message) || e || 'network') }; });
+  })();
+  </script>
+  <script>
+(function () {
+  var API = String(location.origin).replace(/\/+$/, '');
+  var shopEvents = [];
+  var listingsByEventKey = {};
+  var openEventKeys = {};
+  var active = null;
+  var state = {
+    q: '',
+    location: '',
+    date: 'all',
+    cat: 'all',
+    sort: 'date',
+    view: 'events'
+  };
+  var userCity = '';
+  var userRegion = '';
+  var LOC_KEY = 'tixx_user_city';
+  var REG_KEY = 'tixx_user_region';
+  var FAMOUS = ['taylor swift','beyoncé','beyonce','drake','bad bunny','ed sheeran','coldplay','billie eilish','post malone','travis scott','harry styles','olivia rodrigo','sabrina carpenter','morgan wallen','luke combs','zach bryan','eras tour','nfl','nba','mlb','nhl'];
+
+  function isFiltered() {
+    return !!(state.q.trim() || state.location.trim() || state.date !== 'all' || state.cat !== 'all');
+  }
+  function applyLocLabel() {
+    var el = document.getElementById('loc-label');
+    var title = document.getElementById('discover-title');
+    if (!el) return;
+    if (state.location.trim()) {
+      el.textContent = state.location.trim();
+      if (title) title.textContent = 'Tickets in ' + state.location.trim();
+    } else if (userCity) {
+      el.textContent = userCity + (userRegion ? ', ' + userRegion : '');
+      if (title) title.textContent = 'Events near ' + userCity;
+    } else {
+      el.textContent = 'Set location';
+      if (title) title.textContent = 'Search events, artists, and venues';
+    }
+  }
+  function saveLocation(city, region) {
+    userCity = (city || '').trim();
+    userRegion = (region || '').trim();
+    if (window.TixxSettings) window.TixxSettings.saveCity(userCity, userRegion);
+    else {
+      try {
+        if (userCity) localStorage.setItem(LOC_KEY, userCity);
+        if (userRegion) localStorage.setItem(REG_KEY, userRegion);
+      } catch (e) {}
+    }
+    applyLocLabel();
+    renderDiscover();
+  }
+  function loadSavedLocation() {
+    if (window.TixxSettings) {
+      userCity = window.TixxSettings.getCity();
+      userRegion = window.TixxSettings.getRegion();
+    } else {
+      try {
+        userCity = localStorage.getItem(LOC_KEY) || '';
+        userRegion = localStorage.getItem(REG_KEY) || '';
+      } catch (e) {}
+    }
+    applyLocLabel();
+    return !!userCity;
+  }
+  function detectLocation() {
+    loadSavedLocation();
+  }
+  window.addEventListener('tixx:location', function (e) {
+    if (!e.detail) return;
+    userCity = e.detail.city || '';
+    userRegion = e.detail.region || '';
+    applyLocLabel();
+    renderDiscover();
+  });
+  function venueTokens(venue) {
+    return String(venue || '').toLowerCase().replace(/[^a-z0-9\s,]/g, ' ').split(/\s+|,\s*/).filter(Boolean);
+  }
+  function locationMatch(ev) {
+    var needle = (state.location || userCity || '').trim().toLowerCase();
+    if (!needle) return true;
+    var blob = ((ev.venue || '') + ' ' + (ev.event_name || '') + ' ' + (userRegion || '')).toLowerCase();
+    if (blob.indexOf(needle) >= 0) return true;
+    var parts = needle.split(/[,\s]+/);
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i].length > 2 && blob.indexOf(parts[i]) >= 0) return true;
+    }
+    return false;
+  }
+  function fameBoost(name) {
+    var n = String(name || '').toLowerCase();
+    for (var i = 0; i < FAMOUS.length; i++) {
+      if (n.indexOf(FAMOUS[i]) >= 0) return 50;
+    }
+    return 0;
+  }
+  function carouselCardHtml(ev) {
+    var cat = esc(ev.category || 'events');
+    var photo = (ev.image_url || '').trim();
+    var artClass = 'carousel-card-art thumb-' + cat + (photo ? ' has-photo' : '');
+    var photoHtml = photo
+      ? '<img class="carousel-card-photo" src="' + esc(photo) + '" alt="" loading="lazy" decoding="async"/>'
+      : '';
+    var stockN = ev.count || 0;
+    var stockPill = window.TixxStock
+      ? '<span class="tixx-stock-art-pill">' + esc(window.TixxStock.formatStockShort(stockN)) + '</span>'
+      : '';
+    var footer = window.TixxStock
+      ? window.TixxStock.cardFooterHtml(ev, esc, money)
+      : ('<p class="carousel-card-price">From ' + esc(money(ev.min_price)) + '</p>');
+    return '<button type="button" class="carousel-card" data-event-key="' + esc(ev.key) + '">' +
+      '<div class="' + artClass + '">' + photoHtml + stockPill +
+      '<span class="carousel-card-badge">' + esc(catLabel(ev.category)) + '</span>' +
+      '<span class="carousel-card-initials">' + esc(initials(ev.event_name)) + '</span></div>' +
+      '<div class="carousel-card-body">' +
+      '<p class="carousel-card-title">' + esc(ev.event_name) + '</p>' +
+      '<p class="carousel-card-meta">' + esc(ev.event_date_display) + '<br/>' + esc(ev.venue) + '</p>' +
+      footer + '</div></button>';
+  }
+  function fillCarousel(trackId, events, sectionId, headEvents, catalogTotals) {
+    var track = document.getElementById(trackId);
+    var sec = sectionId ? document.getElementById(sectionId) : null;
+    if (!track) return;
+    if (!events.length) {
+      track.innerHTML = '<p class="carousel-empty">' + esc((window.TixxPublic && window.TixxPublic.MSG.categoryEmpty) || 'Nothing here yet.') + '</p>';
+      if (sec) sec.hidden = false;
+      return;
+    }
+    track.innerHTML = events.map(carouselCardHtml).join('');
+    track.querySelectorAll('.carousel-card').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var key = btn.getAttribute('data-event-key');
+        var ev = events.find(function (e) { return e.key === key; });
+        if (ev) focusEvent(ev);
+      });
+    });
+    if (sec) sec.hidden = false;
+    if (window.TixxStock && sectionId) {
+      window.TixxStock.updateSectionHead(sectionId, headEvents || events, catalogTotals || null);
+    }
+  }
+  function sectionCatalogTotals(categoryEvents) {
+    return {
+      tickets: window.__shopTotalCount || (window.TixxStock ? window.TixxStock.sumTickets(categoryEvents) : 0),
+      events: categoryEvents.length
+    };
+  }
+  function focusEvent(ev) {
+    state.q = ev.event_name || '';
+    document.getElementById('f-q').value = state.q;
+    state.view = 'events';
+    document.querySelectorAll('.view-toggle button').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-view') === 'events');
+    });
+    if (ev.key) {
+      openEventKeys[ev.key] = true;
+      loadEventListings(ev.key);
+    }
+    render();
+    setTimeout(function () {
+      var cards = document.querySelectorAll('.event-card');
+      var card = null;
+      for (var i = 0; i < cards.length; i++) {
+        if (cards[i].getAttribute('data-event') === ev.key) { card = cards[i]; break; }
+      }
+      if (card) {
+        card.classList.add('open');
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        document.getElementById('all-events-heading').scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 80);
+  }
+  function renderDiscover() {
+    var wrap = document.getElementById('discover-sections');
+    if (!wrap) return;
+    if (isFiltered()) {
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    var allEv = allDiscoverEvents();
+    if (!allEv.length) {
+      fillCarousel('carousel-popular', [], 'sec-popular');
+      fillCarousel('carousel-concerts', [], 'sec-concerts');
+      fillCarousel('carousel-sports', [], 'sec-sports');
+      fillCarousel('carousel-shows', [], 'sec-shows');
+      var nearSec0 = document.getElementById('sec-near');
+      if (nearSec0) nearSec0.hidden = true;
+      return;
+    }
+    var catalogTickets = window.__shopCatalogCount || window.__shopTotalCount || (window.TixxStock ? window.TixxStock.sumTickets(allEv) : 0);
+    var catalogEvents = window.__shopEventCount || allEv.length;
+    var popularAll = allEv.slice().sort(function (a, b) {
+      return (b.count + fameBoost(b.event_name)) - (a.count + fameBoost(a.event_name));
+    });
+    var popular = popularAll.slice(0, 24);
+    var nearAll = allEv.filter(locationMatch);
+    var near = nearAll.slice(0, 20);
+    var concertsAll = allEv.filter(function (e) { return e.category === 'concerts'; });
+    var sportsAll = allEv.filter(function (e) { return e.category === 'sports'; });
+    var showsAll = allEv.filter(function (e) {
+      return e.category === 'events' || e.category === 'parking';
+    });
+    var concerts = concertsAll.slice(0, 20);
+    var sports = sportsAll.slice(0, 20);
+    var shows = showsAll.slice(0, 20);
+    fillCarousel('carousel-popular', popular, 'sec-popular', popularAll, {
+      tickets: catalogTickets,
+      events: catalogEvents
+    });
+    fillCarousel('carousel-concerts', concerts, 'sec-concerts', concertsAll, sectionCatalogTotals(concertsAll));
+    fillCarousel('carousel-sports', sports, 'sec-sports', sportsAll, sectionCatalogTotals(sportsAll));
+    fillCarousel('carousel-shows', shows, 'sec-shows', showsAll, sectionCatalogTotals(showsAll));
+    var nearSec = document.getElementById('sec-near');
+    if (near.length && (userCity || state.location.trim())) {
+      fillCarousel('carousel-near', near, 'sec-near', nearAll);
+    } else if (nearSec) {
+      nearSec.hidden = true;
+    }
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  }
+  function money(n) {
+    var x = Number(n);
+    if (!isFinite(x) || x <= 0) x = 35;
+    return '$' + x.toFixed(2);
+  }
+  function evMinPrice(ev) {
+    var p = Number(ev.min_price || ev.min_price_usd || 0);
+    return p > 0 ? p : 35;
+  }
+  function apiEventsToCarousel(events) {
+    return (events || []).map(function (e) {
+      return {
+        key: e.event_key,
+        event_name: e.event_name,
+        event_id: e.event_id || '',
+        event_date: e.event_date || '',
+        event_date_display: e.event_date_display || '',
+        event_date_ts: e.event_date_ts || dateTsClient(e.event_date),
+        venue: e.venue || '',
+        category: e.category || 'events',
+        image_url: e.image_url || '',
+        count: e.ticket_count || 0,
+        min_price: evMinPrice(e),
+        min_price_usd: evMinPrice(e)
+      };
+    });
+  }
+  function eventSummaryAsListing(e) {
+    return {
+      category: e.category || 'events',
+      venue: e.venue || '',
+      event_name: e.event_name || '',
+      event_date_ts: e.event_date_ts || dateTsClient(e.event_date),
+      search_blob: [
+        e.event_name, e.venue, e.event_date_display, e.category
+      ].join(' ').toLowerCase()
+    };
+  }
+  function sortEventGroups(groups) {
+    var copy = groups.slice();
+    copy.sort(function (a, b) {
+      if (state.sort === 'price_asc') return a.min_price - b.min_price;
+      if (state.sort === 'price_desc') return b.min_price - a.min_price;
+      if (state.sort === 'name') return String(a.event_name).localeCompare(String(b.event_name));
+      return (a.event_date_ts || 0) - (b.event_date_ts || 0);
+    });
+    return copy;
+  }
+  function shopEventByKey(key) {
+    for (var i = 0; i < shopEvents.length; i++) {
+      if (shopEvents[i].event_key === key) return shopEvents[i];
+    }
+    return null;
+  }
+  function buildEventSearchQuery(ev) {
+    var parts = [(ev && ev.event_name) || ''];
+    var venue = (ev && ev.venue) || '';
+    if (venue && venue !== 'Venue TBA') parts.push(venue);
+    return parts.join(' ').trim();
+  }
+  function allLoadedListings() {
+    var out = [];
+    var seen = {};
+    Object.keys(listingsByEventKey).forEach(function (k) {
+      var cache = listingsByEventKey[k];
+      if (!cache || !cache.listings) return;
+      cache.listings.forEach(function (l) {
+        if (seen[l.listing_id]) return;
+        seen[l.listing_id] = true;
+        out.push(l);
+      });
+    });
+    return out;
+  }
+  function findListingById(id) {
+    var rows = allLoadedListings();
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].listing_id === id) return rows[i];
+    }
+    return null;
+  }
+  function eventDateTs(ev) {
+    return Number(ev.event_date_ts) || dateTsClient(ev.event_date);
+  }
+  function eventMatchesDisplayFilters(e) {
+    if (state.cat !== 'all' && e.category !== state.cat) return false;
+    if (!locationMatch(e)) return false;
+    if (state.date !== 'all') {
+      var now = Date.now();
+      var ts = eventDateTs(e);
+      if (state.date === 'future' && ts < now - 86400000) return false;
+      if (state.date === 'week' && (ts < now || ts > now + 7 * 86400000)) return false;
+      if (state.date === 'month' && (ts < now || ts > now + 30 * 86400000)) return false;
+    }
+    var q = state.q.trim().toLowerCase();
+    if (q) {
+      var blob = [
+        e.event_name, e.venue, e.event_date_display, e.event_date, e.event_id, e.category
+      ].join(' ').toLowerCase();
+      var parts = q.split(/\s+/).filter(Boolean);
+      for (var i = 0; i < parts.length; i++) {
+        if (blob.indexOf(parts[i]) < 0) return false;
+      }
+    }
+    return true;
+  }
+  function buildEventsForDisplay() {
+    return sortEventGroups(shopEvents.filter(eventMatchesDisplayFilters).map(function (e) {
+      var key = e.event_key;
+      if (!key) return null;
+      var cache = listingsByEventKey[key] || {};
+      var listings = (cache.listings || []).slice().sort(function (a, b) {
+        return (a.price_usd || 0) - (b.price_usd || 0);
+      });
+      return {
+        key: key,
+        event_name: e.event_name,
+        event_id: e.event_id || '',
+        event_date_display: e.event_date_display || formatDateClient(e.event_date),
+        event_date_ts: eventDateTs(e),
+        venue: (e.venue && String(e.venue).toLowerCase() !== 'unknown') ? e.venue : 'Venue TBA',
+        category: e.category || 'events',
+        image_url: e.image_url || '',
+        listings: listings,
+        count: e.ticket_count || listings.length || 0,
+        min_price: evMinPrice(e),
+        seatsPending: !!cache.loading,
+        seatsError: cache.error || '',
+        seatsLoaded: !!cache.loaded
+      };
+    }).filter(Boolean));
+  }
+  function allDiscoverEvents() {
+    return apiEventsToCarousel(shopEvents.filter(function (e) {
+      return state.cat === 'all' || e.category === state.cat;
+    }));
+  }
+  function initials(name) {
+    var p = String(name || 'E').trim().split(/\s+/);
+    return ((p[0] || 'E')[0] + (p[1] || '')[0]).toUpperCase();
+  }
+  function formatDateClient(raw) {
+    var s = String(raw || '').trim();
+    if (!s) return 'Date TBA';
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/);
+    if (!m) return s.length > 40 ? s.slice(0, 40) + '…' : s;
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    var y = +m[1], mo = +m[2] - 1, d = +m[3];
+    var dt = new Date(y, mo, d, m[4] ? +m[4] : 12, m[5] ? +m[5] : 0);
+    if (isNaN(dt.getTime())) return s.slice(0, 24);
+    if (m[4]) {
+      var h = dt.getHours(), mm = dt.getMinutes();
+      var ap = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return days[dt.getDay()] + ', ' + months[mo] + ' ' + d + ' · ' + h + ':' + (mm < 10 ? '0' : '') + mm + ' ' + ap;
+    }
+    return days[dt.getDay()] + ', ' + months[mo] + ' ' + d + ', ' + y;
+  }
+  function dateTsClient(raw) {
+    var s = String(raw || '').trim();
+    var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return 9999999999999;
+    return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
+  }
+  function normalizeListing(l) {
+    var row = Object.assign({}, l);
+    var venue = String(row.venue || '').trim();
+    if (!venue || venue.toLowerCase() === 'unknown') row.venue = 'Venue TBA';
+    row.event_date_display = row.event_date_display || formatDateClient(row.event_date);
+    row.event_date_ts = row.event_date_ts || dateTsClient(row.event_date);
+    row.category = row.category || 'events';
+    row.event_key = row.event_key || [row.event_name, row.event_date, row.venue].join('|').toLowerCase();
+    row.image_url = row.image_url || '';
+    row.event_id = row.event_id || '';
+    row.purchasable = row.purchasable !== false;
+    row.search_blob = row.search_blob || [
+      row.event_name, row.venue, row.section, row.row, row.seat, row.event_date_display, row.category
+    ].join(' ').toLowerCase();
+    return row;
+  }
+  function catLabel(c) {
+    var labels = { concerts: 'Concert', sports: 'Sports', parking: 'Parking', events: 'Event' };
+    return labels[c] || 'Event';
+  }
+  function thumbBlock(ev) {
+    var cat = esc(ev.category || 'events');
+    var photo = (ev.image_url || '').trim();
+    var cls = 'event-thumb thumb-' + cat + (photo ? ' has-photo' : '');
+    var photoHtml = photo
+      ? '<img class="event-thumb-photo" src="' + esc(photo) + '" alt="" loading="lazy" decoding="async"/>'
+      : '';
+    return '<div class="' + cls + '" aria-hidden="true">' + photoHtml +
+      '<span class="event-thumb-initials">' + esc(initials(ev.event_name)) + '</span>' +
+      '<img class="event-thumb-mark" src="/public/securetixx-mark.svg" alt="" width="22" height="22"/>' +
+      '</div>';
+  }
+  function showBanner(text, ok) {
+    var b = document.getElementById('banner');
+    if (!b) return;
+    b.hidden = false;
+    b.className = 'banner ' + (ok ? 'ok' : 'err');
+    b.textContent = text;
+  }
+
+  function matchesFilters(l) {
+    var loc = state.location.trim().toLowerCase();
+    if (state.cat !== 'all' && l.category !== state.cat) return false;
+    if (loc) {
+      var blob = ((l.venue || '') + ' ' + (l.event_name || '') + ' ' + (l.search_blob || '')).toLowerCase();
+      if (blob.indexOf(loc) < 0) {
+        var ok = false;
+        loc.split(/[,\s]+/).forEach(function (p) {
+          if (p.length > 2 && blob.indexOf(p) >= 0) ok = true;
+        });
+        if (!ok) return false;
+      }
+    }
+    if (state.date !== 'all') {
+      var now = Date.now();
+      var ts = Number(l.event_date_ts) || 9999999999999;
+      if (state.date === 'future' && ts < now - 86400000) return false;
+      if (state.date === 'week' && (ts < now || ts > now + 7 * 86400000)) return false;
+      if (state.date === 'month' && (ts < now || ts > now + 30 * 86400000)) return false;
+    }
+    return true;
+  }
+
+  function filteredListings() {
+    return allLoadedListings().filter(matchesFilters);
+  }
+
+  function sortListings(arr) {
+    var copy = arr.slice();
+    copy.sort(function (a, b) {
+      if (state.sort === 'price_asc') return (a.price_usd || 0) - (b.price_usd || 0);
+      if (state.sort === 'price_desc') return (b.price_usd || 0) - (a.price_usd || 0);
+      if (state.sort === 'name') return String(a.event_name).localeCompare(String(b.event_name));
+      return (a.event_date_ts || 0) - (b.event_date_ts || 0);
+    });
+    return copy;
+  }
+
+  function groupEvents(list) {
+    var map = {};
+    list.forEach(function (l) {
+      var k = l.event_key || l.event_name;
+      if (!map[k]) {
+        map[k] = {
+          key: k,
+          event_name: l.event_name,
+          event_id: l.event_id || '',
+          event_date_display: l.event_date_display,
+          event_date_ts: l.event_date_ts,
+          venue: l.venue,
+          category: l.category,
+          image_url: l.image_url || '',
+          listings: []
+        };
+      } else if (!map[k].image_url && l.image_url) {
+        map[k].image_url = l.image_url;
+      }
+      if (!map[k].event_id && l.event_id) map[k].event_id = l.event_id;
+      map[k].listings.push(l);
+    });
+    var groups = Object.keys(map).map(function (k) { return map[k]; });
+    groups.forEach(function (g) {
+      g.listings.sort(function (a, b) { return (a.price_usd || 0) - (b.price_usd || 0); });
+      var mp = 0;
+      g.listings.forEach(function (l) {
+        var p = Number(l.price_usd || 0);
+        if (p > 0 && (mp <= 0 || p < mp)) mp = p;
+      });
+      g.min_price = mp > 0 ? mp : 35;
+      g.count = g.listings.length;
+    });
+    groups.sort(function (a, b) {
+      if (state.sort === 'price_asc') return a.min_price - b.min_price;
+      if (state.sort === 'price_desc') return b.min_price - a.min_price;
+      if (state.sort === 'name') return String(a.event_name).localeCompare(String(b.event_name));
+      return (a.event_date_ts || 0) - (b.event_date_ts || 0);
+    });
+    return groups;
+  }
+
+  function staggerCards(container, selector) {
+    if (!container) return;
+    var cards = container.querySelectorAll(selector);
+    cards.forEach(function (el, i) {
+      el.style.animationDelay = Math.min(i * 0.06, 0.6) + 's';
+    });
+  }
+  function flashFilter() {
+    var eg = document.getElementById('event-grid');
+    var lg = document.getElementById('listing-grid');
+    [eg, lg].forEach(function (g) {
+      if (!g || g.hidden) return;
+      g.classList.add('is-filtering');
+      setTimeout(function () { g.classList.remove('is-filtering'); }, 220);
+    });
+  }
+
+  function render() {
+    var load = document.getElementById('load');
+    var empty = document.getElementById('empty');
+    var eg = document.getElementById('event-grid');
+    var lg = document.getElementById('listing-grid');
+    var meta = document.getElementById('results-meta');
+    if (load) load.hidden = true;
+
+    var list = sortListings(filteredListings());
+    var events = buildEventsForDisplay();
+    var ticketTotal = window.__shopCatalogCount || window.__shopTotalCount || 0;
+    var ticketShown = allLoadedListings().length;
+    var anySeatsLoading = Object.keys(listingsByEventKey).some(function (k) {
+      return listingsByEventKey[k] && listingsByEventKey[k].loading;
+    });
+
+    if (meta) {
+      var evN = events.length;
+      var extra = isFiltered() ? ' (filtered)' : '';
+      var loading = anySeatsLoading ? ' · loading seats…' : '';
+      meta.innerHTML = '<strong>' + ticketTotal + '</strong> tickets · <strong>' + evN + '</strong> events shown' + extra + loading;
+    }
+
+    if (!events.length && !list.length) {
+      if (empty) {
+        if (window.__shopLoadError) {
+          empty.hidden = false;
+          empty.textContent = (window.TixxPublic && window.TixxPublic.shopError()) || 'The shop is temporarily unavailable.';
+        } else {
+          empty.hidden = false;
+          empty.textContent = shopEvents.length
+            ? 'No events match your filters.'
+            : ((window.TixxPublic && window.TixxPublic.MSG.categoryEmpty) || 'Nothing here yet.');
+        }
+      }
+      if (eg) eg.hidden = true;
+      if (lg) lg.hidden = true;
+      renderDiscover();
+      return;
+    }
+    if (empty) empty.hidden = true;
+
+    if (state.view === 'listings') {
+      if (eg) eg.hidden = true;
+      if (lg) {
+        lg.hidden = false;
+        if (!list.length) {
+          lg.innerHTML = '<p class="carousel-empty" style="padding:1.25rem">Expand an event above to load seats, or use search to narrow events first.</p>';
+          return;
+        }
+        lg.innerHTML = list.map(function (l) {
+          var face = l.face_value_usd ? '<span class="seat-face">' + esc(money(l.face_value_usd)) + '</span>' : '';
+          var buyBtn = l.purchasable === false
+            ? '<button type="button" class="btn-buy btn-unavail" disabled>Unavailable</button>'
+            : '<button type="button" class="btn-buy" data-id="' + esc(l.listing_id) + '">Buy</button>';
+          return '<article class="listing-card">' +
+            '<div class="event-title" style="font-size:.95rem">' + esc(l.event_name) + '</div>' +
+            '<div class="event-meta">' + esc(l.event_date_display) + '<br/><span class="venue">' + esc(l.venue) + '</span></div>' +
+            '<div class="seat-info">Sec ' + esc(l.section) + ' · Row ' + esc(l.row) + ' · Seat ' + esc(l.seat) + '</div>' +
+            '<div class="seat-price-wrap"><span class="seat-price">' + esc(money(l.price_usd)) + '</span>' + face + '</div>' +
+            buyBtn + '</article>';
+        }).join('');
+        lg.querySelectorAll('[data-id]').forEach(function (btn) {
+          btn.addEventListener('click', function () { openBuy(btn.getAttribute('data-id')); });
+        });
+        staggerCards(lg, '.listing-card');
+      }
+      return;
+    }
+
+    if (lg) lg.hidden = true;
+    if (eg) {
+      eg.hidden = false;
+      eg.innerHTML = events.map(function (ev) {
+        var seats = ev.seatsPending
+          ? '<p class="seat-pending" style="padding:.75rem 1rem;color:#64748b;font-size:.9rem">Loading available seats…</p>'
+          : (ev.seatsError
+            ? '<p class="seat-pending" style="padding:.75rem 1rem;color:#b91c1c;font-size:.9rem">' + esc(ev.seatsError) + '</p>'
+            : (!ev.listings.length
+              ? '<p class="seat-pending" style="padding:.75rem 1rem;color:#64748b;font-size:.9rem">No seats listed for this event.</p>'
+              : ev.listings.map(function (l) {
+          var face = l.face_value_usd ? '<span class="seat-face">' + esc(money(l.face_value_usd)) + '</span>' : '';
+          var buyBtn = l.purchasable === false
+            ? '<button type="button" class="btn-buy btn-unavail" disabled title="No viewer link yet">Unavailable</button>'
+            : '<button type="button" class="btn-buy" data-id="' + esc(l.listing_id) + '">Buy · ' + esc(money(l.price_usd)) + '</button>';
+          return '<div class="seat-row">' +
+            '<span class="seat-info">Sec ' + esc(l.section) + ' · Row ' + esc(l.row) + ' · Seat ' + esc(l.seat) + '</span>' +
+            '<div class="seat-price-wrap">' + face + buyBtn + '</div></div>';
+        }).join('')));
+        var openCls = openEventKeys[ev.key] ? ' open' : '';
+        return '<article class="event-card' + openCls + '" data-event="' + esc(ev.key) + '">' +
+          '<div class="event-card-head">' +
+          thumbBlock(ev) +
+          '<div><h2 class="event-title">' + esc(ev.event_name) + '</h2>' +
+          '<div class="event-meta">' + esc(ev.event_date_display) + '<br/><span class="venue">' + esc(ev.venue) + '</span>' +
+          '<span class="event-badge cat-' + esc(ev.category) + '">' + esc(catLabel(ev.category)) + '</span></div></div>' +
+          '<div class="event-card-price"><div class="from-label">From</div><div class="from-price">' + esc(money(ev.min_price)) + '</div>' +
+          '<div class="ticket-count">' + esc(window.TixxStock ? window.TixxStock.formatStock(ev.count) : (ev.count + ' ticket' + (ev.count > 1 ? 's' : ''))) +
+          ' <span class="event-chevron" aria-hidden="true">▼</span></div></div></div>' +
+          '<div class="seat-list">' + seats + '</div></article>';
+      }).join('');
+
+      eg.querySelectorAll('.event-card-head').forEach(function (head) {
+        head.addEventListener('click', function (e) {
+          if (e.target.closest('.btn-buy')) return;
+          var card = head.parentElement;
+          var eventKey = card.getAttribute('data-event');
+          var wasOpen = card.classList.contains('open');
+          card.classList.toggle('open');
+          if (card.classList.contains('open')) {
+            openEventKeys[eventKey] = true;
+            if (!wasOpen) loadEventListings(eventKey);
+          } else {
+            delete openEventKeys[eventKey];
+          }
+        });
+      });
+      eg.querySelectorAll('.btn-buy').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          openBuy(btn.getAttribute('data-id'));
+        });
+      });
+      staggerCards(eg, '.event-card');
+    }
+    renderDiscover();
+  }
+
+  async function applyEventImages(images) {
+    if (!images) return;
+    Object.keys(images).forEach(function (k) {
+      var url = images[k];
+      if (!url) return;
+      shopEvents.forEach(function (e) {
+        if (e.event_key === k) e.image_url = url;
+      });
+      Object.keys(listingsByEventKey).forEach(function (k) {
+        var cache = listingsByEventKey[k];
+        if (!cache || !cache.listings) return;
+        cache.listings.forEach(function (l) {
+          if (l.event_key === k) l.image_url = url;
+        });
+      });
+    });
+    render();
+  }
+
+  function collectEventsNeedingImages(limit) {
+    var seen = {};
+    var out = [];
+    function add(ev) {
+      var key = ev.key || ev.event_key;
+      if (!key || seen[key] || (ev.image_url || '').trim().startsWith('http')) return;
+      seen[key] = true;
+      out.push({
+        event_key: key,
+        event_name: ev.event_name || '',
+        event_id: ev.event_id || '',
+        category: ev.category || 'events'
+      });
+    }
+    (shopEvents || []).forEach(function (e) { add(e); });
+    return out.slice(0, limit || 25);
+  }
+
+  async function resolveMissingImages() {
+    var rounds = 0;
+    while (rounds < 12) {
+      var missing = collectEventsNeedingImages(25);
+      if (!missing.length) break;
+      try {
+        var r = await fetch(API + '/api/shop/event-images', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ events: missing, limit: 25 })
+        });
+        var data = await r.json();
+        if (!data.ok || !data.images || !Object.keys(data.images).length) break;
+        await applyEventImages(data.images);
+      } catch (err) {
+        break;
+      }
+      rounds += 1;
+      await new Promise(function (res) { setTimeout(res, 180); });
+    }
+  }
+
+  function openBuy(id) {
+    active = findListingById(id);
+    if (!active) return;
+    var st = document.getElementById('buy-status');
+    var confirmBtn = document.getElementById('buy-confirm');
+    document.getElementById('buy-event-title').textContent = active.event_name || 'Event';
+    document.getElementById('buy-event-meta').innerHTML =
+      esc(active.event_date_display || '') + '<br/>' + esc(active.venue || '') +
+      '<br/>Sec ' + esc(active.section) + ' · Row ' + esc(active.row) + ' · Seat ' + esc(active.seat);
+    document.getElementById('buy-price-main').textContent = money(active.price_usd);
+    var faceEl = document.getElementById('buy-price-face');
+    if (active.face_value_usd && faceEl) {
+      faceEl.textContent = money(active.face_value_usd) + ' face';
+      faceEl.hidden = false;
+    } else if (faceEl) {
+      faceEl.hidden = true;
+    }
+    if (st) {
+      st.textContent = '';
+      st.className = 'buy-status';
+    }
+    document.getElementById('modal').hidden = false;
+    document.body.style.overflow = 'hidden';
+    var canBuy = active.purchasable !== false;
+    var canEmail = window.__shopEmailBuy !== false;
+    if (confirmBtn) {
+      confirmBtn.hidden = false;
+      confirmBtn.disabled = !canBuy || !canEmail;
+      confirmBtn.textContent = canBuy
+        ? (canEmail ? 'Confirm & get ticket' : 'Email delivery unavailable')
+        : 'Ticket link pending — contact support';
+    }
+    document.getElementById('buy-pay').hidden = !window.__shopStripe || !canBuy;
+    if (window.TixxSettings) {
+      var nm = window.TixxSettings.getFullName && window.TixxSettings.getFullName();
+      var buyName = document.getElementById('buy-name');
+      var buyEmail = document.getElementById('buy-email');
+      if (buyName && nm && !buyName.value.trim()) buyName.value = nm;
+      try {
+        var prof = window.TixxSettings.getProfile && window.TixxSettings.getProfile();
+        if (buyEmail && prof && prof.email && !buyEmail.value.trim()) buyEmail.value = prof.email;
+      } catch (eP) {}
+      try {
+        var sessEm = localStorage.getItem('tm_viewer_session_email') || sessionStorage.getItem('tm_viewer_session_email') || '';
+        if (buyEmail && sessEm && !buyEmail.value.trim()) buyEmail.value = sessEm;
+      } catch (e) {}
+    }
+    var emInput = document.getElementById('buy-email');
+    if (emInput) setTimeout(function () { emInput.focus(); }, 60);
+  }
+  function closeBuy() {
+    document.getElementById('modal').hidden = true;
+    document.body.style.overflow = '';
+    active = null;
+  }
+
+  async function postJson(path, body) {
+    var r = await fetch(API + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var data = {};
+    try { data = await r.json(); } catch (e) {}
+    return { data: data };
+  }
+
+  var renderTimer = null;
+  function scheduleRender() {
+    if (renderTimer) clearTimeout(renderTimer);
+    renderTimer = setTimeout(function () {
+      renderTimer = null;
+      render();
+    }, 120);
+  }
+
+  document.getElementById('search-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    state.q = document.getElementById('f-q').value;
+    state.location = document.getElementById('f-location').value;
+    state.date = document.getElementById('f-date').value;
+    flashFilter();
+    listingsByEventKey = {};
+    openEventKeys = {};
+    render();
+  });
+  document.getElementById('f-q').addEventListener('input', function () {
+    state.q = this.value;
+    flashFilter();
+    scheduleRender();
+  });
+  var locChip = document.getElementById('loc-chip');
+  if (locChip) {
+    locChip.addEventListener('click', function () {
+      var cur = state.location || userCity || '';
+      var next = window.prompt('Enter city or venue area:', cur);
+      if (next === null) return;
+      state.location = next.trim();
+      var locIn = document.getElementById('f-location');
+      if (locIn) locIn.value = state.location;
+      if (state.location) saveLocation(state.location, userRegion);
+      else applyLocLabel();
+      flashFilter();
+      render();
+    });
+  }
+  document.querySelectorAll('.discover-cats a').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var cat = a.getAttribute('data-disc-cat') || 'all';
+      document.querySelectorAll('.discover-cats a').forEach(function (x) { x.classList.remove('active'); });
+      a.classList.add('active');
+      document.querySelectorAll('.cat-pill').forEach(function (b) {
+        b.classList.toggle('active', b.getAttribute('data-cat') === cat);
+      });
+      state.cat = cat;
+      flashFilter();
+      render();
+      document.getElementById('all-events-heading').scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+  document.querySelectorAll('.carousel-see').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var kind = a.getAttribute('data-see');
+      if (kind === 'concerts') state.cat = 'concerts';
+      else if (kind === 'sports') state.cat = 'sports';
+      else if (kind === 'shows') state.cat = 'events';
+      else if (kind === 'near' && (userCity || state.location)) state.location = state.location || userCity;
+      else state.cat = 'all';
+      document.querySelectorAll('.cat-pill').forEach(function (b) {
+        b.classList.toggle('active', b.getAttribute('data-cat') === state.cat);
+      });
+      document.querySelectorAll('.discover-cats a').forEach(function (x) {
+        x.classList.toggle('active', x.getAttribute('data-disc-cat') === state.cat);
+      });
+      var locIn = document.getElementById('f-location');
+      if (locIn) locIn.value = state.location;
+      flashFilter();
+      render();
+      document.getElementById('all-events-heading').scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+  document.getElementById('f-date').addEventListener('change', function () {
+    state.date = this.value;
+    flashFilter();
+    render();
+  });
+  document.getElementById('f-sort').addEventListener('change', function () {
+    state.sort = this.value;
+    flashFilter();
+    render();
+  });
+  document.querySelectorAll('.cat-pill').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.cat-pill').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      state.cat = btn.getAttribute('data-cat');
+      flashFilter();
+      render();
+    });
+  });
+  document.querySelectorAll('.view-toggle button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.view-toggle button').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      state.view = btn.getAttribute('data-view');
+      flashFilter();
+      render();
+    });
+  });
+
+  document.getElementById('buy-cancel').addEventListener('click', closeBuy);
+  var buyCancelX = document.getElementById('buy-cancel-x');
+  if (buyCancelX) buyCancelX.addEventListener('click', closeBuy);
+  document.getElementById('modal').addEventListener('click', function (e) {
+    if (e.target.id === 'modal') closeBuy();
+  });
+  async function runPurchase() {
+    if (!active) return;
+    var st = document.getElementById('buy-status');
+    var confirmBtn = document.getElementById('buy-confirm');
+    var em = (document.getElementById('buy-email').value || '').trim();
+    var nm = (document.getElementById('buy-name').value || '').trim();
+    if (active.purchasable === false) {
+      if (st) { st.textContent = 'This seat is not ready for instant delivery yet.'; st.className = 'buy-status err'; }
+      return;
+    }
+    if (!em || em.indexOf('@') < 1) {
+      if (st) { st.textContent = 'Enter a valid email address.'; st.className = 'buy-status err'; }
+      return;
+    }
+    if (st) { st.textContent = 'Sending your ticket…'; st.className = 'buy-status'; }
+    if (confirmBtn) confirmBtn.disabled = true;
+    var res = await postJson('/api/shop/purchase', { listing_id: active.listing_id, buyer_email: em, buyer_name: nm });
+    if (res.data.ok) {
+      if (st) { st.textContent = res.data.message || 'Ticket sent! Check your inbox.'; st.className = 'buy-status ok'; }
+      showBanner('Ticket emailed to ' + em, true);
+      if (window.TixxSettings) {
+        window.TixxSettings.recordOrder({
+          at: new Date().toISOString(),
+          listing_id: active.listing_id,
+          event_name: active.event_name,
+          price_usd: active.price_usd,
+          link: active.path ? ('/' + active.path) : ''
+        });
+      }
+      removeListingById(active.listing_id);
+      render();
+      setTimeout(closeBuy, 2200);
+    } else {
+      if (st) {
+        st.textContent = (window.TixxPublic && window.TixxPublic.MSG.purchaseFail) || 'Purchase could not be completed. Please try again or contact support.';
+        st.className = 'buy-status err';
+      }
+      if (confirmBtn) confirmBtn.disabled = false;
+    }
+  }
+  document.getElementById('buy-confirm').addEventListener('click', runPurchase);
+  document.getElementById('buy-pay').addEventListener('click', async function () {
+    if (!active) return;
+    var st = document.getElementById('buy-status');
+    var em = (document.getElementById('buy-email').value || '').trim();
+    if (!em) { st.textContent = 'Enter your email first.'; return; }
+    st.textContent = 'Opening checkout…';
+    var res = await postJson('/api/shop/checkout', {
+      listing_id: active.listing_id,
+      buyer_email: em,
+      buyer_name: (document.getElementById('buy-name').value || '').trim()
+    });
+    if (res.data.ok && res.data.checkout_url) location.href = res.data.checkout_url;
+    else st.textContent = res.data.error || 'Checkout unavailable';
+  });
+
+  async function fetchEventListings(eventKey, offset, limit) {
+    var qs = '?event_key=' + encodeURIComponent(eventKey) +
+      '&limit=' + encodeURIComponent(limit || 500) +
+      '&offset=' + encodeURIComponent(offset || 0);
+    var r = await fetch(API + '/api/shop/listings' + qs, { cache: 'no-store' });
+    var text = await r.text();
+    var data = {};
+    try { data = text ? JSON.parse(text) : {}; } catch (eJ) { throw new Error('bad_response'); }
+    if (!r.ok && !data.error) data.error = 'http_' + r.status;
+    if (!data.ok) throw new Error((window.TixxPublic && window.TixxPublic.fromApi(data)) || 'unavailable');
+    return data;
+  }
+
+  function removeListingById(id) {
+    Object.keys(listingsByEventKey).forEach(function (k) {
+      var cache = listingsByEventKey[k];
+      if (!cache || !cache.listings) return;
+      cache.listings = cache.listings.filter(function (l) { return l.listing_id !== id; });
+    });
+  }
+
+  async function loadEventListings(eventKey) {
+    if (!eventKey) return;
+    var cache = listingsByEventKey[eventKey];
+    if (cache && (cache.loading || cache.loaded)) return cache.promise;
+
+    var ev = shopEventByKey(eventKey);
+    if (!ev) return;
+
+    listingsByEventKey[eventKey] = { loading: true, loaded: false, listings: [], error: '' };
+    render();
+
+    var promise = (async function () {
+      var pageSize = 500;
+      var offset = 0;
+      var all = [];
+      var seen = {};
+      try {
+        while (true) {
+          var chunk = await fetchEventListings(eventKey, offset, pageSize);
+          var rows = (chunk.listings || []).map(normalizeListing).filter(function (l) {
+            if (!l.listing_id || seen[l.listing_id]) return false;
+            seen[l.listing_id] = true;
+            return true;
+          });
+          if (rows.length) {
+            all = all.concat(rows);
+            offset += rows.length;
+          } else if (!chunk.has_more) {
+            break;
+          } else {
+            offset += pageSize;
+          }
+          if (!chunk.has_more || offset >= (chunk.count || 0)) break;
+        }
+        listingsByEventKey[eventKey] = {
+          loading: false,
+          loaded: true,
+          listings: all,
+          error: ''
+        };
+      } catch (e) {
+        listingsByEventKey[eventKey] = {
+          loading: false,
+          loaded: true,
+          listings: [],
+          error: String((e && e.message) || e || 'Could not load seats')
+        };
+      }
+      render();
+      resolveMissingImages();
+    })();
+
+    listingsByEventKey[eventKey].promise = promise;
+    return promise;
+  }
+
+  async function fetchShopEventsFast() {
+    if (window.__tixxShopEventsFetch) {
+      var data = await window.__tixxShopEventsFetch;
+      window.__tixxShopEventsFetch = null;
+      return data && typeof data === 'object' ? data : { ok: false, error: 'bad_response' };
+    }
+    var r = await fetch(API + '/api/shop/listings?events_only=1&limit=0', { cache: 'no-store' });
+    var text = await r.text();
+    var data = {};
+    try { data = text ? JSON.parse(text) : {}; } catch (eJ) { data = { ok: false, error: 'bad_response' }; }
+    if (!r.ok && !data.error) data.error = 'http_' + r.status;
+    return data;
+  }
+
+  (async function init() {
+    var loadEl = document.getElementById('load');
+    var metaEl = document.getElementById('results-meta');
+    try {
+      var qs = new URLSearchParams(location.search);
+      if (qs.get('paid') === '1') showBanner('Payment received — check your email.', true);
+      if (qs.get('q')) {
+        document.getElementById('f-q').value = qs.get('q');
+        state.q = qs.get('q');
+      }
+      if (qs.get('location')) {
+        document.getElementById('f-location').value = qs.get('location');
+        state.location = qs.get('location');
+      }
+      if (qs.get('date')) {
+        document.getElementById('f-date').value = qs.get('date');
+        state.date = qs.get('date');
+      }
+      if (qs.get('cat')) {
+        state.cat = qs.get('cat');
+        document.querySelectorAll('.cat-pill').forEach(function (b) {
+          b.classList.toggle('active', b.getAttribute('data-cat') === state.cat);
+        });
+        document.querySelectorAll('.discover-cats a').forEach(function (a) {
+          a.classList.toggle('active', a.getAttribute('data-disc-cat') === state.cat);
+        });
+      }
+      var data = await fetchShopEventsFast();
+      if (!data.ok) {
+        window.__shopLoadError = (window.TixxPublic && window.TixxPublic.fromApi(data)) || 'unavailable';
+        throw new Error(window.__shopLoadError);
+      }
+      window.__shopLoadError = '';
+      shopEvents = data.events || [];
+      window.__shopEmailBuy = data.email_purchase_enabled !== false;
+      window.__shopStripe = !!data.stripe_enabled;
+      window.__shopParseStats = data.parse_stats || null;
+      window.__shopTotalCount = data.count || 0;
+      window.__shopCatalogCount = data.catalog_count || data.count || 0;
+      window.__shopEventCount = data.event_count || shopEvents.length || 0;
+      if (loadEl) loadEl.hidden = true;
+      if (data.parse_stats && data.parse_stats.lines_read && !state.q.trim()) {
+        var title = document.getElementById('discover-title');
+        if (title) {
+          title.textContent = (window.__shopEventCount || shopEvents.length) + ' events · ' +
+            (window.__shopCatalogCount || data.count || 0) + ' tickets available';
+        }
+      }
+      renderDiscover();
+      render();
+      resolveMissingImages();
+      loadSavedLocation();
+    } catch (e) {
+      window.__shopLoadError = (window.TixxPublic && window.TixxPublic.shopError()) || 'unavailable';
+      if (metaEl) metaEl.textContent = 'Shop temporarily unavailable';
+      showBanner(window.__shopLoadError, false);
+      render();
+    } finally {
+      if (loadEl) loadEl.hidden = true;
+    }
+    var sticky = document.getElementById('filters-sticky');
+    var topbar = document.querySelector('.topbar');
+    if (sticky || topbar) {
+      window.addEventListener('scroll', function () {
+        if (sticky) sticky.classList.toggle('is-stuck', window.scrollY > 120);
+        if (topbar) topbar.classList.toggle('is-scrolled', window.scrollY > 8);
+      }, { passive: true });
+    }
+  })();
+})();
+  </script>
+</body>
+</html>
