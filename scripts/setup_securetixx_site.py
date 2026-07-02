@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -233,6 +235,8 @@ def main() -> None:
     write_logos()
     changed = patch_site()
     write_readme()
+    subprocess.run([sys.executable, str(ROOT / "scripts" / "patch_securetixx_ui.py")], check=False)
+    subprocess.run([sys.executable, str(ROOT / "scripts" / "fix_securetixx_index.py")], check=False)
     print(f"cloned {SRC.relative_to(ROOT)} -> {DST.relative_to(ROOT)}")
     print(f"patched {len(changed)} files")
 

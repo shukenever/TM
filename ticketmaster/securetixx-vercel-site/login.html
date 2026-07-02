@@ -11,7 +11,8 @@
   <link rel="dns-prefetch" href="https://upload.wikimedia.org"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/public/securetixx-theme.css"/>
   <style>
     :root {
       --tm-blue: #059669;
@@ -1401,7 +1402,8 @@
     }
   </style>
 </head>
-<body class="tm-app-body tm-shell-retail-simple tm-page--login">
+<header class="stx-header" role="banner"><div class="stx-header-inner"><a class="stx-logo" href="/"><img src="/public/securetixx-logo-header.svg" alt="SecureTixx" height="34"/></a><nav class="stx-nav"><a href="/">Home</a><a href="/shop.html">Marketplace</a></nav></div></header>
+<body class="tm-app-body stx-app stx-login tm-shell-retail-simple tm-page--login">
   <header class="topbar topbar--tm topbar--simple" role="banner"><div class="tm-simple-bar"><a class="tm-brand-lockup tm-brand-lockup--simple tixx-brand" href="/" aria-label="SecureTixx home"><img class="tixx-logo tixx-logo--on-dark" src="/public/securetixx-logo-header.svg" alt="SecureTixx" width="100" height="32" style="height:32px;width:auto;display:block"/></a><div id="tm-topbar-guest" class="tm-topbar-account-slot"><button type="button" class="tm-topbar-login-btn" id="tm-topbar-login">Log in</button></div><div id="tm-topbar-signed" class="tm-topbar-account-slot" hidden><div class="tm-account-wrap"><button type="button" class="tm-topbar-account-trigger" id="tm-topbar-account-btn" aria-expanded="false" aria-haspopup="true"><svg class="tm-account-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/></svg><span id="tm-topbar-account-label" class="tm-topbar-account-label">Account</span></button><div id="tm-account-menu" class="tm-account-menu" hidden role="menu"><div class="tm-account-menu-header"><p class="tm-account-menu-email" id="tm-account-menu-email"></p></div><div class="tm-account-menu-body"><a href="/my-tickets" class="tm-account-menu-item" id="tm-menu-my-tickets" role="menuitem">My tickets</a><p class="tm-account-menu-hint">More settings soon.</p></div><div class="tm-account-menu-sep" aria-hidden="true"></div><button type="button" class="tm-account-menu-item tm-account-menu-signout" id="tm-menu-sign-out" role="menuitem">Sign out</button></div></div></div></div></header>
 
   <main>
