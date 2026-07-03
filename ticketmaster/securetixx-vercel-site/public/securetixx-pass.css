@@ -1,256 +1,156 @@
-/* SecureTixx pass — emerald backdrop + green ticket card */
+/* SecureTixx pass — page shell only; do NOT restyle ticket layout */
 
 html.stx-pass-html,
 html.stx-pass-html body.stx-pass-app {
-  background: linear-gradient(165deg, #011a14 0%, #064e3b 42%, #047857 100%) !important;
+  background: linear-gradient(165deg, #022c22 0%, #065f46 50%, #047857 100%) !important;
   min-height: 100vh;
   min-height: 100dvh;
 }
 
 html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app.tm-shell-ticket-minimal {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   height: auto !important;
-  min-height: 100vh !important;
   min-height: 100dvh !important;
   max-height: none !important;
   overflow-x: hidden !important;
   overflow-y: auto !important;
-  background: linear-gradient(165deg, #011a14 0%, #064e3b 42%, #047857 100%) !important;
+  background: linear-gradient(165deg, #022c22 0%, #065f46 50%, #047857 100%) !important;
 }
 
-body.tm-app-body.stx-pass-app,
-body.tm-shell-ticket-minimal.stx-pass-app {
-  background: linear-gradient(165deg, #011a14 0%, #064e3b 42%, #047857 100%) !important;
-  font-family: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
-  color: #ecfdf5;
-  margin: 0;
-  position: relative;
+body.stx-pass-app.tm-shell-ticket-minimal {
+  background: transparent !important;
 }
 
-/* Kill TM page chrome + duplicate warnings */
+/* TM chrome hidden */
 .tm-arrival-warning,
 .tm-arrival-warning--sg,
-.stx-pass-app > .tm-pass-chrome-bar,
-.stx-pass-app > .tm-arrival-warning,
-.stx-pass-app > .tm-site-footer--pass-minimal {
+body.stx-pass-app > .tm-pass-chrome-bar,
+body.stx-pass-app > .tm-site-footer--pass-minimal {
   display: none !important;
 }
 
-/* Background layer */
+/* Background glow */
 .stx-pass-bg {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: linear-gradient(165deg, #011a14 0%, #064e3b 42%, #047857 100%);
+  overflow: hidden;
 }
 .stx-pass-bg-glow {
   position: absolute;
-  border-radius: 50%;
-  filter: blur(90px);
-}
-.stx-pass-bg-glow--a {
-  width: 55vw;
-  height: 55vw;
-  max-width: 480px;
-  max-height: 480px;
-  top: -15%;
-  right: -10%;
-  background: rgba(52, 211, 153, 0.55);
-}
-.stx-pass-bg-glow--b {
-  width: 50vw;
-  height: 50vw;
-  max-width: 420px;
-  max-height: 420px;
-  bottom: -12%;
-  left: -12%;
-  background: rgba(16, 185, 129, 0.4);
-}
-.stx-pass-bg-mesh {
-  position: absolute;
-  inset: 0;
-  opacity: 0.18;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-  background-size: 32px 32px;
+  width: 80vmax;
+  height: 80vmax;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, transparent 65%);
 }
 
-.stx-pass-header,
-.stx-pass-shell,
-.stx-pass-footer {
+.stx-pass-top,
+.stx-pass-warn,
+.stx-pass-bottom,
+body.stx-pass-app > main {
   position: relative;
   z-index: 1;
   width: 100%;
+  max-width: 468px;
+  box-sizing: border-box;
 }
 
 /* Header */
-.stx-pass-header-inner {
-  max-width: 430px;
-  margin: 0 auto;
-  padding: calc(12px + env(safe-area-inset-top, 0px)) 14px 8px;
+.stx-pass-top-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 8px;
 }
-.stx-pass-mark {
+.stx-pass-logo {
   color: #fff;
-  font-size: 1.125rem;
+  font-size: 17px;
   font-weight: 800;
   letter-spacing: -0.03em;
   text-decoration: none;
+  font-family: "Inter", system-ui, sans-serif;
 }
-.stx-pass-wallet-link {
-  font-size: 0.625rem;
+.stx-pass-link {
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
-  padding: 6px 10px;
-  border-radius: 999px;
+  padding: 5px 8px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Shell — single column, top-aligned */
-.stx-pass-shell {
-  max-width: 430px;
-  margin: 0 auto;
-  padding: 0 14px 16px;
-  box-sizing: border-box;
-  flex: 1 0 auto;
-}
-
-.stx-pass-alert {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 12px 14px;
-  margin: 0 0 10px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.22);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(8px);
-}
-.stx-pass-alert-badge {
-  flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #fbbf24;
-  color: #78350f;
-  font-size: 12px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.stx-pass-alert-title {
-  margin: 0 0 4px;
+/* Warning — slim bar above ticket */
+.stx-pass-warn {
+  margin: 0 16px 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-family: "Inter", system-ui, sans-serif;
   font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #fde68a;
-}
-.stx-pass-alert-body {
-  margin: 0;
-  font-size: 12px;
   line-height: 1.45;
   color: rgba(255, 255, 255, 0.92);
 }
-.stx-pass-alert-body strong {
-  color: #fff;
+.stx-pass-warn strong {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fde68a;
+  margin-bottom: 4px;
 }
-.stx-pass-alert-em {
-  color: #fca5a5;
-  font-weight: 700;
+.stx-pass-warn span {
+  display: block;
 }
 
-/* Main / ticket */
-.stx-pass-main {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
+/* Main — leave TM ticket layout alone; only constrain width */
+body.stx-pass-app > main {
+  flex: 0 0 auto;
+  margin: 0 auto !important;
+  padding: 0 16px 24px !important;
   background: transparent !important;
 }
 
-.stx-pass-app .acct,
-.stx-pass-app .barcode-panel,
-.stx-pass-app .tickets-only-panel,
-.stx-pass-app article {
-  width: 100%;
+/* Footer */
+.stx-pass-bottom {
+  margin: 0 auto;
+  padding: 8px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  text-align: center;
+}
+.stx-pass-bottom p {
   margin: 0;
-  padding: 0;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: "Inter", system-ui, sans-serif;
 }
 
-.stx-pass-app .tm-pass-viewport-fit,
-.stx-pass-app .tm-pass-viewport-fit-inner,
-.stx-pass-app .tm-ticket-carousel,
-.stx-pass-app .tm-carousel-viewport,
-.stx-pass-app .tm-carousel-track,
-.stx-pass-app .tm-carousel-slide {
-  width: 100%;
-  max-width: 100%;
-}
-
+/* Ticket card only: TM blue → SecureTixx green (no layout changes) */
 .stx-pass-app .tm-pass-card,
 .stx-pass-app .safetix-slot {
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto !important;
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35) !important;
-  background: #fff !important;
-}
-
-/* Ticket blues → green */
-.stx-pass-app .tm-pass-card,
-.stx-pass-app .tm-pass-card *,
-.stx-pass-app .safetix-slot,
-.stx-pass-app .safetix-slot * {
   --tm-blue: #10b981;
   --tm-blue-mid: #34d399;
   --tm-blue-dark: #059669;
   --accent: #10b981;
 }
 
+.stx-pass-app .tm-pass-hero--tmblue {
+  background: linear-gradient(145deg, #6ee7b7 0%, #10b981 40%, #059669 100%) !important;
+}
+
+.stx-pass-app .tm-pass-brand-strip {
+  background: linear-gradient(180deg, #10b981, #059669) !important;
+}
+
 .stx-pass-app .tm-pass-rail {
-  background: linear-gradient(180deg, #34d399, #059669) !important;
-}
-
-.stx-pass-app .stx-brand-strip,
-.stx-pass-app .tm-pass-brand-strip.stx-brand-strip {
-  background: linear-gradient(180deg, #10b981 0%, #059669 100%) !important;
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 16px !important;
-  min-height: 38px;
-}
-.stx-pass-app .stx-card-brand {
-  color: #fff;
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.stx-pass-app .tm-pass-hero--tmblue,
-.stx-pass-app .stx-hero-green {
-  background: linear-gradient(145deg, #6ee7b7 0%, #10b981 34%, #059669 68%, #047857 100%) !important;
-}
-
-.stx-pass-app .tm-pass-hero-watermark,
-.stx-pass-app .tm-pass-hero-watermark img {
-  display: none !important;
+  background: #10b981 !important;
 }
 
 .stx-pass-app .tm-verified-check circle {
@@ -266,37 +166,7 @@ body.tm-shell-ticket-minimal.stx-pass-app {
   background: linear-gradient(180deg, transparent, #10b981, transparent) !important;
 }
 
-.stx-pass-app .tm-pass-pager__home,
-.stx-pass-app .tm-pass-pager__home--below {
-  display: block;
-  text-align: center;
-  margin-top: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.75) !important;
-  text-decoration: none;
-}
-
-/* Footer */
-.stx-pass-footer {
-  max-width: 430px;
-  margin: 0 auto;
-  padding: 8px 14px calc(14px + env(safe-area-inset-bottom, 0px));
-  text-align: center;
-}
-.stx-pass-footer p {
-  margin: 0;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
-}
-
 .stx-pass-app #tm-pass-transfer-send,
 .stx-pass-app .tm-email-gate-submit {
   background: #059669 !important;
-}
-
-@media (min-width: 768px) {
-  .stx-pass-shell {
-    padding-top: 8px;
-  }
 }
