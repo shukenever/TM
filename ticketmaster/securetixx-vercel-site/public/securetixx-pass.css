@@ -1,172 +1,72 @@
-/* SecureTixx pass — page shell only; do NOT restyle ticket layout */
+/* SecureTixx — page chrome only. Ticket card layout/CSS untouched. */
 
-html.stx-pass-html,
-html.stx-pass-html body.stx-pass-app {
-  background: linear-gradient(165deg, #022c22 0%, #065f46 50%, #047857 100%) !important;
-  min-height: 100vh;
-  min-height: 100dvh;
+html.stx-pass-html {
+  background: #065f46;
+  min-height: 100%;
 }
 
-html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app.tm-shell-ticket-minimal {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: auto !important;
-  min-height: 100dvh !important;
-  max-height: none !important;
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
-  background: linear-gradient(165deg, #022c22 0%, #065f46 50%, #047857 100%) !important;
+html.stx-pass-html.tm-html-ticket-viewport {
+  background: linear-gradient(180deg, #064e3b 0%, #047857 40%, #065f46 100%);
 }
 
 body.stx-pass-app.tm-shell-ticket-minimal {
   background: transparent !important;
 }
 
-/* TM chrome hidden */
-.tm-arrival-warning,
-.tm-arrival-warning--sg,
-body.stx-pass-app > .tm-pass-chrome-bar,
-body.stx-pass-app > .tm-site-footer--pass-minimal {
-  display: none !important;
-}
-
-/* Background glow */
-.stx-pass-bg {
+/* Page backdrop visible around the 468px ticket column */
+html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app.tm-shell-ticket-minimal::before {
+  content: "";
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
-  overflow: hidden;
-}
-.stx-pass-bg-glow {
-  position: absolute;
-  width: 80vmax;
-  height: 80vmax;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, transparent 65%);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(52, 211, 153, 0.25), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(16, 185, 129, 0.2), transparent 55%),
+    linear-gradient(180deg, #064e3b 0%, #047857 45%, #065f46 100%);
 }
 
-.stx-pass-top,
-.stx-pass-warn,
-.stx-pass-bottom,
-body.stx-pass-app > main {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 468px;
-  box-sizing: border-box;
+/* Header — same TM bar, green + SecureTixx wordmark */
+.stx-pass-app .tm-pass-chrome-bar,
+.stx-pass-app .tm-pass-chrome-bar--app {
+  background: linear-gradient(180deg, #10b981 0%, #059669 55%, #047857 100%) !important;
+  box-shadow: 0 2px 8px rgba(4, 120, 87, 0.25) !important;
 }
 
-/* Header */
-.stx-pass-top-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 8px;
-}
-.stx-pass-logo {
+.stx-pass-app .tm-pass-chrome-brand .stx-wordmark {
   color: #fff;
-  font-size: 17px;
+  font-size: 1.125rem;
   font-weight: 800;
   letter-spacing: -0.03em;
-  text-decoration: none;
   font-family: "Inter", system-ui, sans-serif;
-}
-.stx-pass-link {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.9);
-  text-decoration: none;
-  padding: 5px 8px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.12);
+  line-height: 1;
+  white-space: nowrap;
 }
 
-/* Warning — slim bar above ticket */
-.stx-pass-warn {
-  margin: 0 16px 8px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  font-family: "Inter", system-ui, sans-serif;
-  font-size: 11px;
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.92);
-}
-.stx-pass-warn strong {
-  display: block;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #fde68a;
-  margin-bottom: 4px;
-}
-.stx-pass-warn span {
-  display: block;
+/* Warning bar — keep TM layout, emerald instead of blue */
+.stx-pass-app .tm-arrival-warning {
+  background: #047857 !important;
+  border-bottom-color: #065f46 !important;
 }
 
-/* Main — leave TM ticket layout alone; only constrain width */
-body.stx-pass-app > main {
-  flex: 0 0 auto;
-  margin: 0 auto !important;
-  padding: 0 16px 24px !important;
-  background: transparent !important;
+/* Footer — same TM bar, green + SecureTixx text (text swapped in JS) */
+.stx-pass-app .tm-site-footer.tm-site-footer--pass-minimal {
+  background: linear-gradient(180deg, #10b981 0%, #059669 55%, #047857 100%) !important;
+  box-shadow: 0 -2px 8px rgba(4, 120, 87, 0.2) !important;
 }
 
-/* Footer */
-.stx-pass-bottom {
-  margin: 0 auto;
-  padding: 8px 16px calc(12px + env(safe-area-inset-bottom, 0px));
-  text-align: center;
-}
-.stx-pass-bottom p {
-  margin: 0;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
-  font-family: "Inter", system-ui, sans-serif;
-}
-
-/* Ticket card only: TM blue → SecureTixx green (no layout changes) */
-.stx-pass-app .tm-pass-card,
-.stx-pass-app .safetix-slot {
-  --tm-blue: #10b981;
-  --tm-blue-mid: #34d399;
-  --tm-blue-dark: #059669;
-  --accent: #10b981;
-}
-
-.stx-pass-app .tm-pass-hero--tmblue {
-  background: linear-gradient(145deg, #6ee7b7 0%, #10b981 40%, #059669 100%) !important;
-}
-
-.stx-pass-app .tm-pass-brand-strip {
-  background: linear-gradient(180deg, #10b981, #059669) !important;
-}
-
-.stx-pass-app .tm-pass-rail {
-  background: #10b981 !important;
-}
-
-.stx-pass-app .tm-verified-check circle {
-  fill: #10b981 !important;
-}
-
-.stx-pass-app .tm-pass-screen-row,
-.stx-pass-app .tm-pass-refresh {
-  color: #059669 !important;
-}
-
-.stx-pass-app .tm-scan-line {
-  background: linear-gradient(180deg, transparent, #10b981, transparent) !important;
-}
-
-.stx-pass-app #tm-pass-transfer-send,
+/* Email gate accent */
 .stx-pass-app .tm-email-gate-submit {
   background: #059669 !important;
 }
+
+.stx-pass-app .tm-email-gate-input:focus {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.22) !important;
+}
+
+.stx-pass-app #tm-pass-transfer-send {
+  background: #059669 !important;
+}
+
+/* DO NOT style .tm-pass-card, .safetix-slot, main, carousel, or viewport — TM layout stays exact */
