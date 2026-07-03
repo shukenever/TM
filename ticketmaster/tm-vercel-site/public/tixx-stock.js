@@ -44,7 +44,7 @@
       '<span class="tixx-stock-price">From ' + esc(money(price)) + '</span></p>';
   }
 
-  function updateSectionHead(sectionId, events, catalogTotals) {
+  function updateSectionHead(sectionId, events, catalogTotals, opts) {
     var sec = document.getElementById(sectionId);
     if (!sec) return;
     var head = sec.querySelector('.home-section-head, .carousel-head');
@@ -53,11 +53,14 @@
     if (!h2) return;
     var base = h2.getAttribute('data-title-base') || h2.textContent.replace(/\s*·.*$/, '').trim();
     if (!h2.getAttribute('data-title-base')) h2.setAttribute('data-title-base', base);
+    var showCounts = !opts || opts.showCounts !== false;
     var meta = '';
-    if (catalogTotals && (catalogTotals.tickets || catalogTotals.events)) {
-      meta = sectionMeta(catalogTotals.tickets || 0, catalogTotals.events || 0);
-    } else if (events && events.length) {
-      meta = sectionMeta(sumTickets(events), events.length);
+    if (showCounts) {
+      if (catalogTotals && (catalogTotals.tickets || catalogTotals.events)) {
+        meta = sectionMeta(catalogTotals.tickets || 0, catalogTotals.events || 0);
+      } else if (events && events.length) {
+        meta = sectionMeta(sumTickets(events), events.length);
+      }
     }
     h2.textContent = meta ? base + ' · ' + meta : base;
   }

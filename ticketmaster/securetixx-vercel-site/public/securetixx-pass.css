@@ -1,0 +1,123 @@
+/* SecureTixx pass page — green shell; TM branding stays on ticket card only */
+.stx-pass-app {
+  --stx-emerald: #059669;
+  --stx-emerald-dark: #047857;
+  --stx-bg: #eef6f1;
+  background: var(--stx-bg) !important;
+  font-family: "Outfit", "Inter", system-ui, sans-serif;
+}
+
+.stx-pass-app.tm-app-body,
+.stx-pass-app.tm-shell-ticket-minimal {
+  background: var(--stx-bg) !important;
+}
+
+/* Page-level chrome — emerald; ticket card keeps Ticketmaster blue */
+.stx-pass-app:not(.tm-pass-card) {
+  --tm-page-gray: #eef6f1;
+}
+.stx-pass-app .tm-pass-card,
+.stx-pass-app .safetix-slot,
+.stx-pass-app .tm-pass-card * {
+  --tm-blue: #026cdf;
+  --tm-blue-mid: #1a7fe0;
+  --tm-blue-dark: #0153a3;
+  --accent: #026cdf;
+}
+
+.stx-pass-chrome {
+  background: linear-gradient(180deg, #10b981 0%, #059669 52%, #047857 100%);
+  box-shadow: 0 2px 12px rgba(4, 120, 87, 0.35);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.stx-pass-chrome-inner {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.stx-pass-chrome-brand {
+  text-decoration: none;
+  color: #fff;
+}
+.stx-pass-wordmark {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.stx-pass-chrome-tag {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.14);
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+}
+
+.stx-pass-footer {
+  background: linear-gradient(180deg, #047857 0%, #064e3b 100%);
+  color: rgba(255, 255, 255, 0.88);
+  margin-top: auto;
+}
+.stx-pass-footer-inner {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 1.5rem;
+  text-align: center;
+}
+.stx-pass-footer-line {
+  margin: 0 0 0.35rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+.stx-pass-footer-muted {
+  opacity: 0.78;
+  font-size: 0.75rem;
+}
+.stx-pass-footer-copy {
+  margin-top: 0.65rem;
+  font-size: 0.6875rem;
+  opacity: 0.65;
+}
+
+/* Hide legacy TM chrome if any slip through */
+.stx-pass-app .tm-pass-chrome-bar {
+  display: none !important;
+}
+.stx-pass-app .tm-site-footer--pass-minimal {
+  display: none !important;
+}
+
+/* Page chrome around ticket — warm green-gray, not TM blue */
+.stx-pass-app.tm-shell-ticket-minimal,
+.stx-pass-app body.tm-shell-ticket-minimal {
+  background: var(--stx-bg) !important;
+}
+
+.stx-pass-app .tm-pass-viewport-wrap,
+.stx-pass-app .tm-pass-stage {
+  background: transparent !important;
+}
+
+/* Transfer modal on pass — emerald accent */
+.stx-pass-app #tm-pass-transfer-send {
+  background: var(--stx-emerald) !important;
+}
+
+/* Email gate modal — emerald not TM blue */
+.stx-pass-app .tm-email-gate-btn,
+.stx-pass-app .tm-email-gate-submit {
+  background: var(--stx-emerald) !important;
+  border-color: var(--stx-emerald-dark) !important;
+}
+.stx-pass-app .tm-email-gate-input:focus {
+  border-color: var(--stx-emerald) !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.25) !important;
+}

@@ -11,7 +11,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(os.environ.get("TM_SITE_ROOT", "")).resolve() if os.environ.get("TM_SITE_ROOT", "").strip() else Path(__file__).resolve().parent
 BACKEND = os.environ.get("TM_VIEWER_BACKEND_URL", "http://127.0.0.1:3919").rstrip("/")
 PORT = int(os.environ.get("PORT", "3000"))
 

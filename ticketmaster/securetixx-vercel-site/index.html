@@ -2910,7 +2910,28 @@
   <header class="topbar topbar--tm topbar--simple" role="banner"><div class="tm-simple-bar"><a class="tm-brand-lockup tm-brand-lockup--simple tixx-brand" href="/" aria-label="SecureTixx home"><img class="tixx-logo tixx-logo--on-dark" src="/public/securetixx-logo-header.svg" alt="SecureTixx" width="100" height="32" style="height:32px;width:auto;display:block"/></a><nav class="tm-nav-links tm-home-nav" aria-label="Primary"><a href="/shop.html">Shop</a><a href="/my-tickets">My tickets</a><button type="button" class="tixx-settings-btn-nav" data-tixx-settings title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></nav></div></header>
 
   <header class="stx-header" role="banner"><div class="stx-header-inner"><a class="stx-logo" href="/" aria-label="SecureTixx home"><img src="/public/securetixx-logo-header.svg" alt="SecureTixx" width="168" height="34"/></a><nav class="stx-nav" aria-label="Primary"><a href="/shop.html">Marketplace</a><a href="/my-tickets">Wallet</a></nav><div class="stx-header-actions"><button type="button" class="tixx-settings-btn-nav" data-tixx-settings title="Settings" aria-label="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><div id="tm-topbar-guest" class="tm-topbar-account-slot"><button type="button" class="tm-topbar-login-btn" id="tm-topbar-login">Sign in</button></div><div id="tm-topbar-signed" class="tm-topbar-account-slot" hidden><div class="tm-account-wrap"><button type="button" class="tm-topbar-account-trigger" id="tm-topbar-account-btn" aria-expanded="false" aria-haspopup="true"><svg class="tm-account-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/></svg><span id="tm-topbar-account-label" class="tm-topbar-account-label">Account</span></button><div id="tm-account-menu" class="tm-account-menu" hidden role="menu"><div class="tm-account-menu-header"><p class="tm-account-menu-email" id="tm-account-menu-email"></p></div><div class="tm-account-menu-body"><a href="/my-tickets" class="tm-account-menu-item" id="tm-menu-my-tickets" role="menuitem">My tickets</a><button type="button" class="tm-account-menu-item" data-tixx-settings role="menuitem">Settings</button><p class="tm-account-menu-hint">Account, orders, addresses &amp; preferences.</p></div><div class="tm-account-menu-sep" aria-hidden="true"></div><button type="button" class="tm-account-menu-item tm-account-menu-signout" id="tm-menu-sign-out" role="menuitem">Sign out</button></div></div></div></div></header>
-<main>
+<main class="stx-home-main">
+    <section class="stx-hero-banner" aria-label="Welcome">
+      <div class="stx-hero-banner-inner">
+        <div class="stx-hero-copy">
+          <p class="stx-kicker">SecureTixx marketplace</p>
+          <h1>Verified tickets,<br/>delivered in seconds</h1>
+          <p class="tm-retail-sub">Mobile passes with rotating barcodes · Instant email delivery · Priced below face value on concerts, sports, and shows.</p>
+          <div class="stx-hero-actions">
+            <a class="tm-retail-cta" href="#home-discover">Browse events</a>
+            <a class="stx-hero-secondary" href="/shop.html">Open marketplace</a>
+          </div>
+        </div>
+        <div class="stx-hero-art" aria-hidden="true">
+          <svg class="stx-hero-shield" viewBox="0 0 64 64" fill="none"><path d="M32 4L54 14v16c0 14.5-10 26.5-22 30C20 46.5 10 34.5 10 30V14L32 4z" stroke="currentColor" stroke-width="3"/><path d="M24 32l6 6 12-14" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+      <ul class="stx-stat-row" aria-label="Highlights">
+        <li><strong>Verified</strong><span>SafeTix barcodes</span></li>
+        <li><strong>Instant</strong><span>Email delivery</span></li>
+        <li><strong>Secure</strong><span>Protected checkout</span></li>
+      </ul>
+    </section>
     <div class="stx-shell">
       <aside class="stx-sidebar" aria-label="Browse">
         <div class="stx-sidebar-card">
@@ -2932,18 +2953,6 @@
         </div>
       </aside>
       <div class="stx-main-col">
-        <section class="stx-hero" aria-label="Welcome">
-          <div class="stx-hero-copy">
-            <p class="stx-kicker">Protected marketplace</p>
-            <h1>Tickets you can trust — delivered in seconds</h1>
-            <p class="tm-retail-sub">Verified TM passes · Instant email delivery · Up to 50% off face value. Browse concerts, sports, and shows near you.</p>
-            <a class="tm-retail-cta" href="#home-discover">Explore events</a>
-          </div>
-          <div class="stx-hero-art" aria-hidden="true">
-            <svg class="stx-hero-shield" viewBox="0 0 64 64" fill="none"><path d="M32 4L54 14v16c0 14.5-10 26.5-22 30C20 46.5 10 34.5 10 30V14L32 4z" stroke="currentColor" stroke-width="3"/><path d="M24 32l6 6 12-14" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <img class="tm-retail-hero-img stx-hero-hidden-img" src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&amp;fit=crop&amp;w=200&amp;q=60" alt="" loading="eager"/>
-          </div>
-        </section>
         <div class="stx-search-wrap tm-search-strip-wrap">
           <div class="stx-search-card">
             <h2>Find your next event</h2>

@@ -19,6 +19,11 @@
     );
   }
 
+  function isSecureTixxHost() {
+    var h = location.hostname;
+    return h === "securetixx.com" || h === "www.securetixx.com";
+  }
+
   /** Matches injected head snippet in api/tm-passes-fetch.js */
   function shouldShowGate() {
     var h = location.hostname;
@@ -132,6 +137,15 @@
       subLine += " Reminder summary: 24 hours, 3 hours, and 1 hour before start.";
     }
 
+    var accent = isSecureTixxHost() ? "#059669" : "#026cdf";
+    var accentHover = isSecureTixxHost() ? "#047857" : "#0153a3";
+    var accentSoft = isSecureTixxHost()
+      ? "rgba(5, 150, 105, 0.25)"
+      : "rgba(2, 108, 223, 0.2)";
+    var gateTitle = isSecureTixxHost()
+      ? "SecureTixx — almost there"
+      : "Almost there";
+
     var root = document.createElement("div");
     root.id = "tm-email-gate-root";
     root.setAttribute("role", "dialog");
@@ -143,7 +157,9 @@
     root.innerHTML =
       '<div class="tm-email-gate-backdrop"></div>' +
       '<div class="tm-email-gate-panel">' +
-      '<p class="tm-email-gate-title">Almost there</p>' +
+      '<p class="tm-email-gate-title">' +
+      gateTitle +
+      "</p>" +
       '<p class="tm-email-gate-sub">' +
       subLine +
       "</p>" +
@@ -164,10 +180,18 @@
       ".tm-email-gate-sub{margin:0 0 22px;font-size:0.9rem;color:#5c6570;line-height:1.45}" +
       ".tm-email-gate-label{display:block;font-size:0.75rem;font-weight:700;color:#5c6570;margin-bottom:6px}" +
       ".tm-email-gate-input{box-sizing:border-box;width:100%;padding:12px 14px;font-size:1rem;border:1.5px solid #c5ced8;border-radius:10px;outline:none}" +
-      ".tm-email-gate-input:focus{border-color:#026cdf;box-shadow:0 0 0 3px rgba(2,108,223,0.2)}" +
+      ".tm-email-gate-input:focus{border-color:" +
+      accent +
+      ";box-shadow:0 0 0 3px " +
+      accentSoft +
+      "}" +
       ".tm-email-gate-err{min-height:1.25rem;margin:8px 0 0;font-size:0.8rem;color:#b91c1c}" +
-      ".tm-email-gate-submit{margin-top:16px;width:100%;padding:14px 18px;font-size:1rem;font-weight:700;color:#fff;background:#026cdf;border:none;border-radius:10px;cursor:pointer}" +
-      ".tm-email-gate-submit:hover{background:#0153a3}";
+      ".tm-email-gate-submit{margin-top:16px;width:100%;padding:14px 18px;font-size:1rem;font-weight:700;color:#fff;background:" +
+      accent +
+      ";border:none;border-radius:10px;cursor:pointer}" +
+      ".tm-email-gate-submit:hover{background:" +
+      accentHover +
+      "}";
 
     document.head.appendChild(style);
     document.body.appendChild(root);

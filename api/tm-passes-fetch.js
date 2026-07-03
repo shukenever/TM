@@ -1,5 +1,10 @@
 "use strict";
 
+const {
+  isSecureTixxHost,
+  applySecureTixxPassBranding,
+} = require("../lib/tm-viewer/securetixx-pass-branding");
+
 /**
  * Hybrid deploy: Vercel rewrites GET /tickets/:gid/:slug → this function, which pulls HTML from your VPS(es).
  * Uses raw Node res.writeHead/end (Vercel Node functions are not Express — no res.status().send()).
@@ -135,7 +140,31 @@ async function tryServeUrl(req, res, u) {
   }
   let buf = Buffer.from(await r.arrayBuffer());
   const ctLower = (ct || "").toLowerCase();
-  if (
+  if (ctLower.includes("text/html") && buf.length > 0) {
+    try {
+      let html = buf.toString("utf8");
+      const host = (
+        req.headers["x-forwarded-host"] ||
+        req.headers.host ||
+        ""
+      ).toString();
+      if (isSecureTixxHost(host)) {
+        html = applySecureTixxPassBranding(html);
+      }
+      buf = Buffer.from(html, "utf8");
+      if (shouldInjectEmailGate()) {
+        buf = injectEmailGate(buf);
+      }
+    } catch {
+      if (shouldInjectEmailGate()) {
+        try {
+          buf = injectEmailGate(buf);
+        } catch {
+          /* keep original buf */
+        }
+      }
+    }
+  } else if (
     shouldInjectEmailGate() &&
     ctLower.includes("text/html") &&
     buf.length > 0

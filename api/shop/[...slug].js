@@ -34,7 +34,8 @@ module.exports = async (req, res) => {
       const cacheHome = key === "home";
       return proxy(req, res, GET_ROUTES[key], {
         methods: "GET, OPTIONS",
-        cacheControl: cacheHome ? "public, max-age=300, s-maxage=86400, stale-while-revalidate=3600" : "",
+        // VPS serves a prebuilt snapshot file — do not CDN-cache for 24h or UI stays stale after AI runs.
+        cacheControl: cacheHome ? "public, max-age=60, s-maxage=120, stale-while-revalidate=300" : "",
       });
     }
     if ((req.method === "POST" || req.method === "PUT" || req.method === "PATCH") && POST_ROUTES[key]) {

@@ -36,6 +36,8 @@ from datetime import datetime
 from pathlib import Path
 
 _STOCK_LOCK = threading.Lock()
+_AI_LOCK = threading.Lock()
+_AI_RUNNING = False
 _MEDIA_CACHE_LOCK = threading.Lock()
 _LISTINGS_MEM_CACHE: dict[str, tuple[float, int, list[dict], dict]] = {}
 _LISTINGS_WARMING: set[str] = set()
@@ -951,6 +953,353 @@ def _infer_category(event_name: str, venue: str) -> str:
     return "events"
 
 
+_SHOP_CATEGORIES = frozenset({"concerts", "sports", "events", "parking"})
+_CATEGORY_MAP_MEM: tuple[float, dict[str, str]] | None = None
+
+
+def _category_map_path() -> Path:
+    return _stock_data_dir() / "shop_category_map.json"
+
+
+def _ai_cooldown_path() -> Path:
+    return _stock_data_dir() / "ai_cooldown.txt"
+
+
+def _read_ai_cooldown_ts() -> float:
+    path = _ai_cooldown_path()
+    if not path.is_file():
+        return 0.0
+    try:
+        first = path.read_text(encoding="utf-8", errors="replace").strip().splitlines()[0].strip()
+        return float(first)
+    except (OSError, ValueError, IndexError):
+        return 0.0
+
+
+def _ai_cooldown_due(*, force: bool = False) -> bool:
+    """True when ai_cooldown.txt is missing or older than 24h (or force=True)."""
+    if force:
+        return True
+    last = _read_ai_cooldown_ts()
+    if last <= 0:
+        return True
+    return (time.time() - last) >= 86400
+
+
+def _ai_cooldown_seconds_left() -> int:
+    last = _read_ai_cooldown_ts()
+    if last <= 0:
+        return 0
+    return max(0, int(86400 - (time.time() - last)))
+
+
+def _ai_cooldown_mark() -> None:
+    path = _ai_cooldown_path()
+    now = time.time()
+    try:
+        path.write_text(
+            f"{int(now)}\n{datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')}\n",
+            encoding="utf-8",
+        )
+        _shop_debug_log(f"AI cooldown marked (next run after 24h): {path}")
+    except OSError as e:
+        _shop_debug_log(f"AI cooldown write failed: {e!r}")
+
+
+def _prune_category_map(valid_keys: set[str], path: Path) -> dict[str, str]:
+    """Remove category-map entries for events no longer in inventory."""
+    existing = _read_category_map()
+    if not existing:
+        return {}
+    pruned = {k: v for k, v in existing.items() if k in valid_keys}
+    if len(pruned) != len(existing):
+        _write_category_map(pruned, path)
+        _shop_debug_log(
+            f"AI category map pruned {len(existing) - len(pruned)} stale/past events"
+        )
+    return pruned
+
+
+def _read_category_map() -> dict[str, str]:
+    global _CATEGORY_MAP_MEM
+    path = _category_map_path()
+    if not path.is_file():
+        return {}
+    try:
+        st = path.stat()
+        if _CATEGORY_MAP_MEM and _CATEGORY_MAP_MEM[0] == st.st_mtime:
+            return dict(_CATEGORY_MAP_MEM[1])
+        raw = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+        mappings = raw.get("mappings") if isinstance(raw, dict) else raw
+        if not isinstance(mappings, dict):
+            return {}
+        out = {
+            str(k): str(v)
+            for k, v in mappings.items()
+            if str(v) in _SHOP_CATEGORIES
+        }
+        _CATEGORY_MAP_MEM = (st.st_mtime, out)
+        return dict(out)
+    except (OSError, json.JSONDecodeError, TypeError):
+        return {}
+
+
+def _write_category_map(mappings: dict[str, str], path: Path) -> None:
+    global _CATEGORY_MAP_MEM
+    mtime, size = _links_file_fingerprint(path)
+    payload = {
+        "mappings": mappings,
+        "count": len(mappings),
+        "generated_at": time.time(),
+        "links_mtime": mtime,
+        "links_size": size,
+        "cache_version": SHOP_LISTINGS_CACHE_VERSION,
+    }
+    try:
+        out_path = _category_map_path()
+        out_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+        _CATEGORY_MAP_MEM = (out_path.stat().st_mtime, dict(mappings))
+    except OSError as e:
+        _shop_debug_log(f"category map write failed: {e!r}")
+
+
+def _category_map_stale(path: Path) -> bool:
+    """True when inventory file changed — used only to prune maps, not AI schedule."""
+    cmap_path = _category_map_path()
+    if not cmap_path.is_file():
+        return True
+    try:
+        raw = json.loads(cmap_path.read_text(encoding="utf-8", errors="replace"))
+        if raw.get("cache_version") != SHOP_LISTINGS_CACHE_VERSION:
+            return True
+        mtime, size = _links_file_fingerprint(path)
+        if raw.get("links_mtime") != mtime or raw.get("links_size") != size:
+            return True
+    except (OSError, json.JSONDecodeError, TypeError):
+        return True
+    return False
+
+
+def _resolve_category(row: dict) -> str:
+    ek = str(row.get("event_key") or "")
+    venue = _venue_label(str(row.get("venue") or row.get("venue_raw") or ""))
+    name = str(row.get("event_name") or "")
+    cmap = _read_category_map()
+    if ek and ek in cmap:
+        return cmap[ek]
+    return _infer_category(name, venue)
+
+
+def _apply_category_map(rows: list[dict]) -> None:
+    cmap = _read_category_map()
+    if not cmap:
+        return
+    for row in rows:
+        ek = str(row.get("event_key") or "")
+        if ek in cmap:
+            row["category"] = cmap[ek]
+
+
+def _parse_ai_category_map(content: str) -> dict[str, str]:
+    text = (content or "").strip()
+    if not text:
+        return {}
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
+        text = re.sub(r"\s*```$", "", text)
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        m = re.search(r"\{[\s\S]+\}", text)
+        if not m:
+            return {}
+        try:
+            data = json.loads(m.group(0))
+        except json.JSONDecodeError:
+            return {}
+    if isinstance(data, dict):
+        if isinstance(data.get("categories"), dict):
+            data = data["categories"]
+        elif isinstance(data.get("mappings"), dict):
+            data = data["mappings"]
+    if not isinstance(data, dict):
+        return {}
+    out: dict[str, str] = {}
+    for k, v in data.items():
+        cat = str(v or "").strip().lower()
+        if cat in _SHOP_CATEGORIES:
+            out[str(k).strip()] = cat
+    return out
+
+
+def _parse_ai_pick_ids(content: str) -> list[str]:
+    text = (content or "").strip()
+    if not text:
+        return []
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
+        text = re.sub(r"\s*```$", "", text)
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        m = re.search(r"\{[\s\S]+\}|\[[\s\S]+\]", text)
+        if not m:
+            return []
+        try:
+            data = json.loads(m.group(0))
+        except json.JSONDecodeError:
+            return []
+    if isinstance(data, dict):
+        for key in ("picks", "ids", "event_keys", "keys", "popular"):
+            val = data.get(key)
+            if isinstance(val, list):
+                return [str(x).strip() for x in val if str(x).strip()]
+    if isinstance(data, list):
+        return [str(x).strip() for x in data if str(x).strip()]
+    return []
+
+
+def _normalize_event_name(name: str) -> str:
+    return re.sub(r"\s+", " ", (name or "").strip().lower())
+
+
+def _events_for_ai_categorization(events: list[dict]) -> list[dict]:
+    """Top unique event names by ticket volume — AI classifies these, rest inherit/heuristic."""
+    try:
+        cap = int(os.environ.get("SHOP_AI_CATEGORY_MAX") or "500")
+    except (TypeError, ValueError):
+        cap = 500
+    cap = max(50, min(cap, 800))
+    seen: set[str] = set()
+    reps: list[dict] = []
+    for e in sorted(events, key=lambda x: (-(int(x.get("ticket_count") or 0)), x.get("event_name") or "")):
+        name = _normalize_event_name(str(e.get("event_name") or ""))
+        if not name or name in seen:
+            continue
+        seen.add(name)
+        reps.append(e)
+        if len(reps) >= cap:
+            break
+    return reps
+
+
+def _build_full_category_map(events: list[dict], ai_by_key: dict[str, str]) -> dict[str, str]:
+    name_to_cat: dict[str, str] = {}
+    for e in events:
+        ek = str(e.get("event_key") or "")
+        name = _normalize_event_name(str(e.get("event_name") or ""))
+        if ek and ek in ai_by_key and name:
+            name_to_cat.setdefault(name, ai_by_key[ek])
+    full: dict[str, str] = {}
+    for e in events:
+        ek = str(e.get("event_key") or "")
+        if not ek:
+            continue
+        if ek in ai_by_key:
+            full[ek] = ai_by_key[ek]
+            continue
+        name = _normalize_event_name(str(e.get("event_name") or ""))
+        if name and name in name_to_cat:
+            full[ek] = name_to_cat[name]
+        else:
+            venue = _venue_label(str(e.get("venue") or ""))
+            full[ek] = _infer_category(str(e.get("event_name") or ""), venue)
+    return full
+
+
+def _ai_categorize_batch(batch: list[dict]) -> dict[str, str]:
+    api_key = _resolve_openai_api_key()
+    if not api_key or not batch:
+        return {}
+    id_to_key: dict[str, str] = {}
+    lines: list[str] = []
+    for i, e in enumerate(batch, 1):
+        sid = str(i)
+        ek = str(e.get("event_key") or "")
+        if not ek:
+            continue
+        id_to_key[sid] = ek
+        lines.append(f"{sid}. {e.get('event_name') or ''}")
+    if not lines:
+        return {}
+    model = (os.environ.get("OPENAI_HOME_MODEL") or "gpt-4o-mini").strip()
+    payload = {
+        "model": model,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "Classify ticket events. Categories: concerts, sports, events, parking. "
+                    'Reply JSON only: {"categories":{"1":"concerts","2":"sports"}} using the numeric ids.'
+                ),
+            },
+            {"role": "user", "content": "Classify each:\n\n" + "\n".join(lines)},
+        ],
+        "temperature": 0.1,
+        "response_format": {"type": "json_object"},
+    }
+    req = urllib.request.Request(
+        "https://api.openai.com/v1/chat/completions",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=90) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+        content = ((body.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+        parsed = _parse_ai_category_map(content)
+        out: dict[str, str] = {}
+        for sid, cat in parsed.items():
+            ek = id_to_key.get(str(sid).strip())
+            if ek and cat in _SHOP_CATEGORIES:
+                out[ek] = cat
+        return out
+    except Exception as e:
+        _shop_debug_log(f"AI categorize batch failed: {e!r}")
+        return {}
+
+
+def _ai_refresh_category_map(events: list[dict], *, allow_ai: bool, path: Path) -> dict[str, str]:
+    valid_keys = {str(e.get("event_key") or "") for e in events if e.get("event_key")}
+    existing = _prune_category_map(valid_keys, path)
+    if not allow_ai:
+        return existing
+    api_key = _resolve_openai_api_key()
+    if not api_key:
+        _shop_debug_log("AI categorize skipped: no OpenAI key")
+        return existing
+    targets = _events_for_ai_categorization(events)
+    if not targets:
+        return existing
+    by_key = {str(e.get("event_key") or ""): e for e in targets if e.get("event_key")}
+    keys = sorted(by_key.keys())
+    try:
+        chunk_size = int(os.environ.get("SHOP_AI_CATEGORY_BATCH") or "35")
+    except (TypeError, ValueError):
+        chunk_size = 35
+    chunk_size = max(15, min(chunk_size, 50))
+    ai_partial: dict[str, str] = {}
+    batches = 0
+    for i in range(0, len(keys), chunk_size):
+        batch = [by_key[k] for k in keys[i : i + chunk_size]]
+        got = _ai_categorize_batch(batch)
+        ai_partial.update(got)
+        batches += 1
+        if i + chunk_size < len(keys):
+            time.sleep(0.2)
+    full = _build_full_category_map(events, ai_partial)
+    _write_category_map(full, path)
+    _shop_debug_log(
+        f"AI category map rebuilt ai={len(ai_partial)}/{len(keys)} "
+        f"full={len(full)}/{len(valid_keys)} batches={batches}"
+    )
+    return full
+
+
 def _event_group_key(row: dict) -> str:
     return "|".join(
         [
@@ -1484,8 +1833,8 @@ def _parse_stock_line(raw_line: str, *, source: str = "") -> dict | None:
 def _public_listing(row: dict) -> dict:
     date_label, date_sort, date_ts = _format_event_date(row.get("event_date") or "")
     venue = _venue_label(row.get("venue") or "")
-    category = _infer_category(row.get("event_name") or "", venue)
     event_key = _event_group_key({**row, "venue": venue})
+    category = _resolve_category({"event_key": event_key, "event_name": row.get("event_name"), "venue": venue})
     return {
         "listing_id": row["listing_id"],
         "event_key": event_key,
@@ -1635,7 +1984,7 @@ def _normalize_events_for_api(
             row = listings_by_key[ek]
             venue = _venue_label(str(row.get("venue") or row.get("venue_raw") or ""))
         g["venue"] = venue
-        g["category"] = _infer_category(str(g.get("event_name") or ""), venue)
+        g["category"] = _resolve_category(g)
         if not g.get("event_date_display"):
             g["event_date_display"] = _format_event_date(str(g.get("event_date") or ""))[0]
 
@@ -1879,11 +2228,14 @@ def _load_all_listings(path: Path) -> tuple[list[dict], dict]:
         cached = _LISTINGS_MEM_CACHE.get(key)
         if cached and cached[0] == mtime and cached[1] == size:
             _shop_debug_log(f"listings mem hit {len(cached[2])} rows")
-            return cached[2], cached[3]
+            listings, stats = cached[2], cached[3]
+            _apply_category_map(listings)
+            return listings, stats
 
     disk = _read_listings_disk_cache(path)
     if disk:
         listings, stats = disk
+        _apply_category_map(listings)
         with _STOCK_LOCK:
             _LISTINGS_MEM_CACHE[key] = (mtime, size, listings, stats)
         _shop_debug_log(f"listings disk hit {len(listings)} rows")
@@ -1894,6 +2246,7 @@ def _load_all_listings(path: Path) -> tuple[list[dict], dict]:
     t0 = time.time()
     listings, stats = _parse_links_file(path)
     _shop_debug_log(f"listings parsed {len(listings)} rows in {time.time() - t0:.2f}s")
+    _apply_category_map(listings)
     if listings:
         _store_listings_cache(path, listings, stats)
     return listings, stats
@@ -1922,6 +2275,7 @@ def warm_shop_listings_cache() -> None:
                 f"({stats.get('lines_read', 0)} lines) in {time.time() - t0:.1f}s",
                 flush=True,
             )
+            shop_ai_if_due()
         except Exception as e:
             print(f"[tm-shop] warm failed: {e!r}", flush=True)
         finally:
@@ -2626,10 +2980,19 @@ def _ai_rank_popular_event_keys(candidates: list[dict], *, limit: int = HOME_POP
             _shop_debug_log("AI popular rank skipped: no OpenAI key (set STUBBY_OPENAI_API_KEY)")
         return None
     top = sorted(candidates, key=_popularity_score, reverse=True)[:80]
-    lines = [
-        f"- {e.get('event_key')}: {e.get('event_name')} ({int(e.get('ticket_count') or 0)} tickets)"
-        for e in top
-    ]
+    id_to_key: dict[str, str] = {}
+    lines: list[str] = []
+    for i, e in enumerate(top, 1):
+        sid = str(i)
+        ek = str(e.get("event_key") or "")
+        if not ek:
+            continue
+        id_to_key[sid] = ek
+        lines.append(
+            f"{sid}. {e.get('event_name')} ({int(e.get('ticket_count') or 0)} tickets)"
+        )
+    if len(id_to_key) < limit:
+        return None
     model = (os.environ.get("OPENAI_HOME_MODEL") or "gpt-4o-mini").strip()
     payload = {
         "model": model,
@@ -2637,22 +3000,19 @@ def _ai_rank_popular_event_keys(candidates: list[dict], *, limit: int = HOME_POP
             {
                 "role": "system",
                 "content": (
-                    "You curate a ticket marketplace homepage. Pick the most famous, mainstream, "
-                    "in-demand live events (major artists, sports franchises, big tours, Disney on Ice, etc.). "
-                    'Reply with JSON only: {"event_keys":["key1","key2"]} using exact event_key values from the list.'
+                    "Pick the most famous mainstream events for a ticket homepage. "
+                    f'Reply JSON only: {{"picks":["1","2",...]}} with {limit} numeric ids from the list.'
                 ),
             },
             {
                 "role": "user",
                 "content": (
-                    "Pick the "
-                    + str(limit)
-                    + " most famous / trending events fans would search for first.\n\n"
-                    + "\n".join(lines)
+                    f"Pick the {limit} most famous events:\n\n" + "\n".join(lines)
                 ),
             },
         ],
         "temperature": 0.15,
+        "response_format": {"type": "json_object"},
     }
     req = urllib.request.Request(
         "https://api.openai.com/v1/chat/completions",
@@ -2664,17 +3024,20 @@ def _ai_rank_popular_event_keys(candidates: list[dict], *, limit: int = HOME_POP
         method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=45) as resp:
+        with urllib.request.urlopen(req, timeout=60) as resp:
             body = json.loads(resp.read().decode("utf-8"))
         content = ((body.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
-        keys = _parse_ai_event_keys(content)
-        if not keys:
+        ids = _parse_ai_pick_ids(content)
+        if not ids:
             return None
-        valid = {str(e.get("event_key") or "") for e in candidates}
-        picked = [k for k in keys if k in valid]
+        picked: list[str] = []
+        for sid in ids:
+            ek = id_to_key.get(str(sid).strip())
+            if ek and ek not in picked:
+                picked.append(ek)
         if picked:
             _shop_debug_log(f"AI popular rank ok picked={len(picked)} model={model}")
-        return picked[:limit] if len(picked) >= min(limit, 4) else None
+        return picked[:limit] if len(picked) >= min(limit, 3) else None
     except Exception as e:
         _shop_debug_log(f"AI popular rank failed: {e!r}")
         return None
@@ -2751,7 +3114,7 @@ def _prev_popular_keys_from_snap(snap: dict | None) -> list[str]:
     return out
 
 
-def shop_build_home_snapshot(*, force: bool = False) -> dict:
+def shop_build_home_snapshot(*, force: bool = False, skip_ai: bool = False, _ai_lock_held: bool = False) -> dict:
     t0 = time.time()
     path = _resolve_links_txt()
     if not path.is_file():
@@ -2761,8 +3124,16 @@ def shop_build_home_snapshot(*, force: bool = False) -> dict:
     if snap_path.is_file():
         try:
             prev_snap = json.loads(snap_path.read_text(encoding="utf-8", errors="replace"))
-            if isinstance(prev_snap, dict) and not force and not _home_snapshot_stale(prev_snap, path):
+            ai_due = _ai_cooldown_due(force=force)
+            if (
+                isinstance(prev_snap, dict)
+                and not force
+                and not _home_snapshot_stale(prev_snap, path)
+                and (not ai_due or skip_ai)
+            ):
                 prev_snap["cached"] = True
+                if skip_ai and ai_due:
+                    prev_snap["ai_pending"] = True
                 prev_snap["timing_ms"] = int((time.time() - t0) * 1000)
                 return prev_snap
         except (OSError, json.JSONDecodeError, TypeError):
@@ -2781,64 +3152,104 @@ def shop_build_home_snapshot(*, force: bool = False) -> dict:
     _normalize_events_for_api(events)
     _enrich_events_with_cached_images(events)
 
-    prev_ai_at = float((prev_snap or {}).get("ai_ranked_at") or 0)
-    allow_ai = force or (time.time() - prev_ai_at >= HOME_SNAPSHOT_TTL_SEC)
-    prev_keys = _prev_popular_keys_from_snap(prev_snap if isinstance(prev_snap, dict) else None)
-    popular, ranking = _pick_popular_events(
-        events,
-        allow_ai=allow_ai,
-        prev_popular_keys=prev_keys if not allow_ai else None,
-    )
-    ai_ranked_at = time.time() if ranking == "ai" else (prev_ai_at if prev_ai_at else 0)
-    concerts = sorted(
-        [e for e in events if e.get("category") == "concerts"],
-        key=lambda x: (-(x.get("ticket_count") or 0), x.get("event_name") or ""),
-    )[:HOME_CAROUSEL_LIMIT]
-    sports = sorted(
-        [e for e in events if e.get("category") == "sports"],
-        key=lambda x: (-(x.get("ticket_count") or 0), x.get("event_name") or ""),
-    )[:HOME_CAROUSEL_LIMIT]
-    shows = sorted(
-        [e for e in events if e.get("category") == "events"],
-        key=lambda x: (-(x.get("ticket_count") or 0), x.get("event_name") or ""),
-    )[:HOME_SHOWS_GRID_LIMIT]
-    cat_totals = _category_catalog_totals(events)
-    hero = popular[0] if popular else (events[0] if events else {})
-    mtime, size = _links_file_fingerprint(path)
-    now = time.time()
-    snapshot = {
-        "ok": True,
-        "generated_at": now,
-        "expires_at": now + HOME_SNAPSHOT_TTL_SEC,
-        "links_mtime": mtime,
-        "links_size": size,
-        "cache_version": SHOP_LISTINGS_CACHE_VERSION,
-        "count": catalog_count,
-        "event_count": len(events),
-        "ranking": ranking,
-        "ai_ranked_at": ai_ranked_at,
-        "hero_event_key": str(hero.get("event_key") or ""),
-        "hero_image_url": str(hero.get("image_url") or ""),
-        "hero_event_name": str(hero.get("event_name") or ""),
-        "category_totals": cat_totals,
-        "sections": {
-            "popular": {"events": _home_events_to_cards(popular)},
-            "concerts": {"events": _home_events_to_cards(concerts)},
-            "sports": {"events": _home_events_to_cards(sports)},
-            "shows": {"events": _home_events_to_cards(shows)},
-        },
-        "cached": False,
-        "timing_ms": int((time.time() - t0) * 1000),
-    }
+    allow_ai = _ai_cooldown_due(force=force) and not skip_ai
+    owns_ai_lock = False
+    if allow_ai and not _ai_lock_held:
+        with _AI_LOCK:
+            if _AI_RUNNING:
+                _shop_debug_log("AI categorize skipped — pipeline already running")
+                allow_ai = False
+            else:
+                _AI_RUNNING = True
+                owns_ai_lock = True
+    ai_attempted = False
+    ai_ok = False
     try:
-        snap_path.write_text(json.dumps(snapshot, ensure_ascii=False), encoding="utf-8")
-        _shop_debug_log(
-            f"home snapshot built ranking={ranking} allow_ai={allow_ai} popular={len(popular)} "
-            f"events={len(events)} tickets={catalog_count} {snapshot['timing_ms']}ms"
+        if allow_ai:
+            ai_attempted = True
+            if not _resolve_openai_api_key():
+                _shop_debug_log("AI run due but no OpenAI key — cooldown not marked")
+            else:
+                _shop_debug_log("AI cooldown due — rebuilding categories + popular picks")
+        cmap: dict[str, str] = {}
+        if allow_ai and _resolve_openai_api_key():
+            cmap = _ai_refresh_category_map(events, allow_ai=True, path=path)
+            _apply_category_map(events)
+            ai_ok = len(cmap) >= max(50, int(len(events) * 0.5))
+        elif not allow_ai:
+            _prune_category_map(
+                {str(e.get("event_key") or "") for e in events if e.get("event_key")}, path
+            )
+            _apply_category_map(events)
+
+        prev_keys = _prev_popular_keys_from_snap(prev_snap if isinstance(prev_snap, dict) else None)
+        popular, ranking = _pick_popular_events(
+            events,
+            allow_ai=allow_ai and bool(_resolve_openai_api_key()),
+            prev_popular_keys=prev_keys if not allow_ai else None,
         )
-    except OSError as e:
-        _shop_debug_log(f"home snapshot write failed: {e!r}")
-    return snapshot
+        if allow_ai and ranking in ("ai", "ai_cached"):
+            ai_ok = True
+        ai_ranked_at = _read_ai_cooldown_ts() or time.time()
+        if ai_attempted and ai_ok and _resolve_openai_api_key():
+            _ai_cooldown_mark()
+            ai_ranked_at = _read_ai_cooldown_ts() or time.time()
+        elif ai_attempted and allow_ai and cmap and not ai_ok:
+            _shop_debug_log("AI pipeline finished but quality low — cooldown not marked")
+        concerts = sorted(
+            [e for e in events if e.get("category") == "concerts"],
+            key=lambda x: (-(x.get("ticket_count") or 0), x.get("event_name") or ""),
+        )[:HOME_CAROUSEL_LIMIT]
+        sports = sorted(
+            [e for e in events if e.get("category") == "sports"],
+            key=lambda x: (-(x.get("ticket_count") or 0), x.get("event_name") or ""),
+        )[:HOME_CAROUSEL_LIMIT]
+        shows = sorted(
+            [e for e in events if e.get("category") == "events"],
+            key=lambda x: (-(x.get("ticket_count") or 0), x.get("event_name") or ""),
+        )[:HOME_SHOWS_GRID_LIMIT]
+        cat_totals = _category_catalog_totals(events)
+        hero = popular[0] if popular else (events[0] if events else {})
+        mtime, size = _links_file_fingerprint(path)
+        now = time.time()
+        snapshot = {
+            "ok": True,
+            "generated_at": now,
+            "expires_at": now + HOME_SNAPSHOT_TTL_SEC,
+            "links_mtime": mtime,
+            "links_size": size,
+            "cache_version": SHOP_LISTINGS_CACHE_VERSION,
+            "count": catalog_count,
+            "event_count": len(events),
+            "ranking": ranking,
+            "ai_ranked_at": ai_ranked_at,
+            "hero_event_key": str(hero.get("event_key") or ""),
+            "hero_image_url": str(hero.get("image_url") or ""),
+            "hero_event_name": str(hero.get("event_name") or ""),
+            "category_totals": cat_totals,
+            "sections": {
+                "popular": {"events": _home_events_to_cards(popular)},
+                "concerts": {"events": _home_events_to_cards(concerts)},
+                "sports": {"events": _home_events_to_cards(sports)},
+                "shows": {"events": _home_events_to_cards(shows)},
+            },
+            "cached": False,
+            "timing_ms": int((time.time() - t0) * 1000),
+        }
+        try:
+            snap_path.write_text(json.dumps(snapshot, ensure_ascii=False), encoding="utf-8")
+            _shop_debug_log(
+                f"home snapshot built ranking={ranking} allow_ai={allow_ai} ai_ok={ai_ok} "
+                f"popular={len(popular)} events={len(events)} tickets={catalog_count} "
+                f"{snapshot['timing_ms']}ms"
+            )
+        except OSError as e:
+            _shop_debug_log(f"home snapshot write failed: {e!r}")
+        return snapshot
+    finally:
+        if owns_ai_lock:
+            with _AI_LOCK:
+                _AI_RUNNING = False
 
 
 def _sanitize_home_response(body: dict) -> dict:
@@ -2869,19 +3280,81 @@ def _sanitize_home_response(body: dict) -> dict:
     return {k: body[k] for k in allow if k in body}
 
 
-def shop_home(*, refresh: bool = False) -> dict:
+def _schedule_ai_pipeline(*, force: bool = False) -> bool:
+    global _AI_RUNNING
+    with _AI_LOCK:
+        if _AI_RUNNING:
+            _shop_debug_log("AI pipeline already running — skip duplicate start")
+            return False
+        _AI_RUNNING = True
+
+    def _work() -> None:
+        global _AI_RUNNING
+        try:
+            _shop_debug_log("AI pipeline background start")
+            shop_build_home_snapshot(force=force, skip_ai=False, _ai_lock_held=True)
+        except Exception as e:
+            _shop_debug_log(f"AI pipeline background failed: {e!r}")
+        finally:
+            with _AI_LOCK:
+                _AI_RUNNING = False
+            _shop_debug_log("AI pipeline background done")
+
+    threading.Thread(target=_work, daemon=True, name="tm-shop-ai").start()
+    return True
+
+
+def shop_ai_if_due(*, force: bool = False) -> dict:
+    """Run AI categorization + homepage snapshot when ai_cooldown.txt is missing or 24h old."""
+    if not _ai_cooldown_due(force=force):
+        left = _ai_cooldown_seconds_left()
+        _shop_debug_log(f"AI cooldown active — {left}s until next run")
+        snap_path = _home_snapshot_path()
+        if snap_path.is_file():
+            try:
+                snap = json.loads(snap_path.read_text(encoding="utf-8", errors="replace"))
+                if isinstance(snap, dict) and snap.get("ok"):
+                    snap["ai_skipped"] = True
+                    snap["ai_cooldown_sec_left"] = left
+                    return snap
+            except (OSError, json.JSONDecodeError, TypeError):
+                pass
+        return {"ok": True, "ai_skipped": True, "ai_cooldown_sec_left": left}
+    if force:
+        return shop_build_home_snapshot(force=True, skip_ai=False)
+    _schedule_ai_pipeline(force=False)
     path = _resolve_links_txt()
     snap_path = _home_snapshot_path()
-    if not refresh and snap_path.is_file():
+    if snap_path.is_file():
         try:
             snap = json.loads(snap_path.read_text(encoding="utf-8", errors="replace"))
             if isinstance(snap, dict) and snap.get("ok") and not _home_snapshot_stale(snap, path):
                 snap["cached"] = True
-                snap["age_sec"] = int(max(0, time.time() - float(snap.get("generated_at") or 0)))
-                return _sanitize_home_response(snap)
+                snap["ai_pending"] = True
+                return snap
         except (OSError, json.JSONDecodeError, TypeError):
             pass
-    built = shop_build_home_snapshot(force=True)
+    return shop_build_home_snapshot(force=False, skip_ai=True)
+
+
+def shop_home(*, refresh: bool = False) -> dict:
+    path = _resolve_links_txt()
+    snap_path = _home_snapshot_path()
+    ai_due = _ai_cooldown_due(force=refresh)
+    if snap_path.is_file():
+        try:
+            snap = json.loads(snap_path.read_text(encoding="utf-8", errors="replace"))
+            if isinstance(snap, dict) and snap.get("ok") and not _home_snapshot_stale(snap, path):
+                if not refresh:
+                    if ai_due:
+                        _schedule_ai_pipeline(force=refresh)
+                        snap["ai_pending"] = True
+                    snap["cached"] = True
+                    snap["age_sec"] = int(max(0, time.time() - float(snap.get("generated_at") or 0)))
+                    return _sanitize_home_response(snap)
+        except (OSError, json.JSONDecodeError, TypeError):
+            pass
+    built = shop_ai_if_due(force=refresh)
     return _sanitize_home_response(built)
 
 
