@@ -114,6 +114,11 @@ if (sources["public/site-assets"]) {
   fs.mkdirSync(dstPub, { recursive: true });
   fs.cpSync(sources["public/site-assets"], dstPub, { recursive: true });
   console.log("[sync-public] copied ticketmaster/" + siteFolder + "/public → public/public");
+  const rootIco = path.join(sources["public/site-assets"], "favicon.ico");
+  if (fs.existsSync(rootIco)) {
+    fs.copyFileSync(rootIco, path.join(pub, "favicon.ico"));
+    console.log("[sync-public] copied favicon.ico → public/favicon.ico");
+  }
 }
 
 const assets = path.join(root, "tm_event_assets");
