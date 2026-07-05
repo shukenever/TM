@@ -1102,6 +1102,140 @@ html.stx-pass-html body.stx-pass-app #tm-pass-transfer-status.tm-err {
   color: #b91c1c !important;
 }
 
+/* Ticket Info modal — Ticketmaster-style detail sheet */
+.stx-ticket-info-modal[hidden] {
+  display: none !important;
+}
+
+.stx-ticket-info-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  box-sizing: border-box;
+}
+
+.stx-ticket-info-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 22, 5, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.stx-ticket-info-panel {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.15rem 1.2rem 1rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+  box-sizing: border-box;
+}
+
+.stx-ticket-info-head {
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+html.stx-pass-html body.stx-pass-app .stx-ticket-info-panel h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.08rem;
+  font-weight: 800;
+  color: #0f172a !important;
+}
+
+html.stx-pass-html body.stx-pass-app .stx-ticket-info-source {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b !important;
+}
+
+.stx-ticket-info-list {
+  display: grid;
+  grid-template-columns: minmax(92px, 34%) 1fr;
+  gap: 0.45rem 0.75rem;
+  margin: 0 0 1rem;
+}
+
+html.stx-pass-html body.stx-pass-app .stx-ticket-info-list dt {
+  margin: 0;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b !important;
+  line-height: 1.35;
+}
+
+html.stx-pass-html body.stx-pass-app .stx-ticket-info-list dd {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #0f172a !important;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.stx-ticket-info-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+html.stx-pass-html body.stx-pass-app .stx-ticket-info-order {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0.55rem 1rem;
+  border-radius: 10px;
+  background: rgba(143, 211, 86, 0.14) !important;
+  border: 1px solid rgba(143, 211, 86, 0.45) !important;
+  color: #3f6212 !important;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none !important;
+  box-sizing: border-box;
+}
+
+html.stx-pass-html body.stx-pass-app .stx-ticket-info-order:hover {
+  background: rgba(143, 211, 86, 0.22) !important;
+}
+
+html.stx-pass-html body.stx-pass-app #stx-ticket-info-close {
+  min-height: 42px;
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: 10px;
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+html.stx-pass-html body.stx-pass-app button.tm-pass-info.tm-pass-info-open {
+  cursor: pointer !important;
+}
+
+html.stx-pass-html body.stx-pass-app button.tm-pass-info.tm-pass-info-open.tm-pass-info--muted {
+  cursor: pointer !important;
+}
+
 /* Unlock TM viewport scroll lock on SecureTixx */
 html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app.tm-shell-ticket-minimal {
   height: auto !important;
