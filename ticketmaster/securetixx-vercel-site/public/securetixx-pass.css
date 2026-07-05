@@ -1031,6 +1031,46 @@ html.stx-pass-html body.stx-pass-app .tm-pass-info.tm-pass-btn--ghost .tm-pass-i
   color: var(--stx-lime-dark) !important;
 }
 
+/* Transfer modal — white panel needs dark text (body is white globally) */
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer-panel,
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer-panel h3,
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer-panel p,
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer-panel label,
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer-panel input,
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer-panel textarea,
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer-panel button {
+  color: #0f172a !important;
+}
+
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer-panel .tm-muted,
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer-panel .tm-pass-transfer-field label {
+  color: #475569 !important;
+}
+
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer-panel input::placeholder,
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer-panel textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer-panel input,
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer-panel textarea {
+  background: #fff !important;
+  border-color: #c5ced8 !important;
+}
+
+html.stx-pass-html body.stx-pass-app #tm-pass-transfer-cancel {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html.stx-pass-html body.stx-pass-app #tm-pass-transfer-status.tm-ok {
+  color: #059669 !important;
+}
+
+html.stx-pass-html body.stx-pass-app #tm-pass-transfer-status.tm-err {
+  color: #b91c1c !important;
+}
+
 /* Unlock TM viewport scroll lock on SecureTixx */
 html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app.tm-shell-ticket-minimal {
   height: auto !important;
