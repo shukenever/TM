@@ -1,4 +1,4 @@
-/* SecureTixx pass v52 — phone meta grid + action button layout fix */
+/* SecureTixx pass v53 — phone action buttons single row */
 
 :root {
   --stx-bg: #051605;
@@ -1797,35 +1797,63 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-viewport-f
   }
 
   html.stx-pass-html body.stx-pass-app .tm-pass-actions {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-    grid-template-rows: auto auto !important;
-    gap: 8px !important;
-    padding: 8px !important;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.92fr) minmax(0, 0.92fr) !important;
+    grid-template-rows: auto !important;
+    gap: 6px !important;
+    padding: 8px 6px !important;
   }
 
   html.stx-pass-html body.stx-pass-app .tm-pass-actions > .tm-pass-wallet,
   html.stx-pass-html body.stx-pass-app .tm-pass-actions > a.tm-pass-wallet {
-    grid-column: 1 / -1 !important;
+    grid-column: 1 !important;
     grid-row: 1 !important;
-    min-height: 52px !important;
-    padding: 10px 12px !important;
+    min-height: 58px !important;
+    padding: 6px 4px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
   }
 
   html.stx-pass-html body.stx-pass-app .tm-pass-actions > .tm-pass-info,
   html.stx-pass-html body.stx-pass-app .tm-pass-actions > button.tm-pass-info {
-    grid-column: 1 !important;
-    grid-row: 2 !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
     min-height: 58px !important;
     padding: 8px 4px !important;
   }
 
   html.stx-pass-html body.stx-pass-app .tm-pass-actions > .tm-pass-transfer,
   html.stx-pass-html body.stx-pass-app .tm-pass-actions > button.tm-pass-transfer {
-    grid-column: 2 !important;
-    grid-row: 2 !important;
+    grid-column: 3 !important;
+    grid-row: 1 !important;
     min-height: 58px !important;
     padding: 8px 4px !important;
     box-shadow: 0 2px 10px rgba(163, 230, 53, 0.22) !important;
+  }
+
+  html.stx-pass-html body.stx-pass-app .tm-pass-wallet.tm-pass-wallet--badge {
+    border-width: 1px !important;
+  }
+
+  html.stx-pass-html body.stx-pass-app .tm-pass-wallet-badge-text {
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  html.stx-pass-html body.stx-pass-app .tm-pass-wallet-l1 {
+    font-size: 0.5rem !important;
+    line-height: 1 !important;
+  }
+
+  html.stx-pass-html body.stx-pass-app .tm-pass-wallet-l2 {
+    font-size: 0.58rem !important;
+    line-height: 1.05 !important;
+  }
+
+  html.stx-pass-html body.stx-pass-app .tm-pass-wallet-badge-img {
+    width: 28px !important;
+    max-height: 22px !important;
   }
 
   html.stx-pass-html body.stx-pass-app .tm-pass-transfer,
