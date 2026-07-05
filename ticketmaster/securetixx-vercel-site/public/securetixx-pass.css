@@ -1,4 +1,4 @@
-/* SecureTixx pass v22 — event title/venue above hero, larger typography */
+/* SecureTixx pass v23 — clean venue line, no truncation ellipsis */
 
 :root {
   --stx-bg: #051605;
@@ -403,6 +403,10 @@ html.stx-pass-html body.stx-pass-app .tm-pass-title {
   font-weight: 500 !important;
   color: var(--stx-mint) !important;
   line-height: 1.4 !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  word-break: break-word !important;
 }
 
 .stx-pass-app .tm-pass-sub,
