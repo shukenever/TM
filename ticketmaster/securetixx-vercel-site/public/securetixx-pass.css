@@ -1,4 +1,4 @@
-/* SecureTixx pass v49 — larger refresh button + TM-style countdown */
+/* SecureTixx pass v50 — green refresh button + countdown lock */
 
 :root {
   --stx-bg: #051605;
@@ -720,7 +720,7 @@ html.stx-pass-html body.stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn,
   gap: 6px !important;
   padding: 6px 10px 6px 8px !important;
   margin: 0 !important;
-  border: 1px solid rgba(2, 108, 223, 0.38) !important;
+  border: 1px solid rgba(143, 211, 86, 0.58) !important;
   border-radius: 999px !important;
   background: #fff !important;
   cursor: pointer !important;
@@ -728,8 +728,8 @@ html.stx-pass-html body.stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn,
   font-size: clamp(0.64rem, 2.6vw, 0.72rem) !important;
   font-weight: 700 !important;
   letter-spacing: 0.02em !important;
-  color: #026cdf !important;
-  box-shadow: 0 1px 2px rgba(2, 108, 223, 0.12) !important;
+  color: var(--stx-lime-dark) !important;
+  box-shadow: 0 1px 2px rgba(63, 98, 18, 0.14) !important;
   min-height: 0 !important;
   line-height: 1.15 !important;
   outline: none !important;
@@ -738,16 +738,16 @@ html.stx-pass-html body.stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn,
 
 html.stx-pass-html body.stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn:hover,
 .stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn:hover {
-  color: #0153a3 !important;
-  border-color: rgba(2, 108, 223, 0.55) !important;
-  background: rgba(2, 108, 223, 0.06) !important;
-  box-shadow: 0 1px 3px rgba(2, 108, 223, 0.14) !important;
+  color: #2d5016 !important;
+  border-color: rgba(143, 211, 86, 0.78) !important;
+  background: rgba(143, 211, 86, 0.08) !important;
+  box-shadow: 0 1px 3px rgba(63, 98, 18, 0.18) !important;
 }
 
 html.stx-pass-html body.stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn:focus-visible,
 .stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn:focus-visible {
-  border-color: rgba(2, 108, 223, 0.65) !important;
-  box-shadow: 0 0 0 2px rgba(2, 108, 223, 0.16) !important;
+  border-color: rgba(143, 211, 86, 0.85) !important;
+  box-shadow: 0 0 0 2px rgba(143, 211, 86, 0.22) !important;
 }
 
 html.stx-pass-html body.stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn:active,
@@ -769,11 +769,11 @@ html.stx-pass-html body.stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn:act
   padding: 0 !important;
   margin-left: 1px !important;
   border-radius: 50% !important;
-  border: 1px solid rgba(2, 108, 223, 0.42) !important;
-  background: #fff !important;
+  border: 1px solid rgba(143, 211, 86, 0.68) !important;
+  background: rgba(143, 211, 86, 0.12) !important;
   font-size: 0.62rem !important;
   font-weight: 800 !important;
-  color: #026cdf !important;
+  color: var(--stx-lime-dark) !important;
   font-variant-numeric: tabular-nums !important;
   flex-shrink: 0 !important;
   line-height: 1 !important;
@@ -781,7 +781,7 @@ html.stx-pass-html body.stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn:act
 
 .stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn .tm-pass-refresh-btn__ico {
   font-size: 1rem !important;
-  color: #026cdf !important;
+  color: var(--stx-lime-dark) !important;
   line-height: 1 !important;
 }
 
