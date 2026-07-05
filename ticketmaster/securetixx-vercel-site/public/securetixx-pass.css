@@ -326,6 +326,15 @@ body.stx-pass-app.tm-shell-ticket-minimal::before {
   line-height: 1.2;
 }
 
+.stx-logo-img {
+  display: block;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
 .stx-logo-ico,
 .stx-shield-ico {
   color: var(--stx-lime);
