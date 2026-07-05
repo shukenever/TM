@@ -1,4 +1,4 @@
-/* SecureTixx pass v19 — full-width top header, spaced pass column below */
+/* SecureTixx pass v20 — centered floating shell, header borders top + bottom */
 
 :root {
   --stx-bg: #051605;
@@ -11,7 +11,8 @@
   --stx-white: #fff;
   --stx-max: 430px;
   --stx-card: 400px;
-  --stx-gap: 14px;
+  --stx-gap: 12px;
+  --stx-line: rgba(168, 213, 186, 0.14);
 }
 
 html.stx-pass-html,
@@ -55,19 +56,21 @@ body.stx-pass-app.tm-shell-ticket-minimal::before {
   padding: 0 !important;
 }
 
-/* ── Shell — full-width header, centered pass column below ── */
+/* ── Shell — centered floating column in viewport ── */
 .stx-ticket-app {
   position: relative;
-  flex: 1 1 auto;
-  min-height: 100dvh;
-  min-height: 100svh;
+  flex: 0 0 auto;
   width: 100%;
-  max-width: none;
-  margin: 0;
+  max-width: var(--stx-max);
+  margin: auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   background: transparent;
   overflow: visible;
+  border-top: 1px solid var(--stx-line);
+  border-bottom: 1px solid var(--stx-line);
+  box-sizing: border-box;
 }
 
 .stx-ticket-app__bg {
@@ -96,40 +99,35 @@ body.stx-pass-app.tm-shell-ticket-minimal::before {
 .stx-ticket-app__scroll {
   position: relative;
   z-index: 1;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  align-items: center;
-  width: 100%;
-  max-width: var(--stx-max);
-  margin: 0 auto;
+  align-items: stretch;
   min-height: 0;
   overflow-y: visible;
-  padding: 20px 12px max(20px, env(safe-area-inset-bottom, 0px));
+  padding: 14px 10px max(16px, env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
 }
 
 .stx-app-bar {
-  position: sticky;
-  top: 0;
-  z-index: 50;
+  position: relative;
+  top: auto;
+  z-index: 40;
   flex-shrink: 0;
   width: 100%;
-  max-width: none;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding:
-    max(10px, env(safe-area-inset-top, 0px))
-    max(16px, env(safe-area-inset-right, 0px))
-    12px
-    max(16px, env(safe-area-inset-left, 0px));
-  background: rgba(5, 22, 5, 0.94);
+    max(8px, env(safe-area-inset-top, 0px))
+    12px 10px 12px;
+  background: rgba(5, 22, 5, 0.88);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(168, 213, 186, 0.12);
+  border-top: 1px solid var(--stx-line);
+  border-bottom: 1px solid var(--stx-line);
 }
 
 .stx-app-bar__back,
@@ -199,10 +197,8 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-viewport-f
 }
 
 html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app > main {
-  padding: 0 4px 4px !important;
+  padding: 6px 10px 8px !important;
   align-items: center !important;
-  width: 100% !important;
-  max-width: var(--stx-card) !important;
 }
 
 .stx-pass-app .acct,
@@ -689,10 +685,7 @@ html.stx-pass-html body.stx-pass-app .tm-pass-btn {
 
 .stx-app-foot {
   flex-shrink: 0;
-  width: 100%;
-  max-width: var(--stx-card);
-  margin: 16px auto 0;
-  padding: 12px 16px max(16px, env(safe-area-inset-bottom, 0px));
+  padding: 10px 16px max(12px, env(safe-area-inset-bottom, 0px));
   background: transparent !important;
   border: none !important;
 }
@@ -744,8 +737,21 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-viewport-f
 }
 
 @media (min-width: 460px) {
+  .stx-ticket-app {
+    margin: auto;
+    border-radius: 28px;
+    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    border-top: 1px solid var(--stx-line);
+    border-bottom: 1px solid var(--stx-line);
+  }
+
+  .stx-ticket-app__bg {
+    border-radius: 28px;
+  }
+
   .stx-ticket-app__scroll {
-    padding: 28px 20px 32px;
+    padding: 20px 16px 24px;
   }
 
   html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-viewport-fit {
