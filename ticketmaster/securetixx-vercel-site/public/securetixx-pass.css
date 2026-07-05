@@ -1,4 +1,4 @@
-/* SecureTixx pass v43 — sharp TM-style 1px borders */
+/* SecureTixx pass v44 — soft gradient edges (TM-style, not flat borders) */
 
 :root {
   --stx-bg: #051605;
@@ -12,13 +12,40 @@
   --stx-max: min(calc(100vw - 12px), 480px);
   --stx-card: min(calc(100vw - 16px), 452px);
   --stx-gap: 12px;
-  --stx-line: rgba(168, 213, 186, 0.32);
-  --stx-border: 1px solid rgba(168, 213, 186, 0.32);
-  --stx-border-strong: 1px solid rgba(168, 213, 186, 0.48);
-  --stx-radius: 0;
+  --stx-line: rgba(168, 213, 186, 0.14);
+  --stx-radius: 16px;
+  --stx-radius-sm: 12px;
+  --stx-edge-gradient: linear-gradient(
+    180deg,
+    rgba(168, 213, 186, 0.34) 0%,
+    rgba(143, 211, 86, 0.14) 38%,
+    rgba(76, 124, 42, 0.1) 72%,
+    rgba(168, 213, 186, 0.2) 100%
+  );
+  --stx-edge-gradient-h: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(168, 213, 186, 0.08) 12%,
+    rgba(143, 211, 86, 0.22) 50%,
+    rgba(120, 200, 255, 0.16) 88%,
+    transparent 100%
+  );
+  --stx-shadow-soft: 0 16px 40px rgba(0, 0, 0, 0.38), 0 2px 8px rgba(0, 0, 0, 0.22);
+  --stx-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 -1px 0 rgba(0, 0, 0, 0.18);
   --stx-body-x: 12px;
   --stx-dock-x: 14px;
   --stx-hero-h: clamp(240px, 62vw, 360px);
+}
+
+@keyframes stx-edge-shimmer {
+  0%,
+  100% {
+    opacity: 0.82;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 html.stx-pass-html,
@@ -185,15 +212,34 @@ body.stx-pass-app.tm-shell-ticket-minimal::before {
 }
 
 .stx-pass-float {
+  position: relative;
+  isolation: isolate;
   width: min(100%, var(--stx-max));
   max-width: var(--stx-max);
   margin: 0 auto;
-  border: var(--stx-border-strong);
+  border: none;
   border-radius: var(--stx-radius);
   box-sizing: border-box;
-  background: rgba(5, 22, 5, 0.35);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background: linear-gradient(180deg, rgba(8, 28, 8, 0.92) 0%, rgba(5, 18, 5, 0.86) 100%);
+  box-shadow: var(--stx-shadow-soft), var(--stx-shadow-inset);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow: hidden;
+}
+
+.stx-pass-float::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--stx-edge-gradient);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: stx-edge-shimmer 8s ease-in-out infinite;
 }
 
 .stx-app-bar {
@@ -203,12 +249,12 @@ body.stx-pass-app.tm-shell-ticket-minimal::before {
   flex-shrink: 0;
   width: 100%;
   box-sizing: border-box;
-  border-bottom: var(--stx-border);
-  border-top: none;
-  border-radius: var(--stx-radius);
-  background: rgba(5, 22, 5, 0.98);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  border: none;
+  border-radius: 0;
+  background: linear-gradient(180deg, rgba(8, 28, 8, 0.98) 0%, rgba(5, 22, 5, 0.94) 100%);
+  box-shadow: inset 0 -1px 0 rgba(168, 213, 186, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .stx-app-bar__inner {
@@ -473,7 +519,7 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-visual--ov
   height: var(--stx-hero-h) !important;
   min-height: var(--stx-hero-h) !important;
   max-height: var(--stx-hero-h) !important;
-  border-radius: var(--stx-radius) !important;
+  border-radius: var(--stx-radius-sm) !important;
   flex-shrink: 0 !important;
 }
 
@@ -507,9 +553,12 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-visual--ov
   margin: -14px auto 0 !important;
   z-index: 6 !important;
   padding: 10px 12px 10px !important;
-  border-radius: var(--stx-radius) !important;
-  border: var(--stx-border) !important;
-  box-shadow: none !important;
+  border: none !important;
+  border-radius: var(--stx-radius-sm) !important;
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.06) !important;
   box-sizing: border-box !important;
 }
 
@@ -662,8 +711,12 @@ html.stx-pass-html body.stx-pass-app .tm-scan-glow {
   gap: 10px;
   width: 100%;
   margin: 0;
-  padding: 10px 4px 12px;
-  border-bottom: var(--stx-border);
+  padding: 10px 4px 14px;
+  border-bottom: none;
+  background-image: var(--stx-edge-gradient-h);
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  background-position: bottom;
   box-sizing: border-box;
 }
 
@@ -713,6 +766,8 @@ html.stx-pass-html body.stx-pass-app .tm-scan-glow {
 
 /* Bottom dock — seats, concourse, wallet/info/transfer in one bordered frame */
 .stx-pass-bottom {
+  position: relative;
+  isolation: isolate;
   order: 2 !important;
   display: flex !important;
   flex-direction: column !important;
@@ -722,10 +777,27 @@ html.stx-pass-html body.stx-pass-app .tm-scan-glow {
   margin: 10px 0 0 !important;
   padding: 16px var(--stx-dock-x) 12px !important;
   box-sizing: border-box !important;
-  border: var(--stx-border) !important;
-  border-radius: var(--stx-radius) !important;
-  background: rgba(0, 0, 0, 0.24) !important;
+  border: none !important;
+  border-radius: var(--stx-radius-sm) !important;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.18) 100%) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 8px 22px rgba(0, 0, 0, 0.24) !important;
   overflow: visible !important;
+}
+
+.stx-pass-bottom::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--stx-edge-gradient);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 html.stx-pass-html body.stx-pass-app .stx-pass-bottom .tm-pass-gate {
@@ -742,8 +814,12 @@ html.stx-pass-html body.stx-pass-app .stx-pass-bottom .tm-pass-gate {
   margin: 0 0 2px !important;
   background: transparent !important;
   border: none !important;
-  border-bottom: var(--stx-border) !important;
-  border-radius: var(--stx-radius) !important;
+  border-bottom: none !important;
+  border-radius: 0 !important;
+  background-image: var(--stx-edge-gradient-h);
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  background-position: bottom;
   box-sizing: border-box !important;
 }
 
@@ -824,9 +900,11 @@ html.stx-pass-html body.stx-pass-app .stx-pass-bottom .stx-entry-gate {
   font-weight: 800 !important;
   letter-spacing: 0.1em !important;
   padding: 14px 12px !important;
-  border-radius: var(--stx-radius) !important;
-  border: var(--stx-border) !important;
-  box-shadow: none !important;
+  border-radius: var(--stx-radius-sm) !important;
+  border: none !important;
+  box-shadow:
+    0 8px 20px rgba(143, 211, 86, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
   background: linear-gradient(180deg, var(--stx-lime-bright), var(--stx-lime)) !important;
   color: var(--stx-lime-dark) !important;
   text-transform: uppercase !important;
@@ -846,15 +924,17 @@ html.stx-pass-html body.stx-pass-app .stx-pass-bottom .tm-pass-gate {
   min-width: 0 !important;
   margin: 0 !important;
   padding: 14px 12px !important;
-  border-radius: var(--stx-radius) !important;
+  border-radius: var(--stx-radius-sm) !important;
   background: linear-gradient(180deg, var(--stx-lime-bright), var(--stx-lime)) !important;
   color: var(--stx-lime-dark) !important;
   font-size: 0.78rem !important;
   font-weight: 800 !important;
   letter-spacing: 0.1em !important;
   text-transform: uppercase !important;
-  border: var(--stx-border) !important;
-  box-shadow: none !important;
+  border: none !important;
+  box-shadow:
+    0 8px 20px rgba(143, 211, 86, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
   box-sizing: border-box !important;
 }
 
@@ -868,9 +948,12 @@ html.stx-pass-html body.stx-pass-app .tm-pass-actions {
   max-width: 100% !important;
   padding: 8px !important;
   margin: 0 !important;
-  background: rgba(0, 0, 0, 0.28) !important;
-  border: var(--stx-border) !important;
-  border-radius: var(--stx-radius) !important;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.34), rgba(0, 0, 0, 0.22)) !important;
+  border: none !important;
+  border-radius: var(--stx-radius-sm) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 4px 14px rgba(0, 0, 0, 0.2) !important;
   box-sizing: border-box !important;
   visibility: visible !important;
   opacity: 1 !important;
@@ -900,7 +983,7 @@ html.stx-pass-html body.stx-pass-app .tm-pass-btn,
 html.stx-pass-html body.stx-pass-app a.tm-pass-btn,
 html.stx-pass-html body.stx-pass-app button.tm-pass-btn {
   min-height: 56px !important;
-  border-radius: var(--stx-radius) !important;
+  border-radius: var(--stx-radius-sm) !important;
   padding: 12px 10px !important;
   display: flex !important;
   flex-direction: row !important;
@@ -1149,8 +1232,12 @@ html.stx-pass-html body.stx-pass-app .tm-pass-transfer-label,
   width: 100%;
   max-width: var(--stx-max);
   margin: 14px auto 0;
-  padding: 0 8px;
+  padding: 14px 8px 0;
   box-sizing: border-box;
+  background-image: var(--stx-edge-gradient-h);
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  background-position: top;
 }
 
 .stx-trust-badge {
@@ -1442,8 +1529,8 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-viewport-f
 
   .stx-pass-float {
     border-radius: var(--stx-radius);
-    overflow: visible;
-    box-shadow: none;
+    overflow: hidden;
+    box-shadow: var(--stx-shadow-soft), var(--stx-shadow-inset);
   }
 
   html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-viewport-fit {
