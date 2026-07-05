@@ -1,4 +1,4 @@
-/* SecureTixx pass v40 — bottom dock flush with card border */
+/* SecureTixx pass v41 — unified bottom border, full-width concourse buttons */
 
 :root {
   --stx-bg: #051605;
@@ -9,13 +9,14 @@
   --stx-mint: #a8d5ba;
   --stx-mint-dim: #6b9b7a;
   --stx-white: #fff;
-  --stx-max: min(calc(100vw - 20px), 448px);
-  --stx-card: min(calc(100vw - 24px), 420px);
+  --stx-max: min(calc(100vw - 16px), 456px);
+  --stx-card: min(calc(100vw - 20px), 428px);
   --stx-gap: 12px;
   --stx-line: rgba(168, 213, 186, 0.14);
   --stx-body-x: 6px;
   --stx-main-x: 4px;
   --stx-bleed-x: calc(var(--stx-body-x) + var(--stx-main-x));
+  --stx-dock-x: 12px;
   --stx-hero-h: clamp(240px, 62vw, 360px);
 }
 
@@ -702,18 +703,22 @@ html.stx-pass-html body.stx-pass-app .tm-scan-glow {
   margin: 0 0 10px !important;
 }
 
-/* Bottom dock — section, main concourse, wallet/info/transfer */
+/* Bottom dock — seats, concourse, wallet/info/transfer in one bordered frame */
 .stx-pass-bottom {
   order: 2 !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 14px !important;
+  align-items: stretch !important;
+  gap: 10px !important;
   width: calc(100% + (2 * var(--stx-bleed-x))) !important;
   margin-left: calc(-1 * var(--stx-bleed-x)) !important;
   margin-right: calc(-1 * var(--stx-bleed-x)) !important;
   margin-top: 10px !important;
-  padding-top: 0 !important;
+  padding: 18px var(--stx-dock-x) 12px !important;
   box-sizing: border-box !important;
+  border: 1px solid rgba(168, 213, 186, 0.16) !important;
+  border-radius: 16px !important;
+  background: rgba(0, 0, 0, 0.24) !important;
 }
 
 .stx-pass-app .tm-pass-seats {
@@ -722,11 +727,12 @@ html.stx-pass-html body.stx-pass-app .tm-scan-glow {
   grid-template-columns: repeat(3, 1fr) !important;
   gap: 10px !important;
   width: 100% !important;
-  padding: 20px 14px !important;
-  margin: 0 !important;
-  background: rgba(0, 0, 0, 0.22) !important;
-  border: 1px solid rgba(168, 213, 186, 0.12) !important;
-  border-radius: 16px !important;
+  padding: 0 0 14px !important;
+  margin: 0 0 2px !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(168, 213, 186, 0.12) !important;
+  border-radius: 0 !important;
   box-sizing: border-box !important;
 }
 
@@ -779,30 +785,41 @@ html.stx-pass-html body.stx-pass-app .tm-scan-glow {
 .stx-pass-bottom .stx-entry-gate {
   order: 2 !important;
   margin: 0 !important;
+  align-self: stretch !important;
 }
 
 .stx-pass-bottom .tm-pass-gate {
   order: 1 !important;
   margin: 0 !important;
+  align-self: stretch !important;
 }
 
 .stx-pass-bottom .tm-pass-actions {
   order: 3 !important;
-  margin: 0 !important;
+  margin: 4px 0 0 !important;
+  align-self: stretch !important;
 }
 
+html.stx-pass-html body.stx-pass-app .stx-pass-bottom .tm-pass-gate,
+html.stx-pass-html body.stx-pass-app .stx-pass-bottom .stx-entry-gate,
 .stx-pass-app .tm-pass-gate {
-  display: block !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
   box-sizing: border-box !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
   background: rgba(0, 0, 0, 0.45) !important;
   color: var(--stx-white) !important;
   text-align: center !important;
   font-size: 0.66rem !important;
   font-weight: 800 !important;
   letter-spacing: 0.12em !important;
-  padding: 13px 16px !important;
-  border-radius: 14px !important;
+  padding: 13px 12px !important;
+  border-radius: 12px !important;
   border: 1px solid rgba(168, 213, 186, 0.1) !important;
   box-shadow: none !important;
 }
@@ -813,9 +830,11 @@ html.stx-pass-html body.stx-pass-app .tm-scan-glow {
   justify-content: center !important;
   gap: 8px !important;
   width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
   margin: 0 !important;
-  padding: 14px 16px !important;
-  border-radius: 14px !important;
+  padding: 14px 12px !important;
+  border-radius: 12px !important;
   background: linear-gradient(180deg, var(--stx-lime-bright), var(--stx-lime)) !important;
   color: var(--stx-lime-dark) !important;
   font-size: 0.78rem !important;
@@ -823,6 +842,7 @@ html.stx-pass-html body.stx-pass-app .tm-scan-glow {
   letter-spacing: 0.1em !important;
   text-transform: uppercase !important;
   box-shadow: 0 8px 22px rgba(143, 211, 86, 0.2) !important;
+  box-sizing: border-box !important;
 }
 
 html.stx-pass-html body.stx-pass-app .stx-pass-bottom .tm-pass-actions,
@@ -832,11 +852,12 @@ html.stx-pass-html body.stx-pass-app .tm-pass-actions {
   grid-template-rows: auto !important;
   gap: 10px !important;
   width: 100% !important;
+  max-width: 100% !important;
   padding: 8px !important;
   margin: 0 !important;
-  background: rgba(0, 0, 0, 0.38) !important;
-  border: 1px solid rgba(143, 211, 86, 0.16) !important;
-  border-radius: 16px !important;
+  background: rgba(0, 0, 0, 0.28) !important;
+  border: 1px solid rgba(143, 211, 86, 0.12) !important;
+  border-radius: 14px !important;
   box-sizing: border-box !important;
   visibility: visible !important;
   opacity: 1 !important;
