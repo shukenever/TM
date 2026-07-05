@@ -1,4 +1,4 @@
-/* SecureTixx pass v38 — fix orphan Ticket info label */
+/* SecureTixx pass v39 — centered phone frame, restored hero height */
 
 :root {
   --stx-bg: #051605;
@@ -9,11 +9,12 @@
   --stx-mint: #a8d5ba;
   --stx-mint-dim: #6b9b7a;
   --stx-white: #fff;
-  --stx-max: min(calc(100vw - 12px), 655px);
-  --stx-card: min(calc(100vw - 16px), 655px);
+  --stx-max: min(calc(100vw - 24px), 430px);
+  --stx-card: min(calc(100vw - 28px), 400px);
   --stx-gap: 12px;
   --stx-line: rgba(168, 213, 186, 0.14);
-  --stx-body-x: 4px;
+  --stx-body-x: 8px;
+  --stx-hero-h: clamp(240px, 62vw, 360px);
 }
 
 html.stx-pass-html,
@@ -170,16 +171,17 @@ body.stx-pass-app.tm-shell-ticket-minimal::before {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: stretch;
+  align-items: center;
   width: 100%;
+  max-width: none;
   min-height: 0;
   overflow-y: visible;
-  padding: 18px 3px max(20px, env(safe-area-inset-bottom, 0px));
+  padding: 18px 12px max(20px, env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
 }
 
 .stx-pass-float {
-  width: 100%;
+  width: min(100%, var(--stx-max));
   max-width: var(--stx-max);
   margin: 0 auto;
   border-top: 1px solid var(--stx-line);
@@ -188,7 +190,6 @@ body.stx-pass-app.tm-shell-ticket-minimal::before {
   background: rgba(5, 22, 5, 0.35);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  align-self: stretch;
 }
 
 .stx-app-bar {
@@ -302,7 +303,7 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-viewport-f
   height: auto !important;
   max-height: none !important;
   overflow: visible !important;
-  align-items: center !important;
+  align-items: stretch !important;
 }
 
 html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-viewport-fit {
@@ -376,7 +377,7 @@ html.stx-pass-html body.stx-pass-app .tm-pass-visual,
 html.stx-pass-html body.stx-pass-app .tm-pass-visual.tm-pass-visual--overlay {
   order: 2 !important;
   position: relative !important;
-  margin: 0 2px 12px !important;
+  margin: 0 0 12px !important;
   padding: 0 !important;
   background: transparent !important;
   border-radius: 0 !important;
@@ -384,9 +385,8 @@ html.stx-pass-html body.stx-pass-app .tm-pass-visual.tm-pass-visual--overlay {
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch !important;
-  width: calc(100% - 4px) !important;
-  max-width: none !important;
-  align-self: stretch !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 html.stx-pass-html body.stx-pass-app .tm-pass-head {
@@ -448,7 +448,7 @@ html.stx-pass-html body.stx-pass-app .tm-pass-hero--cover,
 html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-visual--overlay .tm-pass-hero--cover {
   width: 100% !important;
   height: auto !important;
-  min-height: 0 !important;
+  min-height: var(--stx-hero-h) !important;
   max-height: none !important;
   border-radius: 0 !important;
   overflow: visible !important;
@@ -463,9 +463,9 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-visual--ov
   position: relative !important;
   inset: auto !important;
   width: 100% !important;
-  height: clamp(132px, 28vw, 168px) !important;
-  min-height: clamp(132px, 28vw, 168px) !important;
-  max-height: clamp(132px, 28vw, 168px) !important;
+  height: var(--stx-hero-h) !important;
+  min-height: var(--stx-hero-h) !important;
+  max-height: var(--stx-hero-h) !important;
   border-radius: 14px !important;
   flex-shrink: 0 !important;
 }
@@ -1223,7 +1223,7 @@ html.stx-pass-html body.stx-pass-app #tm-pass-transfer-status.tm-err {
 .stx-ticket-info-panel {
   position: relative;
   width: 100%;
-  max-width: 655px;
+  max-width: 430px;
   max-height: 90vh;
   overflow: auto;
   background: #fff;
