@@ -1,4 +1,4 @@
-/* SecureTixx pass shell — full green redesign; TM ticket card (.tm-pass-card) untouched */
+/* SecureTixx pass — grid layout shell; .tm-pass-card interior untouched */
 
 :root {
   --stx-green-950: #022c22;
@@ -7,14 +7,12 @@
   --stx-green-700: #047857;
   --stx-green-600: #059669;
   --stx-green-500: #10b981;
-  --stx-green-400: #34d399;
-  --stx-green-glow: rgba(16, 185, 129, 0.35);
   --stx-amber: #fbbf24;
-  --stx-shell-bg: #ecfdf5;
-  --stx-shell-bg-2: #d1fae5;
+  --stx-shell-max: 920px;
+  --stx-stage-max: 468px;
 }
 
-/* ── Page canvas ── */
+/* ── Outer canvas ── */
 html.stx-pass-html,
 html.stx-pass-html.tm-html-ticket-viewport {
   background: var(--stx-green-950) !important;
@@ -22,293 +20,322 @@ html.stx-pass-html.tm-html-ticket-viewport {
 }
 
 body.stx-pass-app.tm-shell-ticket-minimal {
-  background:
-    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(16, 185, 129, 0.28), transparent 55%),
-    radial-gradient(ellipse 90% 60% at 100% 100%, rgba(5, 150, 105, 0.22), transparent 50%),
-    radial-gradient(ellipse 70% 50% at 0% 80%, rgba(52, 211, 153, 0.12), transparent 45%),
-    linear-gradient(165deg, var(--stx-shell-bg) 0%, #f0fdf4 38%, var(--stx-shell-bg-2) 100%) !important;
-  position: relative;
-  isolation: isolate;
+  background: var(--stx-green-900) !important;
+  min-height: 100vh;
+  margin: 0;
 }
 
 body.stx-pass-app.tm-shell-ticket-minimal::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.55;
-  background-image:
-    linear-gradient(rgba(5, 150, 105, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(5, 150, 105, 0.04) 1px, transparent 1px);
-  background-size: 28px 28px;
-  mask-image: linear-gradient(180deg, #000 0%, transparent 92%);
+  display: none !important;
 }
 
-body.stx-pass-app.tm-shell-ticket-minimal > header,
-body.stx-pass-app.tm-shell-ticket-minimal > .tm-arrival-warning,
-body.stx-pass-app.tm-shell-ticket-minimal > main,
-body.stx-pass-app.tm-shell-ticket-minimal > footer {
-  position: relative;
-  z-index: 1;
-}
-
-/* ── Header ── */
+/* Kill old full-bleed chrome bars if any remain */
 .stx-pass-app .tm-pass-chrome-bar,
 .stx-pass-app .tm-pass-chrome-bar--app {
-  background: linear-gradient(
-    135deg,
-    var(--stx-green-800) 0%,
-    var(--stx-green-700) 42%,
-    var(--stx-green-600) 100%
-  ) !important;
-  border: none !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow:
-    0 4px 24px rgba(2, 44, 34, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
-  padding: 0 !important;
-  padding-top: env(safe-area-inset-top, 0px) !important;
+  display: none !important;
 }
 
-.stx-pass-app .stx-shell-header__band {
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 14px 18px 12px;
+/* ── App shell: inset card, not edge-to-edge bars ── */
+.stx-layout {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding:
+    max(12px, env(safe-area-inset-top, 0px))
+    max(12px, env(safe-area-inset-right, 0px))
+    max(12px, env(safe-area-inset-bottom, 0px))
+    max(12px, env(safe-area-inset-left, 0px));
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.stx-layout__shell {
+  width: 100%;
+  max-width: var(--stx-shell-max);
+  min-height: calc(100dvh - 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: #f8fafc;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+/* ── Top nav (replaces full-width header bar) ── */
+.stx-layout-nav {
+  flex-shrink: 0;
+  background: linear-gradient(90deg, var(--stx-green-800), var(--stx-green-600));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.stx-layout-nav__track {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding: 14px 18px;
 }
 
-.stx-pass-app .tm-pass-chrome-inner {
-  max-width: none !important;
-  width: 100%;
-}
-
-.stx-pass-app .tm-pass-chrome-brand {
-  display: inline-flex !important;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none !important;
-}
-
-.stx-pass-app .tm-pass-chrome-brand .stx-wordmark {
+.stx-layout-nav__brand {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  text-decoration: none;
   color: #fff;
-  font-size: 1.125rem;
+  font-family: "Sora", "Inter", system-ui, sans-serif;
+  font-size: 1.05rem;
   font-weight: 800;
   letter-spacing: -0.03em;
-  font-family: "Sora", "Inter", system-ui, sans-serif;
-  line-height: 1;
-  white-space: nowrap;
 }
 
-.stx-pass-app .stx-mark {
+.stx-layout-nav__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.stx-layout-nav__eyebrow {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.stx-mark {
   width: 28px;
   height: 28px;
   border-radius: 9px;
-  background: linear-gradient(145deg, #fff 0%, #a7f3d0 100%);
+  background: #fff;
   color: var(--stx-green-800);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 900;
-  letter-spacing: -0.04em;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
   flex-shrink: 0;
 }
 
-.stx-pass-app .tm-pass-chrome-tag,
-.stx-pass-app .tm-pass-chrome-tag--app,
-.stx-pass-app .stx-shell-pill {
-  display: inline-flex !important;
+.stx-shell-pill {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 6px 12px !important;
-  border-radius: 999px !important;
-  background: rgba(255, 255, 255, 0.14) !important;
-  border: 1px solid rgba(255, 255, 255, 0.22) !important;
-  backdrop-filter: blur(8px);
-  color: #fff !important;
-  font-size: 0.62rem !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.1em !important;
-  text-transform: uppercase !important;
-  line-height: 1.2 !important;
-  text-align: center !important;
-}
-
-.stx-pass-app .stx-shell-header__sub {
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 0 18px 10px;
-  font-size: 0.62rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.72);
-  text-align: center;
 }
 
-/* ── Alert strip ── */
-.stx-pass-app .tm-arrival-warning {
+/* ── Main grid: sidebar | ticket stage ── */
+.stx-layout__grid {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+}
+
+.stx-layout__sidebar {
+  padding: 14px 14px 0;
+  background: linear-gradient(180deg, #ecfdf5 0%, #f8fafc 100%);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.stx-layout__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 12px 14px 18px;
+  background: #eef2f6;
+  min-height: 0;
+}
+
+.stx-layout__stage > main {
+  width: 100%;
+  max-width: var(--stx-stage-max);
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+  background: transparent !important;
+  overflow: visible !important;
+}
+
+html.tm-html-ticket-viewport body.stx-pass-app.tm-shell-ticket-minimal > .stx-layout .stx-layout__stage main {
+  padding: 0 !important;
+}
+
+/* Alert lives in sidebar — vertical card, not full-width strip */
+.stx-pass-app .tm-arrival-warning,
+.stx-pass-app .stx-shell-alert {
   display: flex !important;
+  flex-direction: column !important;
   align-items: flex-start !important;
-  gap: 12px !important;
-  margin: 0 auto !important;
-  max-width: 520px !important;
-  width: calc(100% - 24px) !important;
-  padding: 12px 14px !important;
-  background: linear-gradient(135deg, var(--stx-green-900) 0%, var(--stx-green-800) 100%) !important;
+  gap: 10px !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  transform: none !important;
+  padding: 14px !important;
+  border-radius: 14px !important;
+  background: var(--stx-green-900) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-left: 4px solid var(--stx-amber) !important;
-  border-bottom: none !important;
-  border-radius: 12px !important;
-  box-shadow:
-    0 8px 28px rgba(2, 44, 34, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 16px rgba(2, 44, 34, 0.2) !important;
   color: #fff !important;
-  transform: translateY(-6px);
-  margin-bottom: 4px !important;
 }
 
 .stx-pass-app .tm-arrival-warning__icon {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
-  background: rgba(251, 191, 36, 0.18);
+  background: rgba(251, 191, 36, 0.2);
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  font-size: 1rem !important;
-  flex-shrink: 0;
-  line-height: 1 !important;
+  font-size: 1.1rem !important;
 }
 
 .stx-pass-app .tm-arrival-warning__title {
-  display: block !important;
+  color: var(--stx-amber) !important;
   font-size: 0.68rem !important;
   font-weight: 800 !important;
-  letter-spacing: 0.08em !important;
+  letter-spacing: 0.07em !important;
   text-transform: uppercase !important;
-  margin-bottom: 4px !important;
-  color: var(--stx-amber) !important;
 }
 
 .stx-pass-app .tm-arrival-warning__body,
 .stx-pass-app .tm-arrival-warning__body strong {
   color: rgba(255, 255, 255, 0.94) !important;
-  font-size: 0.71rem !important;
-  line-height: 1.45 !important;
+  font-size: 0.72rem !important;
+  line-height: 1.5 !important;
 }
 
 .stx-pass-app .tm-arrival-warning__body .tm-warn-red {
   color: #fecaca !important;
-  font-weight: 700 !important;
 }
 
-/* ── Main stage (ticket pedestal — card itself unchanged) ── */
-html.tm-html-ticket-viewport body.stx-pass-app.tm-shell-ticket-minimal > main {
-  padding: 10px 16px 16px !important;
-  background: transparent !important;
+/* Ticket pedestal inside stage */
+html.tm-html-ticket-viewport body.stx-pass-app .stx-layout__stage .tm-pass-viewport-fit {
+  width: 100%;
+  filter: drop-shadow(0 12px 32px rgba(15, 23, 42, 0.18));
 }
 
-html.tm-html-ticket-viewport body.stx-pass-app.tm-shell-ticket-minimal .tm-pass-viewport-fit {
-  filter: drop-shadow(0 18px 40px rgba(2, 44, 34, 0.22));
+html.tm-html-ticket-viewport body.stx-pass-app .stx-layout__stage .tm-pass-viewport-fit::before {
+  display: none;
 }
 
-html.tm-html-ticket-viewport body.stx-pass-app.tm-shell-ticket-minimal .tm-pass-viewport-fit::before {
-  content: "";
-  position: absolute;
-  inset: -8px -12px;
-  border-radius: 28px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0) 70%);
-  pointer-events: none;
-  z-index: -1;
-}
-
-/* ── Footer ── */
-.stx-pass-app .tm-site-footer.tm-site-footer--pass-minimal {
-  background: linear-gradient(
-    180deg,
-    var(--stx-green-800) 0%,
-    var(--stx-green-900) 55%,
-    var(--stx-green-950) 100%
-  ) !important;
-  border: none !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 -8px 32px rgba(2, 44, 34, 0.35) !important;
+/* ── Footer: two-column bar, not centered stack ── */
+.stx-pass-app .tm-site-footer.tm-site-footer--pass-minimal,
+.stx-pass-app .stx-layout-foot {
+  flex-shrink: 0;
+  background: var(--stx-green-950) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
   padding: 0 !important;
-  padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-  margin-top: auto;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
 }
 
-.stx-pass-app .stx-shell-footer__inner {
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 18px 20px 20px;
-  text-align: center;
+.stx-layout-foot__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  padding: 16px 18px;
+  align-items: start;
 }
 
-.stx-pass-app .stx-shell-footer__brand {
+.stx-layout-foot__brand {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-  margin-bottom: 10px;
   color: #fff;
   font-size: 0.8125rem;
   font-weight: 800;
-  letter-spacing: -0.02em;
   font-family: "Sora", "Inter", system-ui, sans-serif;
 }
 
-.stx-pass-app .stx-shell-footer__mark {
-  width: 22px;
-  height: 22px;
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.95);
-  color: var(--stx-green-800);
-  font-size: 0.58rem;
-  font-weight: 900;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.stx-layout-foot__legal .tm-footer-pass-inner {
+  max-width: none;
+  margin: 0;
+  text-align: left;
 }
 
 .stx-pass-app .tm-footer-pass-line,
 .stx-pass-app .tm-footer-pass-line--strong,
 .stx-pass-app .tm-footer-pass-line--copy {
-  color: rgba(255, 255, 255, 0.88) !important;
+  color: rgba(255, 255, 255, 0.78) !important;
+  text-align: left !important;
   text-shadow: none !important;
 }
 
-.stx-pass-app .tm-footer-pass-line--strong {
-  font-size: 0.75rem !important;
-  font-weight: 700 !important;
-  color: #fff !important;
-}
-
 .stx-pass-app .tm-footer-pass-line--copy {
+  margin-top: 8px !important;
+  padding-top: 0 !important;
+  border: none !important;
   font-size: 0.625rem !important;
-  color: rgba(255, 255, 255, 0.55) !important;
-  margin-top: 12px !important;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5) !important;
 }
 
-/* ── Accents (gate / transfer) ── */
+/* ── Wide: sidebar left, ticket stage right ── */
+@media (min-width: 720px) {
+  .stx-layout__grid {
+    grid-template-columns: minmax(260px, 34%) 1fr;
+    grid-template-rows: 1fr;
+  }
+
+  .stx-layout__sidebar {
+    padding: 18px 16px 18px 18px;
+    border-bottom: none;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .stx-pass-app .tm-arrival-warning {
+    position: sticky;
+    top: 12px;
+  }
+
+  .stx-layout__stage {
+    padding: 18px 20px 22px;
+    justify-content: center;
+  }
+
+  .stx-layout-foot__grid {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .stx-layout-foot__legal .tm-footer-pass-inner {
+    text-align: right;
+  }
+
+  .stx-pass-app .tm-footer-pass-line,
+  .stx-pass-app .tm-footer-pass-line--strong,
+  .stx-pass-app .tm-footer-pass-line--copy {
+    text-align: right !important;
+  }
+}
+
+/* Gate / transfer accents */
 .stx-pass-app .tm-email-gate-submit,
 .stx-pass-app #tm-pass-transfer-send {
   background: var(--stx-green-600) !important;
-}
-
-.stx-pass-app .tm-email-gate-submit:hover {
-  background: var(--stx-green-700) !important;
 }
 
 .stx-pass-app .tm-email-gate-input:focus {
@@ -316,16 +343,10 @@ html.tm-html-ticket-viewport body.stx-pass-app.tm-shell-ticket-minimal .tm-pass-
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25) !important;
 }
 
-@media (hover: none) and (pointer: coarse), (max-width: 639px) {
-  html.tm-html-ticket-viewport body.stx-pass-app.tm-shell-ticket-minimal a[href] {
-    -webkit-tap-highlight-color: rgba(5, 150, 105, 0.18) !important;
-  }
-
-  .stx-pass-app .tm-arrival-warning {
-    width: calc(100% - 16px) !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
+@media (hover: none) and (pointer: coarse) {
+  html.tm-html-ticket-viewport body.stx-pass-app a[href] {
+    -webkit-tap-highlight-color: rgba(5, 150, 105, 0.16) !important;
   }
 }
 
-/* Ticket card interior: intentionally untouched */
+/* .tm-pass-card and children: intentionally untouched */
