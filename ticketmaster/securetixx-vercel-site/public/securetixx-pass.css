@@ -853,6 +853,12 @@ html.stx-pass-html body.stx-pass-app button.tm-pass-btn {
   background: transparent !important;
   border: 1.5px solid var(--stx-lime-bright) !important;
   box-shadow: none !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+}
+
+html.stx-pass-html body.stx-pass-app a.tm-pass-wallet.tm-pass-wallet--badge:hover {
+  background: rgba(143, 211, 86, 0.08) !important;
 }
 
 .stx-pass-app .tm-pass-wallet-badge-ico {

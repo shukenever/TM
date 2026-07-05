@@ -4,6 +4,7 @@ const {
   isSecureTixxHost,
   applySecureTixxPassBranding,
 } = require("../lib/tm-viewer/securetixx-pass-branding");
+const { injectWalletPkpassLink } = require("../lib/tm-viewer/wallet-pkpass-sign");
 
 /**
  * Hybrid deploy: Vercel rewrites GET /tickets/:gid/:slug → this function, which pulls HTML from your VPS(es).
@@ -122,7 +123,7 @@ function withAccessParam(url, access) {
   return `${url}${join}access=${encodeURIComponent(a)}`;
 }
 
-async function tryServeUrl(req, res, u) {
+async function tryServeUrl(req, res, u, passCtx) {
   const r = await fetch(u, {
     method: req.method,
     headers: { Accept: "text/html,application/xhtml+xml,*/*;q=0.8" },
@@ -150,6 +151,22 @@ async function tryServeUrl(req, res, u) {
       ).toString();
       if (isSecureTixxHost(host)) {
         html = applySecureTixxPassBranding(html);
+        if (passCtx && passCtx.gid && passCtx.slug) {
+          const proto = (
+            req.headers["x-forwarded-proto"] ||
+            req.headers["x-forwarded-protocol"] ||
+            "https"
+          )
+            .toString()
+            .split(",")[0]
+            .trim();
+          const pkpassBase = `${proto}://${host.split(",")[0].trim()}/api/tm-pkpass`;
+          html = injectWalletPkpassLink(html, {
+            gid: passCtx.gid,
+            slug: passCtx.slug,
+            pkpassBase,
+          });
+        }
       }
       buf = Buffer.from(html, "utf8");
       if (shouldInjectEmailGate()) {
@@ -226,7 +243,7 @@ module.exports = async (req, res) => {
       for (const u of attempts) {
         allTried.push(u);
         try {
-          const got = await tryServeUrl(req, res, u);
+          const got = await tryServeUrl(req, res, u, { gid, slug });
           if (got.ok) return;
           lastStatus = got.status;
         } catch (e) {
@@ -270,7 +287,7 @@ module.exports = async (req, res) => {
           const u = withAccessParam(u0, access);
           allTried.push(u);
           try {
-            const got = await tryServeUrl(req, res, u);
+            const got = await tryServeUrl(req, res, u, { gid, slug });
             if (got.ok) return;
             lastStatus = got.status;
           } catch (e) {
