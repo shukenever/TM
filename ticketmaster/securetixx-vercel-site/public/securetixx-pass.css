@@ -13,7 +13,7 @@
   --stx-card: 400px;
   --stx-gap: 12px;
   --stx-line: rgba(168, 213, 186, 0.14);
-  --stx-body-x: 8px;
+  --stx-body-x: 4px;
 }
 
 html.stx-pass-html,
@@ -174,7 +174,7 @@ body.stx-pass-app.tm-shell-ticket-minimal::before {
   width: 100%;
   min-height: 0;
   overflow-y: visible;
-  padding: 18px 12px max(20px, env(safe-area-inset-bottom, 0px));
+  padding: 18px 6px max(20px, env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
 }
 
@@ -304,15 +304,15 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-viewport-f
 }
 
 html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-viewport-fit {
-  width: min(100%, var(--stx-card)) !important;
-  max-width: var(--stx-card) !important;
+  width: 100% !important;
+  max-width: 100% !important;
   margin-left: auto !important;
   margin-right: auto !important;
 }
 
 html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app > main {
-  padding: 6px 10px 8px !important;
-  align-items: center !important;
+  padding: 4px 4px 8px !important;
+  align-items: stretch !important;
 }
 
 .stx-pass-app .acct,
