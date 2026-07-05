@@ -743,8 +743,15 @@ html.stx-pass-html body.stx-pass-app .tm-scan-glow {
   color: var(--stx-lime) !important;
 }
 
-.stx-pass-app .tm-verified-check circle {
+.stx-pass-app .tm-verified-check circle,
+.stx-pass-app .stx-verified-check circle {
   fill: var(--stx-lime) !important;
+}
+
+.stx-pass-app .tm-verified-check path,
+.stx-pass-app .stx-verified-check path {
+  stroke: #fff !important;
+  stroke-width: 2.2 !important;
 }
 
 .stx-pass-bottom .stx-entry-gate {
@@ -953,6 +960,15 @@ html.stx-pass-html body.stx-pass-app .tm-pass-info.tm-pass-btn--ghost .tm-pass-i
   white-space: nowrap !important;
 }
 
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer,
+html.stx-pass-html body.stx-pass-app .tm-pass-btn.tm-pass-transfer {
+  background: var(--stx-lime-bright) !important;
+  border: none !important;
+  color: #0a1406 !important;
+  justify-content: center !important;
+  box-shadow: 0 4px 16px rgba(163, 230, 53, 0.28) !important;
+}
+
 .stx-pass-app .tm-pass-transfer,
 .stx-pass-app .tm-pass-btn.tm-pass-transfer {
   background: var(--stx-lime-bright) !important;
@@ -969,11 +985,22 @@ html.stx-pass-html body.stx-pass-app .tm-pass-info.tm-pass-btn--ghost .tm-pass-i
   gap: 7px !important;
 }
 
+html.stx-pass-html body.stx-pass-app .stx-transfer-ico,
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer-ico,
+.stx-pass-app .stx-transfer-ico,
 .stx-pass-app .tm-pass-transfer-ico {
   color: #0a1406 !important;
   flex-shrink: 0 !important;
 }
 
+html.stx-pass-html body.stx-pass-app .stx-transfer-ico path,
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer-ico path,
+.stx-pass-app .stx-transfer-ico path,
+.stx-pass-app .tm-pass-transfer-ico path {
+  fill: #0a1406 !important;
+}
+
+html.stx-pass-html body.stx-pass-app .tm-pass-transfer-label,
 .stx-pass-app .tm-pass-transfer-label {
   color: #0a1406 !important;
   font-size: 0.72rem !important;
