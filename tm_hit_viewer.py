@@ -4894,6 +4894,7 @@ def _safetix_live_barcode_scripts() -> str:
       }
       if (tmClockUrl) {
         function pullTmClock(isFirst) {
+          var prevSkew = remoteSkewSec;
           fetch(tmClockUrl, { cache: "no-store", credentials: "omit" })
             .then(function (r) {
               if (!r.ok) throw new Error("tm-clock " + r.status);
@@ -4905,8 +4906,10 @@ def _safetix_live_barcode_scripts() -> str:
             })
             .catch(function () {})
             .finally(function () {
-              resetDrawState();
-              tick();
+              if (remoteSkewSec !== prevSkew) {
+                resetDrawState();
+                tick();
+              }
               if (isFirst) updateRefreshCountdown();
             });
         }
@@ -4921,6 +4924,7 @@ def _safetix_live_barcode_scripts() -> str:
         }, tmClockPollMs);
       } else if (cfg.sync_date) {
         var syncUrl = window.location.href.split("#")[0];
+        var prevSkew = remoteSkewSec;
         fetch(syncUrl, { method: "HEAD", cache: "no-store", credentials: "same-origin" })
           .then(function (r) {
             var dh = r.headers.get("Date");
@@ -4932,8 +4936,10 @@ def _safetix_live_barcode_scripts() -> str:
           })
           .catch(function () {})
           .finally(function () {
-            resetDrawState();
-            tick();
+            if (remoteSkewSec !== prevSkew) {
+              resetDrawState();
+              tick();
+            }
             updateRefreshCountdown();
           });
       }

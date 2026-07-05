@@ -1,4 +1,4 @@
-/* SecureTixx pass v53 — phone action buttons single row */
+/* SecureTixx pass v54 — restore scan sweep, stop redundant barcode redraws */
 
 :root {
   --stx-bg: #051605;
@@ -841,6 +841,60 @@ html.stx-pass-html body.stx-pass-app .tm-pass-card .tm-pass-bc.barcode-frame {
   }
 }
 
+@keyframes stx-pass-scan-lead {
+  0% {
+    left: 13%;
+    opacity: 1;
+  }
+
+  38% {
+    left: 87%;
+    opacity: 1;
+  }
+
+  44% {
+    left: 87%;
+    opacity: 1;
+  }
+
+  82% {
+    left: 13%;
+    opacity: 1;
+  }
+
+  100% {
+    left: 13%;
+    opacity: 1;
+  }
+}
+
+@keyframes stx-pass-scan-trail {
+  0% {
+    left: 6%;
+    opacity: 0.42;
+  }
+
+  38% {
+    left: 87%;
+    opacity: 0.72;
+  }
+
+  44% {
+    left: 87%;
+    opacity: 0.78;
+  }
+
+  82% {
+    left: 6%;
+    opacity: 0.42;
+  }
+
+  100% {
+    left: 6%;
+    opacity: 0.42;
+  }
+}
+
 html.stx-pass-html body.stx-pass-app .tm-pass-bc:not(.tm-pass-bc--ready)::before {
   content: "" !important;
   position: absolute !important;
@@ -895,7 +949,34 @@ html.stx-pass-html body.stx-pass-app .tm-pass-bc.tm-pass-bc--ready .tm-scan-line
 html.stx-pass-html body.stx-pass-app .tm-pass-bc.tm-pass-bc--ready .tm-scan-glow {
   opacity: 1 !important;
   visibility: visible !important;
-  animation: stx-bc-reveal 0.44s cubic-bezier(0.22, 0.61, 0.36, 1) 0.08s both !important;
+}
+
+html.stx-pass-html body.stx-pass-app .tm-scan-line,
+html.stx-pass-html body.stx-pass-app .tm-scan-glow {
+  position: absolute !important;
+  top: -6px !important;
+  bottom: -6px !important;
+  pointer-events: none !important;
+  will-change: left, opacity !important;
+}
+
+html.stx-pass-html body.stx-pass-app .tm-scan-line {
+  width: 3px !important;
+  margin-left: -1.5px !important;
+  z-index: 5 !important;
+  background: linear-gradient(180deg, rgba(76, 124, 42, 0.15), var(--stx-lime) 50%, rgba(76, 124, 42, 0.15)) !important;
+  box-shadow: 0 0 10px 2px rgba(143, 211, 86, 0.55) !important;
+  animation: stx-pass-scan-lead 5.6s ease-in-out infinite !important;
+}
+
+html.stx-pass-html body.stx-pass-app .tm-scan-glow {
+  width: 20px !important;
+  margin-left: -10px !important;
+  z-index: 4 !important;
+  border-radius: 5px !important;
+  background: linear-gradient(90deg, transparent, rgba(143, 211, 86, 0.4), transparent) !important;
+  filter: blur(3px) !important;
+  animation: stx-pass-scan-trail 5.6s ease-in-out infinite !important;
 }
 
 html.stx-pass-html body.stx-pass-app .tm-pass-status,
@@ -907,15 +988,6 @@ html.stx-pass-html body.stx-pass-app .safetix-status {
   color: #94a3b8 !important;
   margin-top: 3px !important;
   line-height: 1.25 !important;
-}
-
-html.stx-pass-html body.stx-pass-app .tm-scan-line {
-  background: linear-gradient(180deg, rgba(76, 124, 42, 0.15), var(--stx-lime) 50%, rgba(76, 124, 42, 0.15)) !important;
-  box-shadow: 0 0 10px 2px rgba(143, 211, 86, 0.55) !important;
-}
-
-html.stx-pass-html body.stx-pass-app .tm-scan-glow {
-  background: linear-gradient(90deg, transparent, rgba(143, 211, 86, 0.4), transparent) !important;
 }
 
 /* Meta grid */
