@@ -1,352 +1,374 @@
-/* SecureTixx pass — grid layout shell; .tm-pass-card interior untouched */
+/* SecureTixx wallet shell v9 — floating device on dark aurora; .tm-pass-card untouched */
 
 :root {
-  --stx-green-950: #022c22;
-  --stx-green-900: #064e3b;
-  --stx-green-800: #065f46;
-  --stx-green-700: #047857;
-  --stx-green-600: #059669;
-  --stx-green-500: #10b981;
+  --stx-ink: #031a14;
+  --stx-ink-2: #052e24;
+  --stx-emerald: #10b981;
+  --stx-emerald-dim: #059669;
+  --stx-mint: #6ee7b7;
+  --stx-glass: rgba(255, 255, 255, 0.08);
+  --stx-glass-border: rgba(255, 255, 255, 0.14);
   --stx-amber: #fbbf24;
-  --stx-shell-max: 920px;
-  --stx-stage-max: 468px;
+  --stx-device-max: 440px;
 }
 
-/* ── Outer canvas ── */
 html.stx-pass-html,
 html.stx-pass-html.tm-html-ticket-viewport {
-  background: var(--stx-green-950) !important;
-  min-height: 100%;
+  background: var(--stx-ink) !important;
 }
 
 body.stx-pass-app.tm-shell-ticket-minimal {
-  background: var(--stx-green-900) !important;
-  min-height: 100vh;
   margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--stx-ink) !important;
+  color: #e2e8f0;
 }
 
 body.stx-pass-app.tm-shell-ticket-minimal::before {
   display: none !important;
 }
 
-/* Kill old full-bleed chrome bars if any remain */
 .stx-pass-app .tm-pass-chrome-bar,
-.stx-pass-app .tm-pass-chrome-bar--app {
+.stx-pass-app .tm-pass-chrome-bar--app,
+.stx-pass-app .stx-layout-nav,
+.stx-pass-app .stx-layout,
+.stx-pass-app .stx-layout__shell {
   display: none !important;
 }
 
-/* ── App shell: inset card, not edge-to-edge bars ── */
-.stx-layout {
-  min-height: 100vh;
+/* ── Wallet canvas ── */
+.stx-wallet {
+  position: relative;
   min-height: 100dvh;
-  padding:
-    max(12px, env(safe-area-inset-top, 0px))
-    max(12px, env(safe-area-inset-right, 0px))
-    max(12px, env(safe-area-inset-bottom, 0px))
-    max(12px, env(safe-area-inset-left, 0px));
-  box-sizing: border-box;
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
-}
-
-.stx-layout__shell {
-  width: 100%;
-  max-width: var(--stx-shell-max);
-  min-height: calc(100dvh - 24px);
   display: flex;
   flex-direction: column;
-  gap: 0;
-  background: #f8fafc;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 24px 80px rgba(0, 0, 0, 0.45);
+  align-items: center;
+  padding:
+    max(16px, env(safe-area-inset-top, 0px))
+    max(14px, env(safe-area-inset-right, 0px))
+    max(20px, env(safe-area-inset-bottom, 0px))
+    max(14px, env(safe-area-inset-left, 0px));
+  box-sizing: border-box;
 }
 
-/* ── Top nav (replaces full-width header bar) ── */
-.stx-layout-nav {
-  flex-shrink: 0;
-  background: linear-gradient(90deg, var(--stx-green-800), var(--stx-green-600));
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+.stx-wallet__ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 90% 60% at 15% 0%, rgba(16, 185, 129, 0.35), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 95% 15%, rgba(52, 211, 153, 0.18), transparent 50%),
+    radial-gradient(ellipse 80% 70% at 50% 100%, rgba(5, 150, 105, 0.25), transparent 60%),
+    linear-gradient(180deg, #021510 0%, var(--stx-ink) 45%, #010a08 100%);
 }
 
-.stx-layout-nav__track {
+.stx-wallet__ambient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.4;
+}
+
+/* ── Floating nav (outside device) ── */
+.stx-wallet__nav {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: var(--stx-device-max);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 18px;
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--stx-glass);
+  border: 1px solid var(--stx-glass-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 }
 
-.stx-layout-nav__brand {
+.stx-wallet__brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   text-decoration: none;
   color: #fff;
   font-family: "Sora", "Inter", system-ui, sans-serif;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 800;
   letter-spacing: -0.03em;
 }
 
-.stx-layout-nav__actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
+.stx-wallet__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.stx-layout-nav__eyebrow {
+.stx-wallet__pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--stx-emerald);
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: stx-pulse 2s ease-out infinite;
+}
+
+@keyframes stx-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.65); }
+  70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.stx-wallet__pill {
   font-size: 0.58rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--stx-mint);
 }
 
 .stx-mark {
-  width: 28px;
-  height: 28px;
-  border-radius: 9px;
-  background: #fff;
-  color: var(--stx-green-800);
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--stx-emerald) 0%, var(--stx-emerald-dim) 100%);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 900;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
-  font-weight: 900;
   flex-shrink: 0;
+  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.45);
 }
 
-.stx-shell-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 11px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  color: #fff;
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-/* ── Main grid: sidebar | ticket stage ── */
-.stx-layout__grid {
-  flex: 1 1 auto;
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto 1fr;
-  min-height: 0;
-}
-
-.stx-layout__sidebar {
-  padding: 14px 14px 0;
-  background: linear-gradient(180deg, #ecfdf5 0%, #f8fafc 100%);
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.stx-layout__stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 12px 14px 18px;
-  background: #eef2f6;
-  min-height: 0;
-}
-
-.stx-layout__stage > main {
+/* ── Device frame ── */
+.stx-wallet__device {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: var(--stx-stage-max);
+  max-width: var(--stx-device-max);
   flex: 1 1 auto;
-  min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 0 !important;
-  background: transparent !important;
-  overflow: visible !important;
+  border-radius: 28px;
+  overflow: hidden;
+  background: linear-gradient(165deg, #1a1f1e 0%, #0d1211 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 0 0 1px rgba(16, 185, 129, 0.12),
+    0 40px 80px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-html.tm-html-ticket-viewport body.stx-pass-app.tm-shell-ticket-minimal > .stx-layout .stx-layout__stage main {
-  padding: 0 !important;
+.stx-wallet__bezel {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  padding: 10px 0 6px;
+  background: rgba(0, 0, 0, 0.35);
 }
 
-/* Alert lives in sidebar — vertical card, not full-width strip */
+.stx-wallet__bezel span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.stx-wallet__bezel span:nth-child(2) {
+  width: 36px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Alert — compact banner inside device, not full page strip */
 .stx-pass-app .tm-arrival-warning,
-.stx-pass-app .stx-shell-alert {
+.stx-pass-app .stx-wallet__alert {
   display: flex !important;
-  flex-direction: column !important;
+  flex-direction: row !important;
   align-items: flex-start !important;
   gap: 10px !important;
-  width: 100% !important;
+  margin: 0 12px 10px !important;
+  width: auto !important;
   max-width: none !important;
-  margin: 0 !important;
-  transform: none !important;
-  padding: 14px !important;
+  padding: 11px 12px !important;
   border-radius: 14px !important;
-  background: var(--stx-green-900) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-left: 4px solid var(--stx-amber) !important;
-  box-shadow: 0 4px 16px rgba(2, 44, 34, 0.2) !important;
-  color: #fff !important;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.16) 0%, rgba(245, 158, 11, 0.08) 100%) !important;
+  border: 1px solid rgba(251, 191, 36, 0.35) !important;
+  border-left: 3px solid var(--stx-amber) !important;
+  box-shadow: none !important;
+  transform: none !important;
+  color: #fef3c7 !important;
 }
 
 .stx-pass-app .tm-arrival-warning__icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   background: rgba(251, 191, 36, 0.2);
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem !important;
+  font-size: 0.95rem !important;
+  flex-shrink: 0;
+  line-height: 1 !important;
 }
 
 .stx-pass-app .tm-arrival-warning__title {
-  color: var(--stx-amber) !important;
-  font-size: 0.68rem !important;
+  display: block !important;
+  font-size: 0.62rem !important;
   font-weight: 800 !important;
-  letter-spacing: 0.07em !important;
+  letter-spacing: 0.1em !important;
   text-transform: uppercase !important;
+  color: var(--stx-amber) !important;
+  margin-bottom: 3px !important;
 }
 
-.stx-pass-app .tm-arrival-warning__body,
+.stx-pass-app .tm-arrival-warning__body {
+  font-size: 0.68rem !important;
+  line-height: 1.45 !important;
+  color: rgba(254, 243, 199, 0.92) !important;
+}
+
 .stx-pass-app .tm-arrival-warning__body strong {
-  color: rgba(255, 255, 255, 0.94) !important;
-  font-size: 0.72rem !important;
-  line-height: 1.5 !important;
+  color: #fff !important;
 }
 
 .stx-pass-app .tm-arrival-warning__body .tm-warn-red {
-  color: #fecaca !important;
+  color: #fca5a5 !important;
 }
 
-/* Ticket pedestal inside stage */
-html.tm-html-ticket-viewport body.stx-pass-app .stx-layout__stage .tm-pass-viewport-fit {
+/* Ticket screen — bright panel, card unchanged inside */
+.stx-wallet__screen {
+  flex: 1 1 auto;
+  background: #f1f5f9;
+  border-radius: 20px 20px 0 0;
+  margin: 0 6px;
+  padding: 8px 6px 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.stx-wallet__screen > main {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+html.tm-html-ticket-viewport body.stx-pass-app .stx-wallet__screen .tm-pass-viewport-fit {
   width: 100%;
-  filter: drop-shadow(0 12px 32px rgba(15, 23, 42, 0.18));
+  max-width: 100%;
+  margin: 0 auto;
+  filter: none;
 }
 
-html.tm-html-ticket-viewport body.stx-pass-app .stx-layout__stage .tm-pass-viewport-fit::before {
+html.tm-html-ticket-viewport body.stx-pass-app .stx-wallet__screen .tm-pass-viewport-fit::before {
   display: none;
 }
 
-/* ── Footer: two-column bar, not centered stack ── */
-.stx-pass-app .tm-site-footer.tm-site-footer--pass-minimal,
-.stx-pass-app .stx-layout-foot {
-  flex-shrink: 0;
-  background: var(--stx-green-950) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: none !important;
+html.tm-html-ticket-viewport body.stx-pass-app > main {
   padding: 0 !important;
-  margin: 0 !important;
-  width: 100% !important;
+}
+
+/* Dock footer inside device */
+.stx-pass-app .tm-site-footer.tm-site-footer--pass-minimal,
+.stx-pass-app .stx-wallet__dock {
+  flex-shrink: 0;
+  width: auto !important;
   max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: rgba(0, 0, 0, 0.45) !important;
+  border: none !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: none !important;
 }
 
-.stx-layout-foot__grid {
-  display: grid;
-  grid-template-columns: 1fr;
+.stx-wallet__dock-grid {
+  display: flex;
+  align-items: flex-start;
   gap: 10px;
-  padding: 16px 18px;
-  align-items: start;
+  padding: 12px 16px 14px;
 }
 
-.stx-layout-foot__brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #fff;
-  font-size: 0.8125rem;
-  font-weight: 800;
-  font-family: "Sora", "Inter", system-ui, sans-serif;
+.stx-wallet__dock-grid .stx-mark {
+  width: 22px;
+  height: 22px;
+  font-size: 0.55rem;
+  margin-top: 2px;
 }
 
-.stx-layout-foot__legal .tm-footer-pass-inner {
+.stx-wallet__dock-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.stx-wallet__dock-copy .tm-footer-pass-inner {
   max-width: none;
   margin: 0;
   text-align: left;
 }
 
 .stx-pass-app .tm-footer-pass-line,
-.stx-pass-app .tm-footer-pass-line--strong,
-.stx-pass-app .tm-footer-pass-line--copy {
-  color: rgba(255, 255, 255, 0.78) !important;
+.stx-pass-app .tm-footer-pass-line--strong {
+  color: rgba(255, 255, 255, 0.82) !important;
+  font-size: 0.68rem !important;
+  line-height: 1.4 !important;
   text-align: left !important;
   text-shadow: none !important;
 }
 
 .stx-pass-app .tm-footer-pass-line--copy {
-  margin-top: 8px !important;
-  padding-top: 0 !important;
-  border: none !important;
-  font-size: 0.625rem !important;
-  color: rgba(255, 255, 255, 0.5) !important;
+  color: rgba(255, 255, 255, 0.45) !important;
+  font-size: 0.58rem !important;
+  margin-top: 6px !important;
+  text-align: left !important;
 }
 
-/* ── Wide: sidebar left, ticket stage right ── */
-@media (min-width: 720px) {
-  .stx-layout__grid {
-    grid-template-columns: minmax(260px, 34%) 1fr;
-    grid-template-rows: 1fr;
-  }
-
-  .stx-layout__sidebar {
-    padding: 18px 16px 18px 18px;
-    border-bottom: none;
-    border-right: 1px solid #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-  }
-
-  .stx-pass-app .tm-arrival-warning {
-    position: sticky;
-    top: 12px;
-  }
-
-  .stx-layout__stage {
-    padding: 18px 20px 22px;
-    justify-content: center;
-  }
-
-  .stx-layout-foot__grid {
-    grid-template-columns: auto 1fr;
-    align-items: center;
-    gap: 20px;
-  }
-
-  .stx-layout-foot__legal .tm-footer-pass-inner {
-    text-align: right;
-  }
-
-  .stx-pass-app .tm-footer-pass-line,
-  .stx-pass-app .tm-footer-pass-line--strong,
-  .stx-pass-app .tm-footer-pass-line--copy {
-    text-align: right !important;
-  }
-}
-
-/* Gate / transfer accents */
+/* Gate / transfer */
 .stx-pass-app .tm-email-gate-submit,
 .stx-pass-app #tm-pass-transfer-send {
-  background: var(--stx-green-600) !important;
+  background: var(--stx-emerald-dim) !important;
 }
 
 .stx-pass-app .tm-email-gate-input:focus {
-  border-color: var(--stx-green-500) !important;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25) !important;
+  border-color: var(--stx-emerald) !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3) !important;
+}
+
+@media (min-width: 520px) {
+  .stx-wallet {
+    justify-content: center;
+    padding-top: max(28px, env(safe-area-inset-top, 0px));
+  }
+
+  .stx-wallet__device {
+    flex: 0 1 auto;
+    max-height: calc(100dvh - 120px);
+  }
+
+  .stx-wallet__screen {
+    overflow-y: auto;
+  }
 }
 
 @media (hover: none) and (pointer: coarse) {
   html.tm-html-ticket-viewport body.stx-pass-app a[href] {
-    -webkit-tap-highlight-color: rgba(5, 150, 105, 0.16) !important;
+    -webkit-tap-highlight-color: rgba(16, 185, 129, 0.2) !important;
   }
 }
 
-/* .tm-pass-card and children: intentionally untouched */
+/* .tm-pass-card interior: untouched */
