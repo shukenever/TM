@@ -1,4 +1,4 @@
-/* SecureTixx pass v21 — full-width header, floating pass, starfield bg */
+/* SecureTixx pass v22 — event title/venue above hero, larger typography */
 
 :root {
   --stx-bg: #051605;
@@ -357,9 +357,9 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-card {
 
 html.stx-pass-html body.stx-pass-app .tm-pass-visual,
 html.stx-pass-html body.stx-pass-app .tm-pass-visual.tm-pass-visual--overlay {
-  order: 1 !important;
+  order: 2 !important;
   position: relative !important;
-  margin: 12px 14px 14px !important;
+  margin: 0 14px 14px !important;
   padding: 0 !important;
   background: transparent !important;
   border-radius: 0 !important;
@@ -373,9 +373,9 @@ html.stx-pass-html body.stx-pass-app .tm-pass-visual.tm-pass-visual--overlay {
 }
 
 html.stx-pass-html body.stx-pass-app .tm-pass-head {
-  order: 2 !important;
+  order: 1 !important;
   display: block !important;
-  padding: 10px 16px 2px !important;
+  padding: 14px 16px 10px !important;
   background: transparent !important;
   border: none !important;
   grid-template-columns: unset !important;
@@ -388,7 +388,7 @@ html.stx-pass-html body.stx-pass-app .tm-pass-head {
 
 html.stx-pass-html body.stx-pass-app .tm-pass-title {
   margin: 0 !important;
-  font-size: clamp(1.36rem, 4.4vw, 1.72rem) !important;
+  font-size: clamp(1.58rem, 5.2vw, 2.05rem) !important;
   font-weight: 800 !important;
   letter-spacing: -0.03em !important;
   text-transform: none !important;
@@ -398,8 +398,8 @@ html.stx-pass-html body.stx-pass-app .tm-pass-title {
 }
 
 .stx-pass-app .stx-event-venue {
-  margin: 8px 0 0 !important;
-  font-size: clamp(0.88rem, 2.6vw, 1.05rem) !important;
+  margin: 10px 0 0 !important;
+  font-size: clamp(0.96rem, 3vw, 1.18rem) !important;
   font-weight: 500 !important;
   color: var(--stx-mint) !important;
   line-height: 1.4 !important;
@@ -442,9 +442,9 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-visual--ov
   position: relative !important;
   inset: auto !important;
   width: 100% !important;
-  height: 110px !important;
-  min-height: 110px !important;
-  max-height: 110px !important;
+  height: clamp(132px, 28vw, 168px) !important;
+  min-height: clamp(132px, 28vw, 168px) !important;
+  max-height: clamp(132px, 28vw, 168px) !important;
   border-radius: 14px !important;
   flex-shrink: 0 !important;
 }
@@ -476,9 +476,9 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-visual--ov
   bottom: auto !important;
   width: 100% !important;
   max-width: 400px !important;
-  margin: -12px auto 0 !important;
+  margin: -14px auto 0 !important;
   z-index: 6 !important;
-  padding: 8px 10px 8px !important;
+  padding: 10px 12px 10px !important;
   border-radius: 14px !important;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.38) !important;
   box-sizing: border-box !important;
@@ -540,7 +540,7 @@ html.stx-pass-html body.stx-pass-app .tm-pass-card .tm-pass-bc.barcode-frame {
   border: none !important;
   border-radius: 10px !important;
   padding: 4px 4px !important;
-  min-height: 66px !important;
+  min-height: 72px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -551,7 +551,7 @@ html.stx-pass-html body.stx-pass-app .barcode-frame canvas.safetix-canvas,
 html.stx-pass-html body.stx-pass-app .tm-pass-bc--sg canvas.safetix-canvas {
   width: 100% !important;
   max-width: 100% !important;
-  min-height: 60px !important;
+  min-height: 66px !important;
   height: auto !important;
   image-rendering: pixelated !important;
 }
