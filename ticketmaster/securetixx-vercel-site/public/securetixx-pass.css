@@ -513,29 +513,60 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-visual--ov
   opacity: 1 !important;
 }
 
-.stx-bc-refresh {
+.stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn {
   justify-self: end !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 3px !important;
+  gap: 4px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
   font-size: 0.54rem !important;
   font-weight: 600 !important;
   color: #64748b !important;
+  box-shadow: none !important;
+  min-height: 0 !important;
+  line-height: 1.2 !important;
 }
 
-.stx-bc-refresh-txt {
+.stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn:hover {
+  color: var(--stx-lime-dark) !important;
+  background: transparent !important;
+}
+
+.stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn .tm-pass-refresh-btn__label {
   white-space: nowrap;
+}
+
+.stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn .tm-pass-refresh-btn__sec {
+  display: none !important;
+}
+
+.stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn .tm-pass-refresh-btn__ico {
+  font-size: 0.85rem !important;
+  color: var(--stx-lime-dark) !important;
+  line-height: 1 !important;
+}
+
+.stx-pass-app .tm-pass-refresh-btn.stx-bc-refresh-btn.tm-pass-refresh-btn--spin .tm-pass-refresh-btn__ico {
+  animation: stx-refresh-spin 0.65s ease;
+}
+
+@keyframes stx-refresh-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .stx-pass-app .tm-pass-phone-ico {
   display: none !important;
-}
-
-.stx-pass-app .tm-pass-refresh {
-  font-size: 0.85rem !important;
-  color: var(--stx-lime-dark) !important;
-  opacity: 1 !important;
-  animation: none !important;
 }
 
 html.stx-pass-html body.stx-pass-app .tm-pass-bc.barcode-frame,
