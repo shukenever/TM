@@ -1,4 +1,4 @@
-/* SecureTixx pass v13 — scrollable, hero + centered barcode, seats at bottom */
+/* SecureTixx pass v14 — bottom dock: seats, main concourse, actions */
 
 :root {
   --stx-bg: #051605;
@@ -201,6 +201,7 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-card {
   display: flex !important;
   flex-direction: column !important;
   animation: none !important;
+  min-height: calc(100dvh - 72px) !important;
 }
 
 .stx-pass-app .tm-pass-menu,
@@ -228,7 +229,7 @@ html.stx-pass-html body.stx-pass-app .tm-pass-visual.tm-pass-visual--overlay {
 html.stx-pass-html body.stx-pass-app .tm-pass-head {
   order: 2 !important;
   display: block !important;
-  padding: 4px 18px 0 !important;
+  padding: 12px 18px 0 !important;
   background: transparent !important;
   border: none !important;
   grid-template-columns: unset !important;
@@ -265,9 +266,11 @@ html.stx-pass-html body.stx-pass-app .tm-pass-title {
 html.stx-pass-html body.stx-pass-app .tm-pass-body {
   order: 3 !important;
   background: transparent !important;
-  padding: 6px 16px 12px !important;
+  padding: 6px 16px 16px !important;
   display: flex !important;
   flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
 }
 
 /* Hero */
@@ -471,13 +474,29 @@ html.stx-pass-html body.stx-pass-app .tm-scan-glow {
   display: none !important;
 }
 
+.stx-pass-app .tm-pass-type-block {
+  order: 1 !important;
+  margin: 0 0 8px !important;
+}
+
+/* Bottom dock — section, main concourse, wallet/info/transfer */
+.stx-pass-bottom {
+  order: 2 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+  margin-top: auto !important;
+  padding-top: 18px !important;
+}
+
 .stx-pass-app .tm-pass-seats {
-  order: 5 !important;
+  order: 0 !important;
   display: grid !important;
   grid-template-columns: repeat(3, 1fr) !important;
   gap: 8px !important;
   padding: 16px 12px !important;
-  margin: 8px 0 0 !important;
+  margin: 0 !important;
   background: rgba(0, 0, 0, 0.22) !important;
   border: 1px solid rgba(168, 213, 186, 0.12) !important;
   border-radius: 14px !important;
@@ -502,11 +521,6 @@ html.stx-pass-html body.stx-pass-app .tm-scan-glow {
   margin-top: 2px !important;
 }
 
-.stx-pass-app .tm-pass-type-block {
-  order: 1 !important;
-  margin: 0 !important;
-}
-
 .stx-pass-app .tm-pass-verified-row {
   justify-content: center !important;
   margin: 0 auto 12px !important;
@@ -527,8 +541,17 @@ html.stx-pass-html body.stx-pass-app .tm-scan-glow {
   color: var(--stx-lime) !important;
 }
 
+.stx-pass-bottom .stx-entry-gate {
+  order: 1 !important;
+  margin: 0 !important;
+}
+
+.stx-pass-bottom .tm-pass-actions {
+  order: 2 !important;
+  margin: 0 !important;
+}
+
 .stx-entry-gate {
-  order: 3 !important; /* after verified */
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -546,8 +569,8 @@ html.stx-pass-html body.stx-pass-app .tm-scan-glow {
   box-shadow: 0 10px 28px rgba(143, 211, 86, 0.22) !important;
 }
 
+html.stx-pass-html body.stx-pass-app .stx-pass-bottom .tm-pass-actions,
 html.stx-pass-html body.stx-pass-app .tm-pass-actions {
-  order: 4 !important; /* before seats */
   display: grid !important;
   grid-template-columns: 1.15fr 0.85fr 0.95fr !important;
   gap: 8px !important;
@@ -644,13 +667,27 @@ html.stx-pass-html body.stx-pass-app .tm-pass-btn {
   color: var(--stx-lime-dark) !important;
 }
 
+/* Unlock TM viewport scroll lock on SecureTixx */
+html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app.tm-shell-ticket-minimal {
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+}
+
+html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-viewport-fit {
+  overflow: visible !important;
+  overflow-y: visible !important;
+  height: auto !important;
+  max-height: none !important;
+}
+
 @media (min-width: 460px) {
   .stx-ticket-app {
     margin: 12px auto;
     min-height: calc(100dvh - 24px);
     border-radius: 28px;
     box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
-    overflow: hidden;
+    overflow: visible;
   }
 
   .stx-ticket-app__bg {
