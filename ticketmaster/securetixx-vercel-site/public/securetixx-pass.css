@@ -1,4 +1,4 @@
-/* SecureTixx pass v23 — clean venue line, no truncation ellipsis */
+/* SecureTixx pass v24 — mockup action buttons + trust badges */
 
 :root {
   --stx-bg: #051605;
@@ -744,89 +744,168 @@ html.stx-pass-html body.stx-pass-app .tm-scan-glow {
 html.stx-pass-html body.stx-pass-app .stx-pass-bottom .tm-pass-actions,
 html.stx-pass-html body.stx-pass-app .tm-pass-actions {
   display: grid !important;
-  grid-template-columns: 1.15fr 0.85fr 0.95fr !important;
-  gap: 8px !important;
-  padding: 0 !important;
+  grid-template-columns: 1.35fr 1fr 0.95fr !important;
+  gap: 10px !important;
+  padding: 10px !important;
   margin: 0 !important;
+  background: rgba(0, 0, 0, 0.38) !important;
+  border: 1px solid rgba(143, 211, 86, 0.16) !important;
+  border-radius: 16px !important;
+  box-sizing: border-box !important;
   visibility: visible !important;
   opacity: 1 !important;
   height: auto !important;
 }
 
 html.stx-pass-html body.stx-pass-app .tm-pass-btn {
-  min-height: 58px !important;
-  border-radius: 14px !important;
-  padding: 8px 6px !important;
+  min-height: 52px !important;
+  border-radius: 12px !important;
+  padding: 10px 10px !important;
   display: flex !important;
-  flex-direction: column !important;
+  flex-direction: row !important;
   align-items: center !important;
-  justify-content: center !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
   border: none !important;
+  box-sizing: border-box !important;
+  text-decoration: none !important;
 }
 
-.stx-pass-app .tm-pass-wallet {
-  background: #0f172a !important;
-  color: #fff !important;
+.stx-pass-app .tm-pass-wallet.tm-pass-wallet--badge {
+  flex: 1 1 auto !important;
+  background: transparent !important;
+  border: 1.5px solid var(--stx-lime-bright) !important;
+  box-shadow: none !important;
+}
+
+.stx-pass-app .tm-pass-wallet-badge-ico {
+  flex-shrink: 0 !important;
+}
+
+.stx-pass-app .tm-pass-wallet-badge-img {
+  width: 34px !important;
+  max-height: 26px !important;
+}
+
+.stx-pass-app .tm-pass-wallet-badge-text {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  line-height: 1.1 !important;
 }
 
 .stx-pass-app .tm-pass-wallet-l1,
 .stx-pass-app .tm-pass-wallet-l2 {
   color: #fff !important;
-  font-size: 0.56rem !important;
+}
+
+.stx-pass-app .tm-pass-wallet-l1 {
+  font-size: 0.58rem !important;
+  font-weight: 500 !important;
+  opacity: 0.92 !important;
+}
+
+.stx-pass-app .tm-pass-wallet-l2 {
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
 }
 
 .stx-pass-app .tm-pass-info {
-  background: rgba(255, 255, 255, 0.07) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
   color: #fff !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: none !important;
+  justify-content: flex-start !important;
 }
 
 .stx-pass-app .tm-pass-info-ico {
-  width: 26px !important;
-  height: 26px !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
   border-radius: 50% !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.35) !important;
-  line-height: 24px !important;
+  border: 1.5px solid var(--stx-lime) !important;
+  background: transparent !important;
+  color: var(--stx-lime) !important;
+  line-height: 18px !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  font-style: normal !important;
+  text-align: center !important;
+  flex-shrink: 0 !important;
+}
+
+.stx-pass-app .tm-pass-info-label {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+  white-space: nowrap !important;
 }
 
 .stx-pass-app .tm-pass-transfer,
 .stx-pass-app .tm-pass-btn.tm-pass-transfer {
-  background: rgba(143, 211, 86, 0.16) !important;
-  border: 1px solid rgba(143, 211, 86, 0.32) !important;
+  background: var(--stx-lime-bright) !important;
+  border: none !important;
+  justify-content: center !important;
+  box-shadow: 0 4px 16px rgba(163, 230, 53, 0.28) !important;
+}
+
+.stx-pass-app .tm-pass-transfer-stack {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+}
+
+.stx-pass-app .tm-pass-transfer-ico {
+  color: #0a1406 !important;
+  flex-shrink: 0 !important;
 }
 
 .stx-pass-app .tm-pass-transfer-label {
-  color: var(--stx-lime) !important;
-  font-size: 0.66rem !important;
+  color: #0a1406 !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+}
+
+.stx-trust-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px 18px;
+  width: 100%;
+  max-width: var(--stx-max);
+  margin: 14px auto 0;
+  padding: 0 8px;
+  box-sizing: border-box;
+}
+
+.stx-trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.88);
+  white-space: nowrap;
+}
+
+.stx-trust-badge .stx-trust-ico,
+.stx-trust-badge .stx-shield-ico {
+  color: var(--stx-lime);
+  flex-shrink: 0;
 }
 
 .stx-app-foot {
   flex-shrink: 0;
-  padding: 10px 16px max(12px, env(safe-area-inset-bottom, 0px));
+  padding: 0 16px max(14px, env(safe-area-inset-bottom, 0px));
   background: transparent !important;
   border: none !important;
 }
 
 .stx-app-foot__inner {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  justify-content: center;
-  max-width: 320px;
-  margin: 0 auto;
-}
-
-.stx-app-foot__inner .stx-shield-ico {
-  color: var(--stx-mint-dim);
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.stx-app-foot__inner p {
-  margin: 0;
-  font-size: 0.6rem;
-  line-height: 1.45;
-  color: var(--stx-mint-dim);
+  display: none !important;
 }
 
 .stx-pass-app .tm-footer-pass-inner {
