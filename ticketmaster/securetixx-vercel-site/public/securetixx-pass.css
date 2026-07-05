@@ -1,4 +1,4 @@
-/* SecureTixx pass v50 — green refresh button + countdown lock */
+/* SecureTixx pass v51 — instant barcode draw + skeleton reveal */
 
 :root {
   --stx-bg: #051605;
@@ -814,6 +814,62 @@ html.stx-pass-html body.stx-pass-app .tm-pass-card .tm-pass-bc.barcode-frame {
   align-items: center !important;
   justify-content: center !important;
   box-sizing: border-box !important;
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+}
+
+@keyframes stx-bc-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes stx-bc-reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.988);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+html.stx-pass-html body.stx-pass-app .tm-pass-bc:not(.tm-pass-bc--ready)::before {
+  content: "" !important;
+  position: absolute !important;
+  left: 10px !important;
+  right: 10px !important;
+  top: 8px !important;
+  bottom: 6px !important;
+  z-index: 2 !important;
+  border-radius: 8px !important;
+  pointer-events: none !important;
+  background: linear-gradient(
+    90deg,
+    rgba(238, 244, 238, 0.95) 0%,
+    rgba(248, 252, 248, 1) 45%,
+    rgba(238, 244, 238, 0.95) 90%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: stx-bc-shimmer 1.15s ease-in-out infinite !important;
+}
+
+html.stx-pass-html body.stx-pass-app .tm-pass-bc.tm-pass-bc--ready::before {
+  display: none !important;
+}
+
+html.stx-pass-html body.stx-pass-app .tm-pass-bc:not(.tm-pass-bc--ready) canvas.safetix-canvas,
+html.stx-pass-html body.stx-pass-app .tm-pass-bc:not(.tm-pass-bc--ready) .tm-scan-line,
+html.stx-pass-html body.stx-pass-app .tm-pass-bc:not(.tm-pass-bc--ready) .tm-scan-glow {
+  opacity: 0 !important;
+  visibility: hidden !important;
 }
 
 html.stx-pass-html body.stx-pass-app .barcode-frame canvas.safetix-canvas,
@@ -823,6 +879,23 @@ html.stx-pass-html body.stx-pass-app .tm-pass-bc--sg canvas.safetix-canvas {
   min-height: 66px !important;
   height: auto !important;
   image-rendering: pixelated !important;
+  position: relative !important;
+  z-index: 3 !important;
+  will-change: opacity, transform !important;
+}
+
+html.stx-pass-html body.stx-pass-app .tm-pass-bc.tm-pass-bc--ready canvas.safetix-canvas {
+  visibility: visible !important;
+  opacity: 1 !important;
+  animation: stx-bc-reveal 0.44s cubic-bezier(0.22, 0.61, 0.36, 1) both !important;
+  transition: none !important;
+}
+
+html.stx-pass-html body.stx-pass-app .tm-pass-bc.tm-pass-bc--ready .tm-scan-line,
+html.stx-pass-html body.stx-pass-app .tm-pass-bc.tm-pass-bc--ready .tm-scan-glow {
+  opacity: 1 !important;
+  visibility: visible !important;
+  animation: stx-bc-reveal 0.44s cubic-bezier(0.22, 0.61, 0.36, 1) 0.08s both !important;
 }
 
 html.stx-pass-html body.stx-pass-app .tm-pass-status,
