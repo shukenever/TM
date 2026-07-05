@@ -848,8 +848,6 @@ html.stx-pass-html body.stx-pass-app button.tm-pass-btn {
   overflow: hidden !important;
 }
 
-html.stx-pass-html body.stx-pass-app .tm-pass-btn {
-
 .stx-pass-app .tm-pass-wallet.tm-pass-wallet--badge {
   flex: 1 1 auto !important;
   background: transparent !important;
@@ -964,7 +962,12 @@ html.stx-pass-html body.stx-pass-app .tm-pass-info.tm-pass-btn--ghost .tm-pass-i
   background: rgba(255, 255, 255, 0.1) !important;
   color: #fff !important;
   border: none !important;
-  justify-content: flex-start !important;
+  border-radius: 12px !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  padding: 8px 6px !important;
 }
 
 .stx-pass-app .tm-pass-info-ico {
@@ -984,10 +987,13 @@ html.stx-pass-html body.stx-pass-app .tm-pass-info.tm-pass-btn--ghost .tm-pass-i
 }
 
 .stx-pass-app .tm-pass-info-label {
-  font-size: 0.72rem !important;
+  font-size: 0.62rem !important;
   font-weight: 700 !important;
   color: #fff !important;
-  white-space: nowrap !important;
+  white-space: normal !important;
+  line-height: 1.12 !important;
+  text-align: center !important;
+  max-width: 100% !important;
 }
 
 html.stx-pass-html body.stx-pass-app .tm-pass-transfer,
