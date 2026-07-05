@@ -514,6 +514,7 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-visual--ov
 
 html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-visual--overlay .tm-pass-hero--cover .tm-pass-hero-bg {
   position: relative !important;
+  z-index: 2 !important;
   inset: auto !important;
   width: 100% !important;
   height: var(--stx-hero-h) !important;
@@ -529,9 +530,133 @@ html.stx-pass-html body.stx-pass-app .tm-pass-hero--grad {
 }
 
 html.stx-pass-html body.stx-pass-app .tm-pass-hero-bg {
+  position: relative !important;
+  z-index: 2 !important;
   object-fit: cover !important;
   object-position: center 18% !important;
   opacity: 1 !important;
+}
+
+/* White contracting vibrations behind hero image */
+html.stx-pass-html body.stx-pass-app .stx-hero-vibes {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: var(--stx-hero-h) !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  border-radius: var(--stx-radius-sm) !important;
+}
+
+html.stx-pass-html body.stx-pass-app .stx-hero-vibe {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  width: 118% !important;
+  height: 118% !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  border-radius: 50% !important;
+  transform: translate(-50%, -50%) scale(1.45) !important;
+  opacity: 0 !important;
+  animation: stx-hero-vibe-contract 2.9s cubic-bezier(0.38, 0, 0.22, 1) infinite !important;
+}
+
+html.stx-pass-html body.stx-pass-app .stx-hero-vibe:nth-child(2) {
+  animation-delay: 0.97s !important;
+  border-color: rgba(255, 255, 255, 0.17) !important;
+}
+
+html.stx-pass-html body.stx-pass-app .stx-hero-vibe:nth-child(3) {
+  animation-delay: 1.94s !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+html.stx-pass-html body.stx-pass-app .stx-hero-vibes::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: -10% !important;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 7px,
+      rgba(255, 255, 255, 0.045) 7px,
+      rgba(255, 255, 255, 0.045) 8px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 10px,
+      rgba(255, 255, 255, 0.035) 10px,
+      rgba(255, 255, 255, 0.035) 11px
+    ) !important;
+  -webkit-mask-image: radial-gradient(ellipse 88% 78% at 50% 44%, #000 0%, transparent 72%) !important;
+  mask-image: radial-gradient(ellipse 88% 78% at 50% 44%, #000 0%, transparent 72%) !important;
+  animation: stx-hero-vibe-shimmer 2.2s ease-in-out infinite !important;
+}
+
+html.stx-pass-html body.stx-pass-app .stx-hero-vibes::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  width: 145% !important;
+  height: 145% !important;
+  transform: translate(-50%, -50%) scale(1.14) !important;
+  background: radial-gradient(
+    ellipse 58% 52% at 50% 46%,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(255, 255, 255, 0.07) 36%,
+    transparent 64%
+  ) !important;
+  animation: stx-hero-vibe-glow 2.9s cubic-bezier(0.42, 0, 0.58, 1) infinite !important;
+}
+
+@keyframes stx-hero-vibe-contract {
+  0% {
+    transform: translate(-50%, -50%) scale(1.45);
+    opacity: 0;
+  }
+  14% {
+    opacity: 0.58;
+  }
+  58% {
+    opacity: 0.14;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.66);
+    opacity: 0;
+  }
+}
+
+@keyframes stx-hero-vibe-shimmer {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.42;
+  }
+  33% {
+    transform: translate(-4px, 1px) scale(1.03);
+    opacity: 0.72;
+  }
+  66% {
+    transform: translate(3px, -1px) scale(0.97);
+    opacity: 0.55;
+  }
+}
+
+@keyframes stx-hero-vibe-glow {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1.14);
+    opacity: 0.32;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(0.78);
+    opacity: 0.78;
+  }
 }
 
 .stx-pass-app .tm-pass-hero-watermark,
