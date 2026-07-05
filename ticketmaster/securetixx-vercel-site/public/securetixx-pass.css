@@ -841,8 +841,65 @@ html.stx-pass-html body.stx-pass-app .tm-pass-btn {
   font-weight: 700 !important;
 }
 
+html.stx-pass-html body.stx-pass-app .tm-pass-info,
+html.stx-pass-html body.stx-pass-app a.tm-pass-info {
+  background: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  border: none !important;
+  justify-content: flex-start !important;
+}
+
+html.stx-pass-html body.stx-pass-app a.tm-pass-info:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  background-color: rgba(255, 255, 255, 0.14) !important;
+  color: #fff !important;
+}
+
+html.stx-pass-html body.stx-pass-app .tm-pass-info-ico {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  border-radius: 50% !important;
+  border: 1.5px solid var(--stx-lime) !important;
+  background: transparent !important;
+  color: var(--stx-lime) !important;
+  line-height: 18px !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  font-style: normal !important;
+  text-align: center !important;
+  flex-shrink: 0 !important;
+}
+
+html.stx-pass-html body.stx-pass-app .tm-pass-info-label {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+  white-space: nowrap !important;
+}
+
+html.stx-pass-html body.stx-pass-app .tm-pass-info.tm-pass-info--muted,
+html.stx-pass-html body.stx-pass-app .tm-pass-info.tm-pass-btn--ghost {
+  background: rgba(255, 255, 255, 0.06) !important;
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  border: none !important;
+}
+
+html.stx-pass-html body.stx-pass-app .tm-pass-info.tm-pass-info--muted .tm-pass-info-ico,
+html.stx-pass-html body.stx-pass-app .tm-pass-info.tm-pass-btn--ghost .tm-pass-info-ico {
+  border-color: rgba(143, 211, 86, 0.45) !important;
+  color: rgba(143, 211, 86, 0.55) !important;
+}
+
+html.stx-pass-html body.stx-pass-app .tm-pass-info.tm-pass-info--muted .tm-pass-info-label,
+html.stx-pass-html body.stx-pass-app .tm-pass-info.tm-pass-btn--ghost .tm-pass-info-label {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
 .stx-pass-app .tm-pass-info {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
   color: #fff !important;
   border: none !important;
   justify-content: flex-start !important;
