@@ -13,6 +13,7 @@
   --stx-card: 400px;
   --stx-gap: 12px;
   --stx-line: rgba(168, 213, 186, 0.14);
+  --stx-body-x: 8px;
 }
 
 html.stx-pass-html,
@@ -417,12 +418,12 @@ html.stx-pass-html body.stx-pass-app .tm-pass-title {
 html.stx-pass-html body.stx-pass-app .tm-pass-body {
   order: 3 !important;
   background: transparent !important;
-  padding: 8px 16px 14px !important;
+  padding: 8px var(--stx-body-x) 14px !important;
   display: flex !important;
   flex-direction: column !important;
   flex: 0 0 auto !important;
   min-height: 0 !important;
-  gap: 8px !important;
+  gap: 10px !important;
 }
 
 /* Hero */
