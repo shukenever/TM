@@ -1,4 +1,4 @@
-/* SecureTixx pass v44 — soft gradient edges (TM-style, not flat borders) */
+/* SecureTixx pass v46 — +15% frame width, hero vibe animation */
 
 :root {
   --stx-bg: #051605;
@@ -9,8 +9,8 @@
   --stx-mint: #a8d5ba;
   --stx-mint-dim: #6b9b7a;
   --stx-white: #fff;
-  --stx-max: min(calc(100vw - 12px), 480px);
-  --stx-card: min(calc(100vw - 16px), 452px);
+  --stx-max: min(calc(100vw - 12px), 552px);
+  --stx-card: min(calc(100vw - 16px), 520px);
   --stx-gap: 12px;
   --stx-line: rgba(168, 213, 186, 0.14);
   --stx-radius: 16px;
@@ -1471,7 +1471,7 @@ html.stx-pass-html body.stx-pass-app #tm-pass-transfer-status.tm-err {
 .stx-ticket-info-panel {
   position: relative;
   width: 100%;
-  max-width: 430px;
+  max-width: 495px;
   max-height: 90vh;
   overflow: auto;
   background: #fff;
