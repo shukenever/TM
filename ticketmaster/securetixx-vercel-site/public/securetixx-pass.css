@@ -1220,6 +1220,37 @@ html.stx-pass-html body.stx-pass-app .stx-ticket-info-list dd {
   word-break: break-word;
 }
 
+html.stx-pass-html body.stx-pass-app .stx-ticket-info-delivery {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 6px !important;
+}
+
+html.stx-pass-html body.stx-pass-app .stx-ticket-info-delivery-main {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+html.stx-pass-html body.stx-pass-app .stx-ticket-info-via {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 0.62rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: #64748b !important;
+}
+
+html.stx-pass-html body.stx-pass-app .stx-ticket-info-tm-mark {
+  height: 13px !important;
+  width: auto !important;
+  max-width: 96px !important;
+  display: block !important;
+  flex-shrink: 0 !important;
+}
+
 .stx-ticket-info-foot {
   display: flex;
   flex-direction: column;
