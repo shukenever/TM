@@ -460,23 +460,26 @@ html.stx-pass-html body.stx-pass-app .tm-pass-head {
 }
 
 .stx-pass-app .tm-pass-head-center {
-  text-align: left !important;
+  text-align: center !important;
   padding: 0 !important;
+  width: 100% !important;
 }
 
 html.stx-pass-html body.stx-pass-app .tm-pass-title {
-  margin: 0 !important;
+  margin: 0 auto !important;
   font-size: clamp(1.58rem, 5.2vw, 2.05rem) !important;
   font-weight: 800 !important;
   letter-spacing: -0.03em !important;
   text-transform: none !important;
   color: var(--stx-white) !important;
   line-height: 1.12 !important;
+  text-align: center !important;
   animation: none !important;
 }
 
 .stx-pass-app .stx-event-venue {
-  margin: 10px 0 0 !important;
+  margin: 10px auto 0 !important;
+  text-align: center !important;
   font-size: clamp(0.96rem, 3vw, 1.18rem) !important;
   font-weight: 500 !important;
   color: var(--stx-mint) !important;
