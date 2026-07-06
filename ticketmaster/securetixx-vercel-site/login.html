@@ -11,8 +11,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/public/securetixx-theme.css"/>
-  <link rel="stylesheet" href="/public/securetixx-shop-v2.css?v=7"/>
-  <link rel="stylesheet" href="/public/securetixx-login.css?v=2"/>
+  <script src="/public/securetixx-theme.js"></script>
+  <link rel="stylesheet" href="/public/securetixx-shop-v2.css?v=14"/>
+  <link rel="stylesheet" href="/public/securetixx-login.css?v=3"/>
 </head>
 <body class="stx-app stx-shop-v2 stx-login-page">
 <header class="stx-header stx-header--mock" role="banner"><div class="stx-header-inner"><a class="stx-brand-lockup" href="/" aria-label="SecureTixx home"><span class="stx-brand-mark" aria-hidden="true"><svg viewBox="0 0 120 140" fill="none"><defs><linearGradient id="stxBrandShieldGrad" x1="24" y1="16" x2="96" y2="124" gradientUnits="userSpaceOnUse"><stop stop-color="#efffb8"/><stop offset="0.42" stop-color="#c6ff00"/><stop offset="1" stop-color="#3f6212"/></linearGradient></defs><path d="M60 10 104 28.5V72.5C104 101.5 86.5 122 60 132 33.5 122 16 101.5 16 72.5V28.5L60 10Z" fill="url(#stxBrandShieldGrad)" stroke="#d4ff4d" stroke-width="2.5"/><text x="60" y="88" text-anchor="middle" fill="#052e16" font-size="52" font-weight="800" font-family="Outfit,sans-serif">S</text></svg></span><span class="stx-brand-name">SecureTixx</span></a><nav class="stx-nav stx-nav--center" aria-label="Primary"><a href="/">Home</a><a href="/shop.html">Events</a><a href="/help.html">Help</a></nav><div class="stx-header-actions"></div></div></header>
@@ -200,12 +201,14 @@
   function apiBase() {
     var b = typeof window.TM_VIEWER_API_BASE === 'string' ? window.TM_VIEWER_API_BASE.trim() : '';
     b = b ? b.replace(/\/+$/, '') : '';
-    if (b) return b;
-    try {
-      if (window.location && window.location.origin)
-        return String(window.location.origin).replace(/\/+$/, '');
-    } catch (e0) {}
+    if (b && /^https?:\/\//i.test(b)) return b;
     return '';
+  }
+
+  function apiUrl(path) {
+    var p = path.charAt(0) === '/' ? path : '/' + path;
+    var base = apiBase();
+    return base ? base + p : p;
   }
 
   function maybeRedirectExistingSession() {
@@ -213,12 +216,12 @@
     var tok = authGet(TOKEN_KEY);
     if (!tok) return;
     var base = apiBase();
-    if (!base) {
+    if (!base && !(window.location && window.location.origin)) {
       authSet(TOKEN_KEY, '');
       authSet(EMAIL_KEY, '');
       return;
     }
-    fetch(base + '/api/tm-viewer/tickets?token=' + encodeURIComponent(tok), {
+    fetch(apiUrl('/api/tm-viewer/tickets?token=' + encodeURIComponent(tok)), {
       credentials: 'omit',
       cache: 'no-store',
     })
@@ -346,14 +349,16 @@
   }
 
   function postJson(path, payload) {
-    var base = apiBase();
-    if (!base) return Promise.reject(new Error('no_base'));
-    return fetch(base + path, {
+    return fetch(apiUrl(path), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload || {})
     }).then(function (r) {
-      return r.json().then(function (j) { return { ok: r.ok, status: r.status, j: j }; });
+      return r.text().then(function (text) {
+        var j = null;
+        try { j = text ? JSON.parse(text) : null; } catch (eJ) { j = null; }
+        return { ok: r.ok, status: r.status, j: j };
+      });
     });
   }
 
@@ -383,6 +388,10 @@
       .then(function (x) {
         btnContinue.disabled = false;
         if (!(x.j && x.j.ok)) {
+          if (x.status === 404) {
+            setStatus('Sign-in service is unavailable. Try again after the site redeploys.', true);
+            return;
+          }
           if (x.status === 429 && x.j && x.j.retry_after_sec)
             setStatus('Wait ' + x.j.retry_after_sec + 's before another code.', true);
           else setStatus(mapErr(x.j), true);
@@ -458,6 +467,17 @@
   if (btnVerify) btnVerify.addEventListener('click', verifyCode);
   if (btnResend) btnResend.addEventListener('click', startAuthFlow);
   if (btnBackCred) btnBackCred.addEventListener('click', function () { showStep('credentials'); });
+
+  var authForm = document.getElementById('stx-auth-form');
+  if (authForm) {
+    authForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (stepCred && !stepCred.hidden) startAuthFlow();
+      else if (stepCode && !stepCode.hidden) verifyCode();
+      else if (stepForgot && !stepForgot.hidden && btnForgotSend) btnForgotSend.click();
+      else if (stepReset && !stepReset.hidden && btnResetSubmit) btnResetSubmit.click();
+    });
+  }
 
   if (btnForgotOpen) {
     btnForgotOpen.addEventListener('click', function () {

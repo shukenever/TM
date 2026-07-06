@@ -8,8 +8,9 @@ const outFile = path.join(root, "tm_viewer_api_base.js");
 
 const publicApi = (process.env.TM_VIEWER_PUBLIC_API || "").trim().replace(/\/+$/, "");
 const backend = (process.env.TM_VIEWER_BACKEND_URL || "").trim();
-// Direct HTTPS API in the browser (needs TLS on registry). Else same-origin /api/tm-viewer/* proxy.
-const clientBase = publicApi || (backend ? "" : "");
+// Only absolute http(s) URLs are used in the browser. Otherwise same-origin /api/tm-viewer/* proxy.
+const clientBase =
+  publicApi && /^https?:\/\//i.test(publicApi) ? publicApi : backend ? "" : "";
 const escaped = JSON.stringify(clientBase);
 
 const body =
