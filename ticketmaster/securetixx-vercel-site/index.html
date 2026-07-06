@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/public/securetixx-theme.css"/>
+  <link rel="stylesheet" href="/public/securetixx-shop-v2.css"/>
   <style>
     :root {
       --tm-blue: #059669;
@@ -2906,32 +2907,40 @@
     }
   </style>
 </head>
-<body class="tm-app-body stx-app tm-shell-retail-simple tm-page--home">
+<body class="tm-app-body stx-app stx-shop-v2 tm-shell-retail-simple tm-page--home">
   <header class="topbar topbar--tm topbar--simple" role="banner"><div class="tm-simple-bar"><a class="tm-brand-lockup tm-brand-lockup--simple tixx-brand" href="/" aria-label="SecureTixx home"><img class="tixx-logo tixx-logo--on-dark" src="/public/securetixx-logo-header.svg" alt="SecureTixx" width="100" height="32" style="height:32px;width:auto;display:block"/></a><nav class="tm-nav-links tm-home-nav" aria-label="Primary"><a href="/shop.html">Shop</a><a href="/my-tickets">My tickets</a><button type="button" class="tixx-settings-btn-nav" data-tixx-settings title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></nav></div></header>
 
-  <header class="stx-header" role="banner"><div class="stx-header-inner"><a class="stx-logo" href="/" aria-label="SecureTixx home"><img src="/public/securetixx-logo-header.svg" alt="SecureTixx" width="168" height="34"/></a><nav class="stx-nav" aria-label="Primary"><a href="/shop.html">Marketplace</a><a href="/my-tickets">Wallet</a></nav><div class="stx-header-actions"><button type="button" class="tixx-settings-btn-nav" data-tixx-settings title="Settings" aria-label="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><div id="tm-topbar-guest" class="tm-topbar-account-slot"><button type="button" class="tm-topbar-login-btn" id="tm-topbar-login">Sign in</button></div><div id="tm-topbar-signed" class="tm-topbar-account-slot" hidden><div class="tm-account-wrap"><button type="button" class="tm-topbar-account-trigger" id="tm-topbar-account-btn" aria-expanded="false" aria-haspopup="true"><svg class="tm-account-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/></svg><span id="tm-topbar-account-label" class="tm-topbar-account-label">Account</span></button><div id="tm-account-menu" class="tm-account-menu" hidden role="menu"><div class="tm-account-menu-header"><p class="tm-account-menu-email" id="tm-account-menu-email"></p></div><div class="tm-account-menu-body"><a href="/my-tickets" class="tm-account-menu-item" id="tm-menu-my-tickets" role="menuitem">My tickets</a><button type="button" class="tm-account-menu-item" data-tixx-settings role="menuitem">Settings</button><p class="tm-account-menu-hint">Account, orders, addresses &amp; preferences.</p></div><div class="tm-account-menu-sep" aria-hidden="true"></div><button type="button" class="tm-account-menu-item tm-account-menu-signout" id="tm-menu-sign-out" role="menuitem">Sign out</button></div></div></div></div></header>
-<main class="stx-home-main">
-    <section class="stx-hero-banner" aria-label="Welcome">
-      <div class="stx-hero-banner-inner">
-        <div class="stx-hero-copy">
-          <p class="stx-kicker">SecureTixx marketplace</p>
-          <h1>Verified tickets,<br/>delivered in seconds</h1>
-          <p class="tm-retail-sub">Mobile passes with rotating barcodes · Instant email delivery · Priced below face value on concerts, sports, and shows.</p>
-          <div class="stx-hero-actions">
-            <a class="tm-retail-cta" href="#home-discover">Browse events</a>
-            <a class="stx-hero-secondary" href="/shop.html">Open marketplace</a>
+  <header class="stx-header" role="banner"><div class="stx-header-inner"><a class="stx-logo" href="/" aria-label="SecureTixx home"><img src="/public/securetixx-logo-header.svg" alt="SecureTixx" width="168" height="34"/></a><nav class="stx-nav" aria-label="Primary"><a href="/" class="is-active">Home</a><a href="/shop.html">Events</a><a href="/my-tickets">My Tickets</a></nav><div class="stx-header-actions"><button type="button" class="tixx-settings-btn-nav" data-tixx-settings title="Settings" aria-label="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><div id="tm-topbar-guest" class="tm-topbar-account-slot"><button type="button" class="tm-topbar-login-btn" id="tm-topbar-login">Sign In</button></div><div id="tm-topbar-signed" class="tm-topbar-account-slot" hidden><div class="tm-account-wrap"><button type="button" class="tm-topbar-account-trigger" id="tm-topbar-account-btn" aria-expanded="false" aria-haspopup="true"><svg class="tm-account-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/></svg><span id="tm-topbar-account-label" class="tm-topbar-account-label">Account</span></button><div id="tm-account-menu" class="tm-account-menu" hidden role="menu"><div class="tm-account-menu-header"><p class="tm-account-menu-email" id="tm-account-menu-email"></p></div><div class="tm-account-menu-body"><a href="/my-tickets" class="tm-account-menu-item" id="tm-menu-my-tickets" role="menuitem">My tickets</a><button type="button" class="tm-account-menu-item" data-tixx-settings role="menuitem">Settings</button><p class="tm-account-menu-hint">Account, orders, addresses &amp; preferences.</p></div><div class="tm-account-menu-sep" aria-hidden="true"></div><button type="button" class="tm-account-menu-item tm-account-menu-signout" id="tm-menu-sign-out" role="menuitem">Sign out</button></div></div></div></div></header>
+<main class="stx-home-main stx-shop-main">
+    <section class="stx-hero-v2" aria-label="Welcome">
+      <div class="stx-hero-v2-inner">
+        <div class="stx-hero-v2-copy">
+          <p class="stx-hero-v2-badge">100% Verified · 100% Secure</p>
+          <h1>Verified tickets. <em>Delivered</em> in seconds.</h1>
+          <p class="stx-hero-v2-sub">Mobile passes with rotating barcodes · Instant email delivery · Priced below face value on concerts, sports, and shows.</p>
+          <div class="stx-hero-v2-actions">
+            <a class="stx-btn-primary" href="#home-discover">Find Events</a>
+            <a class="stx-btn-ghost" href="/shop.html">Open marketplace</a>
+          </div>
+          <ul class="stx-hero-v2-stats" aria-label="Highlights">
+            <li><strong>100% Verified</strong><span>SafeTix barcodes</span></li>
+            <li><strong>Secure Delivery</strong><span>Instant email passes</span></li>
+            <li><strong>Fan First</strong><span>Below face value</span></li>
+          </ul>
+        </div>
+        <div class="stx-hero-v2-art" aria-hidden="true">
+          <div class="stx-hero-v2-shield-wrap">
+            <svg class="stx-hero-v2-shield" viewBox="0 0 64 64" fill="none"><path d="M32 4 54 14v16c0 14.5-10 26.5-22 30C20 46.5 10 34.5 10 30V14L32 4Z" stroke="currentColor" stroke-width="3"/><path d="M24 32l6 6 12-14" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="stx-hero-v2-metrics">
+              <div><strong>250K+</strong><span>Tickets sold</span></div>
+              <div><strong>98.7%</strong><span>Successful delivery</span></div>
+              <div><strong>24/7</strong><span>Customer support</span></div>
+            </div>
           </div>
         </div>
-        <div class="stx-hero-art" aria-hidden="true">
-          <svg class="stx-hero-shield" viewBox="0 0 64 64" fill="none"><path d="M32 4L54 14v16c0 14.5-10 26.5-22 30C20 46.5 10 34.5 10 30V14L32 4z" stroke="currentColor" stroke-width="3"/><path d="M24 32l6 6 12-14" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
       </div>
-      <ul class="stx-stat-row" aria-label="Highlights">
-        <li><strong>Verified</strong><span>SafeTix barcodes</span></li>
-        <li><strong>Instant</strong><span>Email delivery</span></li>
-        <li><strong>Secure</strong><span>Protected checkout</span></li>
-      </ul>
     </section>
+    <div class="stx-shop-body">
     <div class="stx-shell">
       <aside class="stx-sidebar" aria-label="Browse">
         <div class="stx-sidebar-card">
@@ -2953,20 +2962,23 @@
         </div>
       </aside>
       <div class="stx-main-col">
-        <div class="stx-search-wrap tm-search-strip-wrap">
-          <div class="stx-search-card">
-            <h2>Find your next event</h2>
-            <form class="stx-search-grid" id="tm-home-search-form" action="/shop.html" method="get" role="search">
-              <div class="stx-field"><label for="home-loc">Location</label><input id="home-loc" name="location" type="search" placeholder="City or zip" autocomplete="off"/></div>
-              <div class="stx-field"><label for="home-date">When</label><select id="home-date" name="date" aria-label="Date filter"><option value="all">Any date</option><option value="week">Next 7 days</option><option value="month">Next 30 days</option><option value="future">Upcoming only</option></select></div>
-              <div class="stx-field stx-field--wide"><label for="home-q">Artist, event, or venue</label><input id="home-q" name="q" type="search" placeholder="Search listings…" autocomplete="off"/></div>
-              <button type="submit" class="stx-search-submit">Search marketplace</button>
+        <div class="stx-search-float" id="shop-search">
+          <div class="stx-search-float-card">
+            <div class="stx-search-float-lead">
+              <span class="stx-search-float-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+              <div><strong>Find your next event</strong><span>Search by artist, team, or venue</span></div>
+            </div>
+            <form class="stx-search-float-grid tm-search-strip-wrap stx-search-wrap" id="tm-home-search-form" action="/shop.html" method="get" role="search">
+              <input id="home-q" name="q" type="search" placeholder="Search events, artists or teams" autocomplete="off" aria-label="Search"/>
+              <select id="home-date" name="date" aria-label="Date"><option value="all">Any date</option><option value="week">Next 7 days</option><option value="month">Next 30 days</option><option value="future">Upcoming only</option></select>
+              <input id="home-loc" name="location" type="search" placeholder="All locations" autocomplete="off" aria-label="Location"/>
+              <button type="submit">Search Events</button>
             </form>
           </div>
         </div>
         <div class="home-content">
           <div id="home-discover" class="home-discover">
-            <p id="home-load" class="home-load">Loading events…</p><section class="home-carousel-section" id="home-sec-popular" hidden><div class="home-section-head"><h2>Popular events</h2><a class="home-section-link" href="/shop.html">See all</a></div><div class="home-carousel-track" id="home-carousel-popular"></div></section><section class="home-carousel-section" id="home-sec-concerts" hidden><div class="home-section-head"><h2>Concerts</h2><a class="home-section-link" href="/shop.html?cat=concerts">See all</a></div><div class="home-carousel-track" id="home-carousel-concerts"></div></section><section class="home-carousel-section" id="home-sec-sports" hidden><div class="home-section-head"><h2>Sports</h2><a class="home-section-link" href="/shop.html?cat=sports">See all</a></div><div class="home-carousel-track" id="home-carousel-sports"></div></section><section class="home-carousel-section home-grid-section" id="home-sec-shows" hidden><div class="home-section-head"><h2>Shows &amp; theater</h2><a class="home-section-link" href="/shop.html?cat=events">See all</a></div><div class="home-event-grid" id="home-grid-shows"></div></section><div class="home-shop-banner" id="home-shop-banner"><div><h3 id="home-shop-banner-title">Thousands of verified listings</h3><p>Search by artist, venue, or city — filter by date and category on the shop.</p></div><a href="/shop.html">Open full shop</a></div></div></div></div></div><div id="home-guest-strip" class="home-guest-strip stx-guest-bar">Already bought on SecureTixx? <a href="/login" id="home-guest-signin">Sign in</a> to view your tickets.</div></div><section id="tm-ticket-list" class="tm-ticket-list-section tm-login-gate-section" hidden aria-label="Your tickets"><h2 class="tm-section-heading">Your tickets</h2><div id="tm-home-login-teaser" hidden><p class="tm-login-gate-lead">Your passes appear here after you authenticate with the email on your order.</p><p class="tm-email-hint tm-login-gate-hint">Open the secure sign-in page to receive a one-time code, then return to this home screen.</p><p class="tm-login-gate-actions"><a class="tm-login-gate-cta" id="tm-login-redirect" href="/login">Sign in</a></p></div><div id="tm-viewer-ticket-grid" class="tm-ticket-grid" hidden></div><div id="tm-viewer-empty-tickets" class="tm-viewer-empty-tickets" hidden><p>You&rsquo;re signed in. There are no passes linked to this email yet. If you just ordered, they may appear after delivery updates.</p></div><div id="tm-transfer-modal" class="tm-transfer-modal" hidden aria-hidden="true"><div class="tm-transfer-modal__backdrop" id="tm-transfer-backdrop"></div><div class="tm-transfer-modal__panel" role="dialog" aria-labelledby="tm-transfer-title"><h3 id="tm-transfer-title">Transfer to buyer</h3><p class="tm-muted">Sends a transfer email with the accept link. Add an optional personal note below to include the &ldquo;Message from&hellip;&rdquo; block.</p><div class="tm-transfer-field"><label for="tm-transfer-buyer-email">Buyer email</label><input type="email" id="tm-transfer-buyer-email" autocomplete="email" placeholder="buyer@email.com" /></div><div class="tm-transfer-field"><label for="tm-transfer-buyer-name">Buyer first name <span style="font-weight:400">(optional)</span></label><input type="text" id="tm-transfer-buyer-name" autocomplete="given-name" placeholder="First name" /></div><div class="tm-transfer-field"><label for="tm-transfer-personal-from">Message from <span style="font-weight:400">(optional, default Chris)</span></label><input type="text" id="tm-transfer-personal-from" maxlength="120" placeholder="Chris" autocomplete="off" /></div><div class="tm-transfer-field"><label for="tm-transfer-personal-msg">Personal message <span style="font-weight:400">(optional)</span></label><textarea id="tm-transfer-personal-msg" rows="3" maxlength="4000" placeholder="e.g. For @alex — enjoy the show!"></textarea></div><p id="tm-transfer-status" role="status"></p><div class="tm-transfer-modal__actions"><button type="button" id="tm-transfer-cancel">Cancel</button><button type="button" id="tm-transfer-send">Send transfer</button></div></div></div></section><script src="tm_viewer_api_base.js"></script>
+            <p id="home-load" class="home-load">Loading events…</p><section class="home-carousel-section" id="home-sec-popular" hidden><div class="home-section-head"><h2>Popular events</h2><a class="home-section-link" href="/shop.html">See all</a></div><div class="home-carousel-track" id="home-carousel-popular"></div></section><section class="home-carousel-section" id="home-sec-concerts" hidden><div class="home-section-head"><h2>Concerts</h2><a class="home-section-link" href="/shop.html?cat=concerts">See all</a></div><div class="home-carousel-track" id="home-carousel-concerts"></div></section><section class="home-carousel-section" id="home-sec-sports" hidden><div class="home-section-head"><h2>Sports</h2><a class="home-section-link" href="/shop.html?cat=sports">See all</a></div><div class="home-carousel-track" id="home-carousel-sports"></div></section><section class="home-carousel-section home-grid-section" id="home-sec-shows" hidden><div class="home-section-head"><h2>Shows &amp; theater</h2><a class="home-section-link" href="/shop.html?cat=events">See all</a></div><div class="home-event-grid" id="home-grid-shows"></div></section><div class="home-shop-banner" id="home-shop-banner"><div><h3 id="home-shop-banner-title">Thousands of verified listings</h3><p>Search by artist, venue, or city — filter by date and category on the shop.</p></div><a href="/shop.html">Open full shop</a></div></div></div></div></div></div><div id="home-guest-strip" class="home-guest-strip stx-guest-bar">Already bought on SecureTixx? <a href="/login" id="home-guest-signin">Sign in</a> to view your tickets.</div></div><section id="tm-ticket-list" class="tm-ticket-list-section tm-login-gate-section" hidden aria-label="Your tickets"><h2 class="tm-section-heading">Your tickets</h2><div id="tm-home-login-teaser" hidden><p class="tm-login-gate-lead">Your passes appear here after you authenticate with the email on your order.</p><p class="tm-email-hint tm-login-gate-hint">Open the secure sign-in page to receive a one-time code, then return to this home screen.</p><p class="tm-login-gate-actions"><a class="tm-login-gate-cta" id="tm-login-redirect" href="/login">Sign in</a></p></div><div id="tm-viewer-ticket-grid" class="tm-ticket-grid" hidden></div><div id="tm-viewer-empty-tickets" class="tm-viewer-empty-tickets" hidden><p>You&rsquo;re signed in. There are no passes linked to this email yet. If you just ordered, they may appear after delivery updates.</p></div><div id="tm-transfer-modal" class="tm-transfer-modal" hidden aria-hidden="true"><div class="tm-transfer-modal__backdrop" id="tm-transfer-backdrop"></div><div class="tm-transfer-modal__panel" role="dialog" aria-labelledby="tm-transfer-title"><h3 id="tm-transfer-title">Transfer to buyer</h3><p class="tm-muted">Sends a transfer email with the accept link. Add an optional personal note below to include the &ldquo;Message from&hellip;&rdquo; block.</p><div class="tm-transfer-field"><label for="tm-transfer-buyer-email">Buyer email</label><input type="email" id="tm-transfer-buyer-email" autocomplete="email" placeholder="buyer@email.com" /></div><div class="tm-transfer-field"><label for="tm-transfer-buyer-name">Buyer first name <span style="font-weight:400">(optional)</span></label><input type="text" id="tm-transfer-buyer-name" autocomplete="given-name" placeholder="First name" /></div><div class="tm-transfer-field"><label for="tm-transfer-personal-from">Message from <span style="font-weight:400">(optional, default Chris)</span></label><input type="text" id="tm-transfer-personal-from" maxlength="120" placeholder="Chris" autocomplete="off" /></div><div class="tm-transfer-field"><label for="tm-transfer-personal-msg">Personal message <span style="font-weight:400">(optional)</span></label><textarea id="tm-transfer-personal-msg" rows="3" maxlength="4000" placeholder="e.g. For @alex — enjoy the show!"></textarea></div><p id="tm-transfer-status" role="status"></p><div class="tm-transfer-modal__actions"><button type="button" id="tm-transfer-cancel">Cancel</button><button type="button" id="tm-transfer-send">Send transfer</button></div></div></div></section><script src="tm_viewer_api_base.js"></script>
 <script>window.TM_VIEWER_MAIL_API_BASE = typeof window.TM_VIEWER_MAIL_API_BASE === 'string' ? window.TM_VIEWER_MAIL_API_BASE : '';</script>
 <script src="/public/tixx-public.js"></script>
 <script src="/public/tixx-stock.js"></script>
@@ -3664,6 +3676,14 @@
 })();
 </script></div>
   </main>
+  <footer class="stx-trust-footer" role="contentinfo">
+    <div class="stx-trust-footer-grid">
+      <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-.5-8-5-8-10V6l8-4Z" stroke="currentColor" stroke-width="2"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><div><strong>Buyer Guarantee</strong><span>Every pass verified before delivery</span></div></div>
+      <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/></svg><div><strong>Secure Payments</strong><span>Encrypted checkout &amp; delivery</span></div></div>
+      <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><div><strong>Instant Transfer</strong><span>Mobile passes in seconds</span></div></div>
+      <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><div><strong>24/7 Support</strong><span>Help whenever you need it</span></div></div>
+    </div>
+  </footer>
   <footer class="tm-site-footer tm-site-footer--simple tm-tixx-footer" role="contentinfo"><p class="tm-footer-disclaimer" role="note">SecureTixx helps fans access tickets and complete transfers. Trademarks belong to their respective owners.</p><p class="tm-footer-legal"><a href="/">Home</a><span class="tm-footer-dot" aria-hidden="true"> · </span><a href="/shop.html">Shop</a><span class="tm-footer-dot" aria-hidden="true"> · </span><a href="/my-tickets">My tickets</a><span class="tm-footer-dot" aria-hidden="true"> · </span><a href="/login">Sign in</a><span class="tm-footer-dot" aria-hidden="true"> · </span><a href="#" data-tixx-settings>Settings</a><span class="tm-footer-dot" aria-hidden="true"> · </span><a href="https://securetixx.com" target="_blank" rel="noopener noreferrer">Instagram</a></p></footer>
 <script src="/public/tixx-settings.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" crossorigin="anonymous"></script>
