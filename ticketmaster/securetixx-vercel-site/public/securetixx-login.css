@@ -28,7 +28,9 @@
 }
 
 .stx-login-page .stx-header-actions {
-  display: none;
+  display: flex;
+  justify-self: end;
+  margin-left: 0;
 }
 
 .stx-login-shell {

@@ -51,6 +51,16 @@
   function authToken() {
     try { return (localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY) || '').trim(); } catch (e) { return ''; }
   }
+  function authClear() {
+    try {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(EMAIL_KEY);
+    } catch (e0) {}
+    try {
+      sessionStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(EMAIL_KEY);
+    } catch (e1) {}
+  }
   function apiBase() {
     try { return String(location.origin || '').replace(/\/+$/, ''); } catch (e) { return ''; }
   }
@@ -379,6 +389,9 @@
       '<p class="tixx-settings-readonly" id="tixx-settings-email-display">Not signed in</p>' +
       '<p class="tixx-settings-hint"><a href="/login">Sign in</a> to link orders and tickets to your email.</p></div>' +
       '<button type="button" class="tixx-settings-btn tixx-settings-btn--primary" id="tixx-settings-save-profile">Save profile</button>' +
+      '<div class="tixx-settings-actions-row">' +
+      '<a class="tixx-settings-btn" href="/my-tickets">My tickets</a>' +
+      '<button type="button" class="tixx-settings-btn" id="tixx-settings-sign-out">Sign out</button></div>' +
       '</div>' +
 
       '<div class="tixx-settings-pane" data-pane="orders" hidden>' +
@@ -448,6 +461,17 @@
         switchTab(btn.getAttribute('data-tab'));
       });
     });
+
+    var signOutBtn = el('tixx-settings-sign-out');
+    if (signOutBtn) {
+      signOutBtn.addEventListener('click', function () {
+        authClear();
+        closeModal();
+        syncHeaderAuth();
+        setStatus('Signed out.');
+        location.reload();
+      });
+    }
 
     el('tixx-settings-save-profile').addEventListener('click', function () {
       writeJson(PROFILE_KEY, {
@@ -605,6 +629,80 @@
   /** No-op — we never request GPS (privacy). Kept for older shop code paths. */
   function detectLocation() {}
 
+  function syncHeaderAuth() {
+    var tok = authToken();
+    var guest = el('tm-topbar-guest');
+    var signed = el('tm-topbar-signed');
+    if (guest) guest.hidden = !!tok;
+    if (signed) signed.hidden = !tok;
+    var em = authEmail();
+    var label = el('tm-topbar-account-label');
+    if (label && em) {
+      var at = em.indexOf('@');
+      var short = at > 0 ? em.slice(0, at) : em;
+      if (short.length > 14) short = short.slice(0, 13) + '\u2026';
+      label.textContent = short;
+    }
+    var menuEmail = el('tm-account-menu-email');
+    if (menuEmail) menuEmail.textContent = em || '';
+  }
+
+  function wireHeaderAuth() {
+    syncHeaderAuth();
+    var loginBtn = el('tm-topbar-login');
+    if (loginBtn && !loginBtn.dataset.stxAuthWired) {
+      loginBtn.dataset.stxAuthWired = '1';
+      loginBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        location.href = (window.TM_VIEWER_LOGIN_URL || '/login');
+      });
+    }
+    var accountBtn = el('tm-topbar-account-btn');
+    var menu = el('tm-account-menu');
+    if (accountBtn && menu && !menu.dataset.stxAuthWired) {
+      menu.dataset.stxAuthWired = '1';
+      accountBtn.dataset.stxAuthWired = '1';
+      accountBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var open = menu.hidden;
+        menu.hidden = !open;
+        accountBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      document.addEventListener('click', function () {
+        if (!menu.hidden) {
+          menu.hidden = true;
+          accountBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+      menu.addEventListener('click', function (e) { e.stopPropagation(); });
+      var settingsLink = el('tm-menu-settings');
+      if (settingsLink) {
+        settingsLink.addEventListener('click', function (e) {
+          e.preventDefault();
+          menu.hidden = true;
+          accountBtn.setAttribute('aria-expanded', 'false');
+          openModal();
+        });
+      }
+      var signOut = el('tm-menu-sign-out');
+      if (signOut) {
+        signOut.addEventListener('click', function () {
+          authClear();
+          menu.hidden = true;
+          syncHeaderAuth();
+          location.reload();
+        });
+      }
+    } else if (accountBtn && !accountBtn.dataset.stxAuthWired) {
+      accountBtn.dataset.stxAuthWired = '1';
+      accountBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openModal();
+      });
+    }
+  }
+
   window.TixxSettings = {
     getCity: getCity,
     getRegion: getRegion,
@@ -623,13 +721,15 @@
     detectLocation: detectLocation,
     recordOrder: recordOrder,
     open: openModal,
-    refresh: refreshLabels
+    refresh: refreshLabels,
+    syncHeader: syncHeaderAuth
   };
 
   function init() {
     injectStyles();
     injectModal();
     refreshLabels();
+    wireHeaderAuth();
     document.querySelectorAll('[data-tixx-settings]').forEach(function (b) {
       b.addEventListener('click', function (e) {
         e.preventDefault();

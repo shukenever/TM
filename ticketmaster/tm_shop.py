@@ -46,7 +46,7 @@ _REGISTRY_SRS_BUCKETS: dict[tuple[str, str, str], list[tuple[str, str]]] | None 
 _REGISTRY_SEAT_LOCK = threading.Lock()
 _TM_APP_BASE = "https://app.ticketmaster.com"
 _RE_VIEWER = re.compile(
-    r"https?://[^\s\"'<>\[\]]+/tickets/(\d+)/([^\s\"'<>\[\]/\.]+)",
+    r"https?://[^\s\"'<>\[\],]+/tickets/(\d+)/([^\s\"'<>\[\]/\.,]+)",
     re.I,
 )
 _RE_USD = re.compile(r"(\d+(?:\.\d+)?)")
@@ -189,7 +189,56 @@ def _resolve_links_txt() -> Path:
         if first:
             return _resolve_links_txt_path(Path(first))
 
+    for cand in (
+        here / "stock.txt",
+        here.parent / "stock.txt",
+        stock_parent / "stock.txt",
+    ):
+        if cand.is_file():
+            return cand.resolve()
+
     return stock_parent / "links.txt"
+
+
+def _inventory_paths() -> list[Path]:
+    """All stock files merged for shop listings (links.txt + stock.txt + env overrides)."""
+    out: list[Path] = []
+    seen: set[str] = set()
+
+    def add(p: Path) -> None:
+        if not p.is_file():
+            return
+        try:
+            key = str(p.resolve())
+        except OSError:
+            key = str(p)
+        if key in seen:
+            return
+        seen.add(key)
+        out.append(p)
+
+    add(_resolve_links_txt())
+    for env_key in ("TM_SHOP_STOCK_FILE", "TM_STOCK_FILE"):
+        raw = (os.environ.get(env_key) or "").strip()
+        if raw:
+            add(Path(raw).expanduser())
+    here = Path(__file__).resolve().parent
+    add(here / "stock.txt")
+    add(here.parent / "stock.txt")
+    add(_resolve_stock_path().parent / "stock.txt")
+    return out
+
+
+def _inventory_fingerprint() -> str:
+    parts: list[str] = []
+    for p in _inventory_paths():
+        mtime, size = _links_file_fingerprint(p)
+        try:
+            name = str(p.resolve())
+        except OSError:
+            name = str(p)
+        parts.append(f"{name}:{mtime}:{size}")
+    return "|".join(parts) if parts else "empty"
 
 
 def _resolve_links_txt_path(p: Path) -> Path:
@@ -623,6 +672,100 @@ def _ensure_purchasable_link(row: dict) -> bool:
 def _extract_viewer_link(text: str) -> str:
     m = _RE_VIEWER.search(text or "")
     return m.group(0) if m else ""
+
+
+def _normalize_viewer_link(link: str) -> str:
+    return _extract_viewer_link(link or "")
+
+
+_COMPACT_SEAT_RE = re.compile(
+    r"event_id:\s*([A-Za-z0-9]+)"
+    r"\s*-\s*event_name:\s*(.+?)"
+    r"\s*-\s*purchase_id:\s*(\S+)"
+    r"\s*-\s*section_label:\s*(.+?)"
+    r"\s*-\s*row_label:\s*(.+?)"
+    r"\s*-\s*seat_type:\s*\S+"
+    r"\s*-\s*seat_label:\s*(.+?)"
+    r"(?:\s*-\s*barcode:\s*\S+)?"
+    r"(?:\s*-\s*secure_token:\s*(?:ey[A-Za-z0-9+/=]+)?)?",
+    re.I,
+)
+
+_RE_KV_GARBAGE = re.compile(
+    r"\b(?:purchase_id|section_label|row_label|seat_label|secure_token)\s*:",
+    re.I,
+)
+
+
+def _clean_event_name(name: str) -> str:
+    s = re.sub(r"\s+", " ", (name or "").strip())
+    if not s:
+        return ""
+    m = re.search(r"event_name:\s*(.+?)(?:\s*-\s*purchase_id:|\s*\||$)", s, re.I)
+    if m:
+        s = m.group(1).strip().rstrip(",")
+    if " - purchase_id:" in s:
+        s = s.split(" - purchase_id:", 1)[0].strip().rstrip(",")
+    if _RE_KV_GARBAGE.search(s) or "| event_id:" in s.lower():
+        return ""
+    if len(s) > 120:
+        s = s[:120].rstrip()
+    return s
+
+
+def _listing_row_sane(row: dict) -> bool:
+    name = _clean_event_name(str(row.get("event_name") or ""))
+    if not name:
+        return False
+    for k in ("section", "row", "seat"):
+        v = str(row.get(k) or "").strip()
+        if not v or "http" in v.lower() or len(v) > 40:
+            return False
+    if not _normalize_viewer_link(str(row.get("link") or "")):
+        return False
+    venue = str(row.get("venue") or "").strip()
+    if venue and (_RE_KV_GARBAGE.search(venue) or len(venue) > 140):
+        return False
+    ed = str(row.get("event_date") or "").strip()
+    if ed and (_RE_KV_GARBAGE.search(ed) or len(ed) > 80):
+        return False
+    return True
+
+
+def _strip_segment_prefix(seg: str) -> str:
+    s = (seg or "").strip()
+    m = re.match(r"event_id:\s*\S+\s*-\s*event_name:\s*(.+)$", s, re.I | re.S)
+    if m:
+        return m.group(1).strip()
+    return s
+
+
+def _iter_compact_seat_blocks(text: str) -> list[dict]:
+    out: list[dict] = []
+    seen: set[tuple[str, str, str, str, str]] = set()
+    for m in _COMPACT_SEAT_RE.finditer(text or ""):
+        event_id = m.group(1).strip()
+        event_name = _clean_event_name(m.group(2).strip())
+        if not event_name:
+            continue
+        section = m.group(4).strip()
+        row_n = m.group(5).strip()
+        seat = m.group(6).strip()
+        key = (event_id, event_name.lower(), section, row_n, seat)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(
+            {
+                "event_id": event_id,
+                "event_name": event_name,
+                "section": section,
+                "row": row_n,
+                "seat": seat,
+                "purchase_id": m.group(3).strip(),
+            }
+        )
+    return out
 
 
 def _pick_link_from_cells(cells: list[str], line: str) -> str:
@@ -1739,95 +1882,259 @@ def _parse_links_payload(data_part: str) -> dict[str, str] | None:
     return meta
 
 
-def _parse_stock_line(raw_line: str, *, source: str = "") -> dict | None:
-    line = raw_line.strip()
-    if not line or line.startswith("#"):
+def _build_listing_row(
+    *,
+    meta: dict,
+    link: str,
+    raw_line: str,
+    combo: str,
+    source: str,
+) -> dict | None:
+    event_name = _clean_event_name(str(meta.get("event_name") or ""))
+    if not event_name:
         return None
-    if " | " not in line:
+    link = _normalize_viewer_link(link) or _normalize_viewer_link(str(meta.get("url") or ""))
+    if not link and _registry_lookup_enabled():
+        link = _normalize_viewer_link(
+            _registry_lookup_viewer_url(
+                event_name=event_name,
+                section=str(meta.get("section") or ""),
+                row=str(meta.get("row") or ""),
+                seat=str(meta.get("seat") or ""),
+            )
+        )
+    if not link:
         return None
-    combo, payload = line.split(" | ", 1)
-    meta = _parse_links_payload(payload)
-    cells = _csv_split(payload) if not meta else None
-    if meta:
-        event_name = (meta.get("event_name") or "").strip()
-        if not event_name:
-            return None
-        link = _extract_viewer_link(line) or (meta.get("url") or "").strip()
-        if not _RE_VIEWER.search(link or ""):
-            link = _registry_lookup_viewer_url(
-                event_name=event_name,
-                section=meta.get("section") or "",
-                row=meta.get("row") or "",
-                seat=meta.get("seat") or "",
-            ) or link
-        face = _parse_usd(meta.get("cost_raw") or "")
-        section = (meta.get("section") or "").strip()
-        row = (meta.get("row") or "").strip()
-        seat = (meta.get("seat") or "").strip()
-        event_id = (meta.get("event_id") or "").strip()
-        event_date = (meta.get("event_date") or "").strip()
-        venue = (meta.get("venue") or "").strip()
-    else:
-        if not cells or len(cells) < 9:
-            return None
-        event_name = (cells[1] if len(cells) > 1 else "").strip()
-        if not event_name:
-            return None
-        link = _pick_link_from_cells(cells, line)
-        if not _RE_VIEWER.search(link or ""):
-            link = _registry_lookup_viewer_url(
-                event_name=event_name,
-                section=cells[6] if len(cells) > 6 else "",
-                row=cells[7] if len(cells) > 7 else "",
-                seat=cells[8] if len(cells) > 8 else "",
-            ) or link
-        face = _parse_usd(cells[9] if len(cells) > 9 else "")
-        section = cells[6].strip() if len(cells) > 6 else ""
-        row = cells[7].strip() if len(cells) > 7 else ""
-        seat = cells[8].strip() if len(cells) > 8 else ""
-        event_id = cells[0].strip()
-        event_date = cells[2].strip() if len(cells) > 2 else ""
-        venue = cells[3].strip() if len(cells) > 3 else ""
-    rsm = _import_reslug_map()
-    if rsm and link:
-        remapped = rsm.rewrite_viewer_link(link, _reslug_redirects())
-        if remapped != link:
-            link = remapped
-    purchasable = bool(_RE_VIEWER.search(link or ""))
-    price = _effective_price(face)
-    if purchasable:
-        m = _RE_VIEWER.search(link or "")
-        if not m:
-            return None
-        gid, slug = m.group(1), m.group(2)
-        listing_id = slug
-    else:
-        gid = "0"
-        slug = hashlib.sha256(raw_line.encode("utf-8", errors="replace")).hexdigest()[:18]
-        listing_id = slug
-        link = link or ""
+    face = _parse_usd(str(meta.get("cost_raw") or ""))
+    if face is None and meta.get("face_value_usd") is not None:
+        try:
+            face = float(meta.get("face_value_usd"))
+        except (TypeError, ValueError):
+            face = None
     parsed = {
         "raw_line": raw_line.rstrip("\n\r") + "\n",
-        "combo": combo.strip(),
+        "combo": (combo or "").strip(),
+        "event_id": str(meta.get("event_id") or "").strip(),
+        "event_name": event_name,
+        "event_date": str(meta.get("event_date") or "").strip(),
+        "venue": str(meta.get("venue") or "").strip(),
+        "section": str(meta.get("section") or "").strip(),
+        "row": str(meta.get("row") or "").strip(),
+        "seat": str(meta.get("seat") or "").strip(),
+        "face_value_usd": face,
+        "price_usd": _effective_price(face),
+        "link": link,
+        "source_file": source,
+    }
+    m = _RE_VIEWER.search(link)
+    if not m:
+        return None
+    parsed["gid"] = m.group(1)
+    parsed["slug"] = m.group(2)
+    parsed["listing_id"] = m.group(2)
+    parsed["purchasable"] = True
+    rsm = _import_reslug_map()
+    if rsm:
+        remapped = rsm.rewrite_viewer_link(link, _reslug_redirects())
+        if remapped != link:
+            parsed["link"] = _normalize_viewer_link(remapped)
+            m2 = _RE_VIEWER.search(parsed["link"] or "")
+            if m2:
+                parsed["gid"] = m2.group(1)
+                parsed["slug"] = m2.group(2)
+                parsed["listing_id"] = m2.group(2)
+    if not _listing_row_sane(parsed):
+        return None
+    if not _ensure_purchasable_link(parsed):
+        parsed["purchasable"] = False
+    return parsed
+
+
+def _parse_stubby_url_tail(seg: str) -> dict | None:
+    """Parse stubby rows where the CSV tail before the viewer URL is short or misaligned."""
+    um = re.search(r",((?:https?://)[^,\s]+/tickets/\d+/[^,\s/]+)", seg, re.I)
+    if not um:
+        return None
+    url = um.group(1)
+    before = seg[: um.start()].rstrip(",")
+    after = seg[um.end() :].lstrip(",")
+    after_bits = [x.strip() for x in after.split(",") if x.strip()] if after else []
+    row_hint = after_bits[0] if after_bits and not after_bits[0].startswith("http") else ""
+    cost_raw = ""
+    for bit in after_bits:
+        if bit.startswith("$") or re.fullmatch(r"\d+(?:\.\d+)?", bit):
+            cost_raw = bit
+            break
+
+    account = ""
+    section = ""
+    row_n = row_hint or "-"
+    seat = row_hint or "-"
+    prefix = before
+    tail3 = before.rsplit(",", 2)
+    if len(tail3) == 3 and "@" in tail3[1]:
+        prefix, account, section = (p.strip() for p in tail3)
+    else:
+        parts = before.rsplit(",", 5)
+        if len(parts) != 6 or "@" not in parts[4]:
+            parts = before.rsplit(",", 4)
+            if len(parts) != 5 or "@" not in parts[3]:
+                return None
+            prefix, _venue, _order, account, section = (p.strip() for p in parts)
+        else:
+            prefix, _venue, _order, account, section, row_n = (p.strip() for p in parts)
+            seat = row_hint or row_n
+
+    if "@" not in account:
+        return None
+
+    bits = [b.strip() for b in prefix.split(",") if b.strip()]
+    event_name = _clean_event_name(bits[0] if bits else prefix)
+    if not event_name:
+        return None
+    event_date = ""
+    venue_clean = "Unknown"
+    order_no = ""
+    if len(bits) >= 2:
+        if re.search(r"\d{4}-\d{2}-\d{2}", bits[1]):
+            event_date = bits[1]
+            if len(bits) >= 3:
+                venue_clean = bits[2]
+            if len(bits) >= 4:
+                order_no = bits[3]
+        elif bits[1].lower() not in ("unknown", "tba", "n/a"):
+            venue_clean = bits[1]
+        if len(bits) >= 3 and not order_no:
+            order_no = bits[2]
+
+    event_id = ""
+    m_id = re.search(r"event_id:\s*([A-Za-z0-9]+)", seg, re.I)
+    if m_id:
+        event_id = m_id.group(1).strip()
+
+    return {
         "event_id": event_id,
         "event_name": event_name,
         "event_date": event_date,
-        "venue": venue,
+        "venue": venue_clean,
+        "order_no": order_no,
         "section": section,
-        "row": row,
+        "row": row_n,
         "seat": seat,
-        "face_value_usd": face,
-        "price_usd": price,
-        "link": link,
-        "gid": gid,
-        "slug": slug,
-        "listing_id": listing_id,
-        "purchasable": purchasable,
-        "source_file": source,
+        "cost_raw": cost_raw,
+        "url": url,
     }
-    if purchasable and not _ensure_purchasable_link(parsed):
-        parsed["purchasable"] = False
-    return parsed
+
+
+def _parse_stubby_segment(segment: str, *, combo: str, raw_line: str, source: str) -> list[dict]:
+    seg = _strip_segment_prefix((segment or "").strip())
+    if not seg:
+        return []
+    if " - purchase_id:" in seg and "http" not in seg.lower():
+        return []
+    pseudo = f"{combo} | {seg}" if combo and "@" in combo else seg
+    link = _normalize_viewer_link(pseudo) or _normalize_viewer_link(seg)
+    meta = _parse_links_payload(seg)
+    if meta:
+        meta["event_name"] = _clean_event_name(str(meta.get("event_name") or ""))
+        if not meta["event_name"] or str(meta.get("row") or "").startswith("http"):
+            meta = None
+    if not meta:
+        meta = _parse_stubby_url_tail(seg)
+    if not meta:
+        cells = _csv_split(seg)
+        if cells and len(cells) >= 9:
+            meta = {
+                "event_id": cells[0].strip(),
+                "event_name": _clean_event_name(cells[1].strip() if len(cells) > 1 else ""),
+                "event_date": cells[2].strip() if len(cells) > 2 else "",
+                "venue": cells[3].strip() if len(cells) > 3 else "",
+                "section": cells[6].strip() if len(cells) > 6 else "",
+                "row": cells[7].strip() if len(cells) > 7 else "",
+                "seat": cells[8].strip() if len(cells) > 8 else "",
+                "cost_raw": cells[9].strip() if len(cells) > 9 else "",
+                "url": link or _pick_link_from_cells(cells, pseudo),
+            }
+        else:
+            meta = None
+    if not meta or not _clean_event_name(str(meta.get("event_name") or "")):
+        return []
+    meta["event_name"] = _clean_event_name(str(meta.get("event_name") or ""))
+    if not link:
+        link = _normalize_viewer_link(str(meta.get("url") or "")) or _normalize_viewer_link(pseudo)
+    row = _build_listing_row(meta=meta, link=link, raw_line=raw_line, combo=combo, source=source)
+    return [row] if row else []
+
+
+def _parse_stock_line_all(raw_line: str, *, source: str = "") -> list[dict]:
+    line = raw_line.strip()
+    if not line or line.startswith("#"):
+        return []
+    combo = ""
+    body = line
+    if " | " in line:
+        combo, body = line.split(" | ", 1)
+        combo = combo.strip()
+    segments = [s.strip() for s in body.split(" | ") if s.strip()]
+    if not segments:
+        segments = [body.strip()]
+    out: list[dict] = []
+    seen: set[str] = set()
+
+    def emit(row: dict | None) -> None:
+        if not row:
+            return
+        uid = _listing_uid(row)
+        if uid in seen:
+            return
+        seen.add(uid)
+        out.append(row)
+
+    multi = len(segments) > 1 or "event_id:" in body.lower()
+    if multi:
+        for seg in segments:
+            for row in _parse_stubby_segment(seg, combo=combo, raw_line=line, source=source):
+                emit(row)
+        for block in _iter_compact_seat_blocks(body):
+            link = ""
+            if _registry_lookup_enabled():
+                link = _registry_lookup_viewer_url(
+                    event_name=block["event_name"],
+                    section=block["section"],
+                    row=block["row"],
+                    seat=block["seat"],
+                )
+            row = _build_listing_row(
+                meta=block,
+                link=link,
+                raw_line=line,
+                combo=combo,
+                source=source,
+            )
+            emit(row)
+        return out
+
+    for row in _parse_stubby_segment(body, combo=combo, raw_line=line, source=source):
+        emit(row)
+    if out:
+        return out
+
+    # Legacy single-line path (classic stubby CSV)
+    if " | " not in line:
+        return []
+    combo, payload = line.split(" | ", 1)
+    meta = _parse_links_payload(payload)
+    if meta:
+        meta["event_name"] = _clean_event_name(str(meta.get("event_name") or ""))
+        link = _normalize_viewer_link(line) or _normalize_viewer_link(str(meta.get("url") or ""))
+        row = _build_listing_row(meta=meta, link=link, raw_line=line, combo=combo.strip(), source=source)
+        return [row] if row else []
+    return []
+
+
+def _parse_stock_line(raw_line: str, *, source: str = "") -> dict | None:
+    rows = _parse_stock_line_all(raw_line, source=source)
+    return rows[0] if rows else None
 
 
 def _public_listing(row: dict) -> dict:
@@ -1970,7 +2277,7 @@ def _listings_disk_meta_path() -> Path:
 
 
 # Bump when listing/event cache shape or category logic changes (forces re-parse).
-SHOP_LISTINGS_CACHE_VERSION = 7
+SHOP_LISTINGS_CACHE_VERSION = 8
 
 
 def _normalize_events_for_api(
@@ -2075,29 +2382,36 @@ def _parse_links_file(path: Path) -> tuple[list[dict], dict]:
     stats = {"lines_read": 0, "lines_parsed": 0, "lines_skipped": 0, "purchasable": 0}
     listings: list[dict] = []
     seen: set[str] = set()
-    src = str(path)
-    try:
-        fh = path.open(encoding="utf-8", errors="replace")
-    except OSError as e:
-        return [], {**stats, "error": f"links_txt_read_failed: {e}"}
-    with fh:
-        for line in fh:
-            if not line.strip() or line.strip().startswith("#"):
-                continue
-            stats["lines_read"] += 1
-            row = _parse_stock_line(line, source=src)
-            if not row:
-                stats["lines_skipped"] += 1
-                continue
-            uid = _listing_uid(row)
-            if uid in seen:
-                stats["lines_skipped"] += 1
-                continue
-            seen.add(uid)
-            stats["lines_parsed"] += 1
-            if row.get("purchasable"):
-                stats["purchasable"] += 1
-            listings.append(_public_listing_api(row))
+    paths = _inventory_paths()
+    if not paths:
+        paths = [path] if path.is_file() else []
+    for inv in paths:
+        src = str(inv)
+        try:
+            fh = inv.open(encoding="utf-8", errors="replace")
+        except OSError as e:
+            if len(paths) == 1:
+                return [], {**stats, "error": f"links_txt_read_failed: {e}"}
+            continue
+        with fh:
+            for line in fh:
+                if not line.strip() or line.strip().startswith("#"):
+                    continue
+                stats["lines_read"] += 1
+                rows = _parse_stock_line_all(line, source=src)
+                if not rows:
+                    stats["lines_skipped"] += 1
+                    continue
+                for row in rows:
+                    uid = _listing_uid(row)
+                    if uid in seen:
+                        stats["lines_skipped"] += 1
+                        continue
+                    seen.add(uid)
+                    stats["lines_parsed"] += 1
+                    if row.get("purchasable"):
+                        stats["purchasable"] += 1
+                    listings.append(_public_listing_api(row))
     listings.sort(key=lambda x: (x.get("event_date") or "", x.get("event_name") or ""))
     return listings, stats
 
@@ -2108,6 +2422,7 @@ def _write_listings_disk_cache(path: Path, listings: list[dict], stats: dict, ev
         "links_txt": str(path),
         "links_mtime": mtime,
         "links_size": size,
+        "inventory_fingerprint": _inventory_fingerprint(),
         "count": len(listings),
         "event_count": len(events),
         "parse_stats": stats,
@@ -2140,6 +2455,9 @@ def _read_listings_disk_cache(path: Path) -> tuple[list[dict], dict] | None:
             return None
         if meta.get("cache_version") != SHOP_LISTINGS_CACHE_VERSION:
             return None
+        inv_fp = _inventory_fingerprint()
+        if meta.get("inventory_fingerprint") and meta.get("inventory_fingerprint") != inv_fp:
+            return None
         if meta.get("links_mtime") != mtime or meta.get("links_size") != size:
             return None
         if data_path.is_file():
@@ -2169,6 +2487,9 @@ def _read_events_disk_cache(path: Path) -> tuple[list[dict], dict] | None:
         if meta.get("links_txt") != str(path):
             return None
         if meta.get("cache_version") != SHOP_LISTINGS_CACHE_VERSION:
+            return None
+        inv_fp = _inventory_fingerprint()
+        if meta.get("inventory_fingerprint") and meta.get("inventory_fingerprint") != inv_fp:
             return None
         if meta.get("links_mtime") != mtime or meta.get("links_size") != size:
             return None

@@ -177,6 +177,27 @@
   }
   var AUTH = authStore();
 
+  function migrateLegacyViewerSession() {
+    if (AUTH !== localStorage) return;
+    try {
+      var t = sessionStorage.getItem(TOKEN_KEY);
+      var em0 = sessionStorage.getItem(EMAIL_KEY);
+      if (t) {
+        try {
+          localStorage.setItem(TOKEN_KEY, t);
+          sessionStorage.removeItem(TOKEN_KEY);
+        } catch (eL) {}
+      }
+      if (em0) {
+        try {
+          localStorage.setItem(EMAIL_KEY, em0);
+          sessionStorage.removeItem(EMAIL_KEY);
+        } catch (eM) {}
+      }
+    } catch (e2) {}
+  }
+  migrateLegacyViewerSession();
+
   function authGet(k) {
     if (!AUTH) return null;
     try { return AUTH.getItem(k); } catch (e) { return null; }
@@ -187,6 +208,17 @@
       if (v == null || v === '') AUTH.removeItem(k);
       else AUTH.setItem(k, v);
     } catch (e) {}
+  }
+  function authClearViewer() {
+    [TOKEN_KEY, EMAIL_KEY].forEach(function (key) {
+      try { localStorage.removeItem(key); } catch (e0) {}
+      try { sessionStorage.removeItem(key); } catch (e1) {}
+    });
+  }
+  function getSessionToken() {
+    var tok = authGet(TOKEN_KEY);
+    if (tok) return tok;
+    try { return sessionStorage.getItem(TOKEN_KEY); } catch (e) { return null; }
   }
 
   function shouldForceLogin() {
@@ -213,13 +245,10 @@
 
   function maybeRedirectExistingSession() {
     if (shouldForceLogin()) return;
-    var tok = authGet(TOKEN_KEY);
+    var tok = getSessionToken();
     if (!tok) return;
-    var base = apiBase();
-    if (!base && !(window.location && window.location.origin)) {
-      authSet(TOKEN_KEY, '');
-      authSet(EMAIL_KEY, '');
-      return;
+    function goWallet() {
+      window.location.replace('/my-tickets');
     }
     fetch(apiUrl('/api/tm-viewer/tickets?token=' + encodeURIComponent(tok)), {
       credentials: 'omit',
@@ -229,20 +258,22 @@
         return r.text().then(function (text) {
           var data = null;
           try { data = text ? JSON.parse(text) : null; } catch (eJ) { data = null; }
-          return { ok: r.ok, data: data };
+          return { ok: r.ok, status: r.status, data: data };
         });
       })
       .then(function (packed) {
         if (packed.ok && packed.data && packed.data.ok) {
-          window.location.replace('/my-tickets');
+          goWallet();
           return;
         }
-        authSet(TOKEN_KEY, '');
-        authSet(EMAIL_KEY, '');
+        if (packed.status === 401 || (packed.data && packed.data.error === 'auth_required')) {
+          authClearViewer();
+          return;
+        }
+        goWallet();
       })
       .catch(function () {
-        authSet(TOKEN_KEY, '');
-        authSet(EMAIL_KEY, '');
+        goWallet();
       });
   }
 

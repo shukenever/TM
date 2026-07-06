@@ -1585,3 +1585,123 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* —— Dark mode —— */
+html[data-stx-theme="dark"] .stx-shop-v2 {
+  --stx-mock-bg: #070b09;
+  --stx-mock-ink: #eef2ef;
+  --stx-mock-muted: #9ca89f;
+  --stx-mock-line: #243028;
+  --stx-mock-trust-bg: #121a16;
+  background: var(--stx-mock-bg) !important;
+  color: var(--stx-mock-ink);
+}
+
+html[data-stx-theme="dark"] .stx-help-page-card {
+  background: #121a16;
+  border-color: var(--stx-mock-line);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+html[data-stx-theme="dark"] .stx-help-page-priority {
+  background: rgba(198, 255, 0, 0.1);
+  border-color: rgba(198, 255, 0, 0.22);
+  color: #d9f99d;
+}
+
+html[data-stx-theme="dark"] .stx-search-float-card,
+html[data-stx-theme="dark"] .stx-shop-v2 .stx-sidebar-card,
+html[data-stx-theme="dark"] .stx-events-panel {
+  background: #121a16;
+  border-color: var(--stx-mock-line);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28);
+}
+
+html[data-stx-theme="dark"] .stx-search-field {
+  background: #0a0f0d;
+  border-color: var(--stx-mock-line);
+}
+
+html[data-stx-theme="dark"] .stx-search-field input,
+html[data-stx-theme="dark"] .stx-search-field select {
+  color: var(--stx-mock-ink);
+}
+
+html[data-stx-theme="dark"] .stx-search-field input::placeholder {
+  color: #6b7280;
+}
+
+html[data-stx-theme="dark"] .stx-events-head h2,
+html[data-stx-theme="dark"] .stx-shop-v2 .home-events-panel .home-section-head h2,
+html[data-stx-theme="dark"] .stx-shop-v2 .stx-sidebar-card h2,
+html[data-stx-theme="dark"] .stx-shop-v2 .stx-cat-list a {
+  color: var(--stx-mock-ink);
+}
+
+html[data-stx-theme="dark"] .stx-shop-v2 .stx-cat-list li + li a {
+  border-top-color: var(--stx-mock-line);
+}
+
+html[data-stx-theme="dark"] .stx-events-tools select {
+  background: #0a0f0d;
+  border-color: var(--stx-mock-line);
+  color: var(--stx-mock-muted);
+}
+
+html[data-stx-theme="dark"] .stx-event-row--link:hover .stx-event-row-main {
+  background: rgba(74, 222, 128, 0.06);
+}
+
+html[data-stx-theme="dark"] .stx-event-row-main {
+  background: transparent;
+}
+
+html[data-stx-theme="dark"] .stx-shop-v2 .stx-trust-footer {
+  background: #0a0f0d;
+  border-top-color: var(--stx-mock-line);
+}
+
+html[data-stx-theme="dark"] .stx-login-page {
+  background: #070b09 !important;
+}
+
+html[data-stx-theme="dark"] .stx-login-page .stx-header--mock {
+  background: rgba(2, 8, 4, 0.94);
+  border-bottom-color: rgba(163, 230, 53, 0.08);
+}
+
+html[data-stx-theme="dark"] .stx-login-page .stx-header--mock .stx-nav--center a,
+html[data-stx-theme="dark"] .stx-login-page .stx-brand-name {
+  color: #ecfdf5 !important;
+}
+
+html[data-stx-theme="dark"] .stx-login-form-panel {
+  background: #121a16;
+}
+
+html[data-stx-theme="dark"] .stx-login-form-head h2,
+html[data-stx-theme="dark"] .stx-login-form-head p,
+html[data-stx-theme="dark"] .stx-login-field label,
+html[data-stx-theme="dark"] .stx-login-field input {
+  color: #eef2ef;
+}
+
+html[data-stx-theme="dark"] .stx-login-field input {
+  background: #0a0f0d;
+  border-color: #243028;
+}
+
+html[data-stx-theme="dark"] .stx-login-grid {
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.45);
+}
+
+html[data-stx-theme="dark"] .stx-login-form-foot,
+html[data-stx-theme="dark"] .stx-login-form-foot a,
+html[data-stx-theme="dark"] .stx-login-switch,
+html[data-stx-theme="dark"] .stx-login-switch button {
+  color: #9ca89f;
+}
+
+html[data-stx-theme="dark"] .stx-login-switch button {
+  color: #86efac;
+}

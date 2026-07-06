@@ -4177,13 +4177,13 @@ def _send_otp_email(to_email: str, code: str, *, purpose: str = "signin") -> tup
         banner = "Verify"
     elif purpose_key == "reset":
         headline = "Reset your password"
-        lead = "Enter this code on the password reset page. It expires in <strong style=\"color:#121212;\">10 minutes</strong>."
+        lead = "Enter this code on the password reset page. It expires in <strong style=\"color:#047857;\">10 minutes</strong>."
         footer_note = "Sent for a SecureTixx password reset request."
         subject = f"SecureTixx password reset code: {code}"
         banner = "Reset"
     else:
         headline = "Your one-time code"
-        lead = "Enter this code on the sign-in page to access your passes. It expires in <strong style=\"color:#121212;\">10 minutes</strong>."
+        lead = "Enter this code on the sign-in page to access your tickets. It expires in <strong style=\"color:#047857;\">10 minutes</strong>."
         footer_note = "Sent for SecureTixx account sign-in."
         subject = f"Your SecureTixx sign-in code: {code}"
         banner = "Sign in"
