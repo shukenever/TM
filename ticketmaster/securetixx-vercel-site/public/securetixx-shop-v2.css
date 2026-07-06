@@ -232,6 +232,149 @@
   text-align: center;
 }
 
+.stx-shop-v2 .stx-help-panel-more {
+  display: block;
+  margin-top: 0.75rem;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(236, 253, 245, 0.82);
+  text-decoration: none;
+}
+
+.stx-shop-v2 .stx-help-panel-more:hover {
+  color: var(--stx-mock-lime);
+}
+
+/* Help page */
+.stx-help-page {
+  flex: 1;
+  padding: 2.5rem 1.25rem 3rem;
+}
+
+.stx-help-page-inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.stx-help-page-card {
+  background: #fff;
+  border: 1px solid var(--stx-mock-line);
+  border-radius: 22px;
+  box-shadow: 0 16px 40px rgba(17, 24, 39, 0.08);
+  padding: 2rem 1.5rem;
+}
+
+.stx-help-page-card h1 {
+  margin: 0 0 0.5rem;
+  font-family: "Outfit", system-ui, sans-serif;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--stx-mock-ink);
+}
+
+.stx-help-page-lead {
+  margin: 0 0 1.5rem;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--stx-mock-muted);
+}
+
+.stx-help-page-priority {
+  display: block;
+  margin-bottom: 1rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(198, 255, 0, 0.16);
+  border: 1px solid rgba(198, 255, 0, 0.28);
+  color: #3f6212;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.stx-help-page-email {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.95rem 1rem;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #22c55e 0%, #15803d 100%);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgba(21, 128, 61, 0.22);
+}
+
+.stx-help-page-email:hover {
+  filter: brightness(1.05);
+}
+
+.stx-help-page-note {
+  margin: 1rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--stx-mock-muted);
+  text-align: center;
+}
+
+.stx-help-page-list {
+  margin: 1.75rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.stx-help-page-list li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--stx-mock-line);
+  border-radius: 14px;
+  background: #fafafa;
+}
+
+.stx-help-page-list strong {
+  display: block;
+  margin-bottom: 0.15rem;
+  font-size: 0.875rem;
+  color: var(--stx-mock-ink);
+}
+
+.stx-help-page-list span {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--stx-mock-muted);
+}
+
+.stx-help-page-list svg {
+  width: 20px;
+  height: 20px;
+  color: #15803d;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.stx-help-page-back {
+  display: inline-flex;
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #15803d;
+  text-decoration: none;
+}
+
+.stx-help-page-back:hover {
+  text-decoration: underline;
+}
+
 .stx-shop-v2 .stx-header-actions {
   justify-self: end;
   margin-left: 0;

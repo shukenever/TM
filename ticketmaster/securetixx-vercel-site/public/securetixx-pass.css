@@ -1562,13 +1562,48 @@ html.stx-pass-html body.stx-pass-app .tm-pass-transfer-label,
   gap: 10px 18px;
   width: 100%;
   max-width: var(--stx-max);
-  margin: 14px auto 0;
+  margin: 8px auto 0;
   padding: 14px 8px 0;
   box-sizing: border-box;
   background-image: var(--stx-edge-gradient-h);
   background-size: 100% 1px;
   background-repeat: no-repeat;
   background-position: top;
+}
+
+.stx-pass-help-link {
+  display: block;
+  width: 100%;
+  max-width: var(--stx-max);
+  margin: 12px auto 0;
+  padding: 10px 14px;
+  box-sizing: border-box;
+  text-align: center;
+  text-decoration: none;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+  background-image: var(--stx-edge-gradient-h);
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  background-position: top;
+  transition: color 0.15s ease;
+}
+
+.stx-pass-help-link strong {
+  color: var(--stx-lime);
+  font-weight: 800;
+}
+
+.stx-pass-help-link:hover,
+.stx-pass-help-link:focus-visible {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.stx-pass-help-link:hover strong,
+.stx-pass-help-link:focus-visible strong {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .stx-trust-badge {
