@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/public/securetixx-theme.css"/>
-  <link rel="stylesheet" href="/public/securetixx-shop-v2.css?v=8"/>
+  <link rel="stylesheet" href="/public/securetixx-shop-v2.css?v=9"/>
   <style>
     :root {
       --tm-blue: #059669;
@@ -1101,20 +1101,19 @@
     </div>
     <div class="stx-shell">
       <aside class="stx-sidebar" aria-label="Browse">
-        <div class="stx-sidebar-card">
+        <div class="stx-sidebar-card stx-sidebar-card--categories">
           <h2>Browse Categories</h2>
           <ul class="stx-cat-list" id="stx-sidebar-cats">
-            <li><a href="#" class="stx-sidebar-cat" data-cat="concerts"><span class="stx-cat-ico stx-cat-ico--concerts">🎵</span>Concerts</a></li>
-            <li><a href="#" class="stx-sidebar-cat" data-cat="sports"><span class="stx-cat-ico stx-cat-ico--sports">🏟</span>Sports</a></li>
-            <li><a href="#" class="stx-sidebar-cat" data-cat="events"><span class="stx-cat-ico stx-cat-ico--shows">🎭</span>Theater</a></li>
-            <li><a href="#" class="stx-sidebar-cat" data-cat="all"><span class="stx-cat-ico stx-cat-ico--all">🎪</span>Festivals</a></li>
-            <li><a href="#" class="stx-sidebar-cat" data-cat="events"><span class="stx-cat-ico stx-cat-ico--shows">👨‍👩‍👧</span>Family &amp; More</a></li>
+            <li><a href="#" class="stx-sidebar-cat" data-cat="concerts"><span class="stx-cat-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 18V5l10-2v13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="7" cy="18" r="2.5" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="16" r="2.5" stroke="currentColor" stroke-width="2"/></svg></span><span class="stx-cat-label">Concerts</span><span class="stx-cat-chevron" aria-hidden="true">›</span></a></li>
+            <li><a href="#" class="stx-sidebar-cat" data-cat="sports"><span class="stx-cat-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 3c2 3 2 15 0 18M12 3c-2 3-2 15 0 18M3 12h18" stroke="currentColor" stroke-width="2"/></svg></span><span class="stx-cat-label">Sports</span><span class="stx-cat-chevron" aria-hidden="true">›</span></a></li>
+            <li><a href="#" class="stx-sidebar-cat" data-cat="events"><span class="stx-cat-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M8 9h3v6H8V9Zm5 0h3v6h-3V9Z" stroke="currentColor" stroke-width="2"/><path d="M9 15v2M15 15v2M8 9l1.5-3h5L16 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="stx-cat-label">Theater</span><span class="stx-cat-chevron" aria-hidden="true">›</span></a></li>
+            <li><a href="#" class="stx-sidebar-cat" data-cat="all"><span class="stx-cat-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m12 3 2.2 5.8L20 10l-5.5 1.5L12 17l-2.5-5.5L4 10l5.8-1.2L12 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span><span class="stx-cat-label">Festivals</span><span class="stx-cat-chevron" aria-hidden="true">›</span></a></li>
+            <li><a href="#" class="stx-sidebar-cat" data-cat="events"><span class="stx-cat-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="2.5" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="9" r="2" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-3 2.2-5 5-5M15 20c0-2.2 1.5-4 3.5-4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span class="stx-cat-label">Family &amp; More</span><span class="stx-cat-chevron" aria-hidden="true">›</span></a></li>
           </ul>
-        </div>
-        <div class="stx-sidebar-card stx-sidebar-cta">
-          <strong>Have tickets to sell?</strong>
-          <p>List them securely on SecureTixx and reach buyers instantly.</p>
-          <a href="mailto:ezy.dev.bot@gmail.com">Sell tickets →</a>
+          <a class="stx-sidebar-cta" href="mailto:ezy.dev.bot@gmail.com">
+            <span class="stx-sidebar-cta-copy"><strong>Sell your tickets securely</strong><span>List tickets in minutes.</span></span>
+            <span class="stx-sidebar-cta-arrow" aria-hidden="true">→</span>
+          </a>
         </div>
       </aside>
       <div class="stx-main-col">

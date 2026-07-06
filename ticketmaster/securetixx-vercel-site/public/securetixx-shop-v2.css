@@ -1012,18 +1012,19 @@
 
 .stx-shop-v2 .stx-sidebar-card {
   background: #fff;
-  border: 1px solid var(--stx-mock-line);
-  border-radius: 18px;
-  padding: 1rem;
+  border: 1px solid #e8ecef;
+  border-radius: 16px;
+  padding: 1.25rem 1.15rem 1.15rem;
+  box-shadow: 0 10px 28px rgba(17, 24, 39, 0.06);
 }
 
 .stx-shop-v2 .stx-sidebar-card h2 {
-  margin: 0 0 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--stx-mock-muted);
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: #111827;
 }
 
 .stx-shop-v2 .stx-cat-list {
@@ -1032,23 +1033,110 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
 }
 
 .stx-shop-v2 .stx-cat-list a {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.7rem 0.75rem;
-  border-radius: 12px;
+  gap: 0.8rem;
+  padding: 0.9rem 0.15rem;
+  border-radius: 0;
   text-decoration: none;
-  color: var(--stx-mock-ink);
-  font-size: 0.875rem;
-  font-weight: 600;
+  color: #111827;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s ease;
+}
+
+.stx-shop-v2 .stx-cat-list li + li a {
+  border-top: 1px solid #f1f5f9;
 }
 
 .stx-shop-v2 .stx-cat-list a:hover {
-  background: rgba(5, 150, 105, 0.06);
+  color: #15803d;
+  background: transparent;
+}
+
+.stx-shop-v2 .stx-cat-list a.is-active {
+  color: #15803d;
+  background: transparent;
+  font-weight: 600;
+}
+
+.stx-shop-v2 .stx-cat-ico {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  color: #15803d;
+  flex-shrink: 0;
+}
+
+.stx-shop-v2 .stx-cat-ico svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.stx-shop-v2 .stx-cat-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.stx-shop-v2 .stx-cat-chevron {
+  margin-left: auto;
+  color: #cbd5e1;
+  font-size: 1.35rem;
+  font-weight: 300;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.stx-sidebar-card--categories .stx-sidebar-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 1rem 1.05rem !important;
+  border-radius: 14px !important;
+  background: #ecfccb !important;
+  border: 1px solid rgba(190, 242, 100, 0.55) !important;
+  box-shadow: none !important;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.stx-sidebar-card--categories .stx-sidebar-cta:hover {
+  background: #e7f99a !important;
+  border-color: rgba(163, 230, 53, 0.65) !important;
+}
+
+.stx-sidebar-cta-copy strong {
+  display: block;
+  margin-bottom: 0.12rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #14532d;
+  line-height: 1.25;
+}
+
+.stx-sidebar-cta-copy span {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: #166534;
+  line-height: 1.35;
+}
+
+.stx-sidebar-cta-arrow {
+  color: #15803d;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 @media (max-width: 960px) {
@@ -1058,66 +1146,7 @@
 }
 
 
-/* ── 4. Sidebar ── */
-.stx-shop-v2 .stx-sidebar-card {
-  border-radius: 18px;
-  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.05);
-}
-
-.stx-shop-v2 .stx-sidebar-card h2 {
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-}
-
-.stx-shop-v2 .stx-cat-list a {
-  justify-content: space-between;
-  border-radius: 12px;
-  padding: 0.7rem 0.75rem;
-}
-
-.stx-shop-v2 .stx-cat-list a::after {
-  content: "›";
-  color: #9ca3af;
-  font-size: 1.1rem;
-  line-height: 1;
-}
-
-.stx-shop-v2 .stx-cat-list a.is-active {
-  background: rgba(5, 150, 105, 0.1);
-  color: var(--stx-mock-green);
-}
-
-.stx-shop-v2 .stx-cat-ico {
-  border-radius: 10px;
-}
-
-.stx-sidebar-cta {
-  padding: 1.1rem !important;
-  border-radius: 18px !important;
-  background: linear-gradient(145deg, rgba(190, 242, 100, 0.22), rgba(5, 150, 105, 0.08)) !important;
-  border: 1px solid rgba(5, 150, 105, 0.16) !important;
-  box-shadow: none !important;
-}
-
-.stx-sidebar-cta strong {
-  display: block;
-  margin-bottom: 0.35rem;
-  font-size: 0.875rem;
-}
-
-.stx-sidebar-cta p {
-  margin: 0 0 0.75rem;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-}
-
-.stx-sidebar-cta a {
-  display: inline-flex;
-  padding: 0.55rem 0.85rem;
-  border-radius: 999px;
-  background: rgba(5, 150, 105, 0.12);
-  font-size: 0.8125rem;
-}
+/* ── 4. Sidebar (mockup categories card) ── */
 
 /* ── 5. Popular events ── */
 .stx-events-panel {
