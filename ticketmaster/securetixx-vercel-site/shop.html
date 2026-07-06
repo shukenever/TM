@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/public/securetixx-theme.css"/>
-  <link rel="stylesheet" href="/public/securetixx-shop-v2.css?v=12"/>
+  <link rel="stylesheet" href="/public/securetixx-shop-v2.css?v=14"/>
   <style>
     :root {
       --tm-blue: #059669;
@@ -530,10 +530,12 @@
       color: rgba(255,255,255,.95);
       text-shadow: 0 1px 3px rgba(0,0,0,.2);
     }
-    .thumb-concerts { background: linear-gradient(135deg, #7c3aed, #4f46e5); }
-    .thumb-sports { background: linear-gradient(135deg, #059669, #047857); }
-    .thumb-parking { background: linear-gradient(135deg, #d97706, #b45309); }
-    .thumb-events { background: linear-gradient(135deg, #059669, #047857); }
+    .thumb-concerts,
+    .thumb-sports,
+    .thumb-parking,
+    .thumb-events {
+      background: linear-gradient(145deg, #0c1a12 0%, #132a1c 52%, #1a3322 100%);
+    }
     .event-title {
       font-family: 'Sora', sans-serif;
       font-weight: 800;
@@ -1711,7 +1713,6 @@
       : '';
     return '<div class="' + cls + '" aria-hidden="true">' + photoHtml +
       '<span class="event-thumb-initials">' + esc(initials(ev.event_name)) + '</span>' +
-      '<img class="event-thumb-mark" src="/public/securetixx-mark.svg" alt="" width="22" height="22"/>' +
       '</div>';
   }
   function showBanner(text, ok) {

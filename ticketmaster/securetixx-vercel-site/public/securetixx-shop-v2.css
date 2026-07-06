@@ -1320,26 +1320,18 @@
 }
 
 .stx-event-row .event-thumb-mark {
-  position: absolute;
-  right: 6px;
-  bottom: 6px;
-  z-index: 2;
-  width: 18px;
-  height: 18px;
-  opacity: 0.85;
+  display: none;
 }
 
-.stx-event-row .thumb-concerts {
-  background: linear-gradient(135deg, #7c3aed, #4f46e5);
-}
-
-.stx-event-row .thumb-sports {
-  background: linear-gradient(135deg, #059669, #047857);
-}
-
+.stx-event-row .thumb-concerts,
+.stx-event-row .thumb-sports,
 .stx-event-row .thumb-events,
 .stx-event-row .thumb-parking {
-  background: linear-gradient(135deg, #0ea5e9, #0369a1);
+  background: linear-gradient(145deg, #0c1a12 0%, #132a1c 52%, #1a3322 100%);
+}
+
+.stx-event-row .event-thumb.has-photo {
+  background: #e5e7eb;
 }
 
 .stx-shop-v2 .stx-events-tools {
