@@ -188,12 +188,60 @@
     } catch (e) {}
   }
 
-  try {
-    if (authGet(TOKEN_KEY)) {
-      window.location.replace('/my-tickets');
+  function shouldForceLogin() {
+    try {
+      var q = new URLSearchParams(window.location.search || '');
+      return q.get('reauth') === '1' || q.get('force') === '1';
+    } catch (e0) {
+      return false;
+    }
+  }
+
+  function apiBase() {
+    var b = typeof window.TM_VIEWER_API_BASE === 'string' ? window.TM_VIEWER_API_BASE.trim() : '';
+    b = b ? b.replace(/\/+$/, '') : '';
+    if (b) return b;
+    try {
+      if (window.location && window.location.origin)
+        return String(window.location.origin).replace(/\/+$/, '');
+    } catch (e0) {}
+    return '';
+  }
+
+  function maybeRedirectExistingSession() {
+    if (shouldForceLogin()) return;
+    var tok = authGet(TOKEN_KEY);
+    if (!tok) return;
+    var base = apiBase();
+    if (!base) {
+      authSet(TOKEN_KEY, '');
+      authSet(EMAIL_KEY, '');
       return;
     }
-  } catch (eRedir) {}
+    fetch(base + '/api/tm-viewer/tickets?token=' + encodeURIComponent(tok), {
+      credentials: 'omit',
+      cache: 'no-store',
+    })
+      .then(function (r) {
+        return r.text().then(function (text) {
+          var data = null;
+          try { data = text ? JSON.parse(text) : null; } catch (eJ) { data = null; }
+          return { ok: r.ok, data: data };
+        });
+      })
+      .then(function (packed) {
+        if (packed.ok && packed.data && packed.data.ok) {
+          window.location.replace('/my-tickets');
+          return;
+        }
+        authSet(TOKEN_KEY, '');
+        authSet(EMAIL_KEY, '');
+      })
+      .catch(function () {
+        authSet(TOKEN_KEY, '');
+        authSet(EMAIL_KEY, '');
+      });
+  }
 
   var mode = 'signin';
   var otpPurpose = 'signin';
@@ -232,17 +280,6 @@
     if (!statusEl) return;
     statusEl.textContent = msg || '';
     statusEl.classList.toggle('is-error', !!isErr);
-  }
-
-  function apiBase() {
-    var b = typeof window.TM_VIEWER_API_BASE === 'string' ? window.TM_VIEWER_API_BASE.trim() : '';
-    b = b ? b.replace(/\/+$/, '') : '';
-    if (b) return b;
-    try {
-      if (window.location && window.location.origin)
-        return String(window.location.origin).replace(/\/+$/, '');
-    } catch (e0) {}
-    return '';
   }
 
   function mapErr(data) {
@@ -507,6 +544,7 @@
         });
     });
   }
+  maybeRedirectExistingSession();
 })();
 </script>
 </body>
