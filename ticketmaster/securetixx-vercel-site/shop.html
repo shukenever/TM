@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/public/securetixx-theme.css"/>
-  <link rel="stylesheet" href="/public/securetixx-shop-v2.css"/>
+  <link rel="stylesheet" href="/public/securetixx-shop-v2.css?v=4"/>
   <style>
     :root {
       --tm-blue: #059669;
@@ -1029,32 +1029,46 @@
   </style>
 </head>
 <body class="stx-app stx-shop stx-shop-v2">
-<header class="stx-header" role="banner"><div class="stx-header-inner"><a class="stx-logo" href="/" aria-label="SecureTixx home"><img src="/public/securetixx-logo-header.svg" alt="SecureTixx" width="168" height="34"/></a><nav class="stx-nav" aria-label="Primary"><a href="/">Home</a><a href="/shop.html" class="is-active">Events</a><a href="/my-tickets">My Tickets</a></nav><div class="stx-header-actions"><button type="button" class="tixx-settings-btn-nav" data-tixx-settings title="Settings" aria-label="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><div id="tm-topbar-guest" class="tm-topbar-account-slot"><button type="button" class="tm-topbar-login-btn" id="tm-topbar-login">Sign In</button></div><div id="tm-topbar-signed" class="tm-topbar-account-slot" hidden><div class="tm-account-wrap"><button type="button" class="tm-topbar-account-trigger" id="tm-topbar-account-btn" aria-expanded="false" aria-haspopup="true"><svg class="tm-account-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/></svg><span id="tm-topbar-account-label" class="tm-topbar-account-label">Account</span></button></div></div></div></div></header>
+<header class="stx-header stx-header--mock" role="banner"><div class="stx-header-inner"><a class="stx-brand-lockup" href="/" aria-label="SecureTixx home"><span class="stx-brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3Zm-1 13-3-3 1.4-1.4L11 12.2l4.6-4.6L17 9l-6 6Z" fill="currentColor"/></svg></span><span class="stx-brand-name">SecureTixx</span></a><nav class="stx-nav stx-nav--center" aria-label="Primary"><a href="/">Home</a><a href="/shop.html" class="is-active">Events</a><a href="/my-tickets">My Tickets</a><a href="mailto:ezy.dev.bot@gmail.com">Sell Tickets</a><a href="mailto:ezy.dev.bot@gmail.com">Help</a></nav><div class="stx-header-actions"><button type="button" class="stx-fav-btn" aria-label="Favorites">♡</button><div id="tm-topbar-guest" class="tm-topbar-account-slot"><button type="button" class="stx-signin-btn" id="tm-topbar-login"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/></svg>Sign In</button></div><div id="tm-topbar-signed" class="tm-topbar-account-slot" hidden><button type="button" class="stx-signin-btn" id="tm-topbar-account-btn"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/></svg>Account</button></div></div></div></header>
 
 <main class="stx-shop-main">
   <section class="stx-hero-v2" aria-label="SecureTixx marketplace">
+    <div class="stx-hero-v2-mesh" aria-hidden="true"></div>
+    <div class="stx-hero-v2-glow" aria-hidden="true"></div>
     <div class="stx-hero-v2-inner">
       <div class="stx-hero-v2-copy">
-        <p class="stx-hero-v2-badge">100% Verified · 100% Secure</p>
-        <h1>Verified tickets. <em>Delivered</em> in seconds.</h1>
-        <p class="stx-hero-v2-sub">Mobile passes with rotating barcodes · Instant email delivery · Priced below face value on concerts, sports, and shows.</p>
+        <p class="stx-hero-v2-badge">100% VERIFIED • 100% SECURE</p>
+        <h1>Verified tickets.<br><em>Delivered</em> in seconds.</h1>
+        <p class="stx-hero-v2-sub">Every ticket is verified for authenticity so you can buy, sell, and transfer with complete confidence.</p>
         <div class="stx-hero-v2-actions">
-          <a class="stx-btn-primary" href="#shop-events">Find Events</a>
-          <a class="stx-btn-ghost" href="#shop-search">How it works</a>
+          <a class="stx-btn-primary" href="#shop-events"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Find Events</a>
+          <a class="stx-btn-ghost" href="#shop-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M10 8l6 4-6 4V8Z" fill="currentColor"/></svg>How it works</a>
         </div>
-        <ul class="stx-hero-v2-stats" aria-label="Highlights">
-          <li><strong>100% Verified</strong><span>SafeTix barcodes</span></li>
-          <li><strong>Secure Delivery</strong><span>Instant email passes</span></li>
-          <li><strong>Fan First</strong><span>Below face value</span></li>
+        <ul class="stx-hero-v2-trust" aria-label="Highlights">
+          <li><span class="stx-hero-v2-trust-ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-.5-8-5-8-10V6l8-4Z" stroke="currentColor" stroke-width="2"/></svg></span><span class="stx-hero-v2-trust-text"><strong>100% Verified</strong><span>All tickets are verified</span></span></li>
+          <li><span class="stx-hero-v2-trust-ico"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg></span><span class="stx-hero-v2-trust-text"><strong>Secure Delivery</strong><span>Instant &amp; safe transfer</span></span></li>
+          <li><span class="stx-hero-v2-trust-ico"><svg viewBox="0 0 24 24" fill="none"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span class="stx-hero-v2-trust-text"><strong>Fan First</strong><span>Fair prices. No fees.</span></span></li>
         </ul>
       </div>
       <div class="stx-hero-v2-art" aria-hidden="true">
-        <div class="stx-hero-v2-shield-wrap">
-          <svg class="stx-hero-v2-shield" viewBox="0 0 64 64" fill="none"><path d="M32 4 54 14v16c0 14.5-10 26.5-22 30C20 46.5 10 34.5 10 30V14L32 4Z" stroke="currentColor" stroke-width="3"/><path d="M24 32l6 6 12-14" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="stx-hero-v2-scene">
+          <div class="stx-hero-v2-scene-floor"></div>
+          <div class="stx-hero-v2-scene-rays"></div>
+          <div class="stx-hero-v2-scene-stage">
+            <div class="stx-hero-v2-ring stx-hero-v2-ring--1"></div>
+            <div class="stx-hero-v2-ring stx-hero-v2-ring--2"></div>
+            <div class="stx-hero-v2-ring stx-hero-v2-ring--3"></div>
+            <div class="stx-hero-v2-pedestal-glow"></div>
+            <div class="stx-hero-v2-pedestal-base">
+              <svg class="stx-hero-v2-shield" viewBox="0 0 120 140" fill="none"><defs><linearGradient id="stxShieldFill" x1="24" y1="16" x2="96" y2="124" gradientUnits="userSpaceOnUse"><stop stop-color="#efffb8"/><stop offset="0.42" stop-color="#c6ff00"/><stop offset="1" stop-color="#3f6212"/></linearGradient></defs><path d="M60 10 104 28.5V72.5C104 101.5 86.5 122 60 132 33.5 122 16 101.5 16 72.5V28.5L60 10Z" fill="url(#stxShieldFill)" stroke="#d4ff4d" stroke-width="2.5"/><text x="60" y="88" text-anchor="middle" fill="#052e16" font-size="52" font-weight="800" font-family="Outfit, sans-serif">S</text></svg>
+            </div>
+          </div>
           <div class="stx-hero-v2-metrics">
-            <div><strong>250K+</strong><span>Tickets sold</span></div>
-            <div><strong>98.7%</strong><span>Successful delivery</span></div>
-            <div><strong>24/7</strong><span>Customer support</span></div>
+            <div><strong>250K+</strong><span>Tickets Sold</span></div>
+            <div class="stx-hero-v2-metrics-divider" aria-hidden="true"></div>
+            <div><strong>98.7%</strong><span>Successful Delivery</span></div>
+            <div class="stx-hero-v2-metrics-divider" aria-hidden="true"></div>
+            <div><strong>24/7</strong><span>Customer Support</span></div>
           </div>
         </div>
       </div>
@@ -1062,47 +1076,61 @@
   </section>
 
   <div class="stx-shop-body">
+    <div class="stx-search-stage" id="shop-search">
+      <div class="stx-search-float-card">
+        <div class="stx-search-float-lead">
+          <span class="stx-search-float-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+          <div><strong>Find your next event</strong><span>Search by artist, team, or venue</span></div>
+        </div>
+        <form class="stx-search-float-grid" id="search-form" role="search">
+          <div class="stx-search-field stx-search-field--q">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <input id="f-q" type="search" placeholder="Search events, artists or teams" autocomplete="off" aria-label="Search"/>
+          </div>
+          <span class="stx-search-divider" aria-hidden="true"></span>
+          <div class="stx-search-field">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <select id="f-date" aria-label="Date"><option value="all">Any date</option><option value="week">Next 7 days</option><option value="month">Next 30 days</option><option value="future">Upcoming only</option></select>
+          </div>
+          <span class="stx-search-divider" aria-hidden="true"></span>
+          <div class="stx-search-field">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="11" r="2.2" fill="currentColor"/></svg>
+            <input id="f-location" type="search" placeholder="All locations" autocomplete="off" aria-label="Location"/>
+          </div>
+          <button type="submit" class="stx-search-submit">Search Events</button>
+        </form>
+      </div>
+    </div>
     <div class="stx-shell">
       <aside class="stx-sidebar" aria-label="Browse">
         <div class="stx-sidebar-card">
-          <h2>Browse categories</h2>
+          <h2>Browse Categories</h2>
           <ul class="stx-cat-list" id="stx-sidebar-cats">
-            <li><a href="#" class="stx-sidebar-cat is-active" data-cat="all"><span class="stx-cat-ico stx-cat-ico--all">🎫</span>All listings</a></li>
             <li><a href="#" class="stx-sidebar-cat" data-cat="concerts"><span class="stx-cat-ico stx-cat-ico--concerts">🎵</span>Concerts</a></li>
             <li><a href="#" class="stx-sidebar-cat" data-cat="sports"><span class="stx-cat-ico stx-cat-ico--sports">🏟</span>Sports</a></li>
-            <li><a href="#" class="stx-sidebar-cat" data-cat="events"><span class="stx-cat-ico stx-cat-ico--shows">🎭</span>Theater &amp; drama</a></li>
-            <li><a href="#" class="stx-sidebar-cat" data-cat="parking"><span class="stx-cat-ico stx-cat-ico--all">🅿</span>Parking</a></li>
+            <li><a href="#" class="stx-sidebar-cat" data-cat="events"><span class="stx-cat-ico stx-cat-ico--shows">🎭</span>Theater</a></li>
+            <li><a href="#" class="stx-sidebar-cat" data-cat="all"><span class="stx-cat-ico stx-cat-ico--all">🎪</span>Festivals</a></li>
+            <li><a href="#" class="stx-sidebar-cat" data-cat="events"><span class="stx-cat-ico stx-cat-ico--shows">👨‍👩‍👧</span>Family &amp; More</a></li>
           </ul>
         </div>
         <div class="stx-sidebar-card stx-sidebar-cta">
-          <p>Have extra tickets? List them securely on SecureTixx and reach buyers instantly.</p>
+          <strong>Have tickets to sell?</strong>
+          <p>List them securely on SecureTixx and reach buyers instantly.</p>
           <a href="mailto:ezy.dev.bot@gmail.com">Sell tickets →</a>
         </div>
       </aside>
       <div class="stx-main-col">
-        <div class="stx-search-float" id="shop-search">
-          <div class="stx-search-float-card">
-            <div class="stx-search-float-lead">
-              <span class="stx-search-float-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
-              <div><strong>Find your next event</strong><span>Search by artist, team, or venue</span></div>
-            </div>
-            <form class="stx-search-float-grid" id="search-form" role="search">
-              <input id="f-q" type="search" placeholder="Search events, artists or teams" autocomplete="off" aria-label="Search"/>
-              <select id="f-date" aria-label="Date"><option value="all">Any date</option><option value="week">Next 7 days</option><option value="month">Next 30 days</option><option value="future">Upcoming only</option></select>
-              <input id="f-location" type="search" placeholder="All locations" autocomplete="off" aria-label="Location"/>
-              <button type="submit">Search Events</button>
-            </form>
-          </div>
-        </div>
-
         <section class="stx-events-panel" id="shop-events">
           <div class="stx-events-head">
             <div>
               <h2 id="all-events-heading">Popular Events</h2>
               <p id="results-meta">Loading…</p>
             </div>
-            <div class="stx-events-tools">
-              <select id="f-sort" aria-label="Sort"><option value="date">Sort: Date</option><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option><option value="name">Name A–Z</option></select>
+            <div class="stx-events-head-right">
+              <a href="#" class="stx-view-all" id="stx-view-all">View all</a>
+              <div class="stx-events-tools">
+                <select id="f-sort" aria-label="Sort"><option value="date">Sort: Date</option><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option><option value="name">Name A–Z</option></select>
+              </div>
             </div>
           </div>
 
@@ -1142,10 +1170,10 @@
 
 <footer class="stx-trust-footer" role="contentinfo">
   <div class="stx-trust-footer-grid">
-    <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-.5-8-5-8-10V6l8-4Z" stroke="currentColor" stroke-width="2"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><div><strong>Buyer Guarantee</strong><span>Every pass verified before delivery</span></div></div>
-    <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/></svg><div><strong>Secure Payments</strong><span>Encrypted checkout &amp; delivery</span></div></div>
-    <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><div><strong>Instant Transfer</strong><span>Mobile passes in seconds</span></div></div>
-    <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><div><strong>24/7 Support</strong><span>Help whenever you need it</span></div></div>
+    <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-.5-8-5-8-10V6l8-4Z" stroke="currentColor" stroke-width="2"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><div><strong>Buyer Guarantee</strong><span>Get a full refund if your event is canceled.</span></div></div>
+    <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/></svg><div><strong>Secure Payments</strong><span>Your payment information is encrypted.</span></div></div>
+    <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><div><strong>Instant Transfer</strong><span>Tickets sent to you in seconds.</span></div></div>
+    <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><div><strong>24/7 Support</strong><span>We&apos;re here whenever you need us.</span></div></div>
   </div>
 </footer>
 
@@ -1253,6 +1281,7 @@
       thumbBlock(ev) +
       '<div class="stx-event-row-body">' +
       '<h3>' + esc(ev.event_name) + '</h3>' +
+      '<p class="stx-event-row-kind">' + esc(eventRowSubtitle(ev)) + '</p>' +
       '<p class="stx-event-row-meta">' + esc(ev.event_date_display) + '</p>' +
       '<p class="stx-event-row-venue">' + esc(ev.venue) + '</p>' +
       '</div>' +
@@ -1658,6 +1687,15 @@
     var labels = { concerts: 'Concert', sports: 'Sports', parking: 'Parking', events: 'Event' };
     return labels[c] || 'Event';
   }
+  function eventRowSubtitle(ev) {
+    var name = String(ev.event_name || '');
+    var dash = name.indexOf(' - ');
+    if (dash > 0) return name.slice(dash + 3).trim();
+    if (ev.category === 'sports') return 'Sports Event';
+    if (ev.category === 'concerts') return 'Concert';
+    if (ev.category === 'parking') return 'Parking Pass';
+    return catLabel(ev.category);
+  }
   function thumbBlock(ev) {
     var cat = esc(ev.category || 'events');
     var photo = (ev.image_url || '').trim();
@@ -2054,6 +2092,26 @@
       document.getElementById('shop-events').scrollIntoView({ behavior: 'smooth' });
     });
   });
+  var viewAll = document.getElementById('stx-view-all');
+  if (viewAll) {
+    viewAll.addEventListener('click', function (e) {
+      e.preventDefault();
+      state.q = '';
+      state.location = '';
+      state.date = 'all';
+      state.cat = 'all';
+      document.getElementById('f-q').value = '';
+      if (locIn) locIn.value = '';
+      document.getElementById('f-date').value = 'all';
+      document.querySelectorAll('.cat-pill').forEach(function (b) {
+        b.classList.toggle('active', b.getAttribute('data-cat') === 'all');
+      });
+      syncSidebarCats();
+      applyLocLabel();
+      flashFilter();
+      render();
+    });
+  }
   var locChip = document.getElementById('loc-chip');
   if (locChip) {
     locChip.addEventListener('click', function () {
