@@ -1,0 +1,409 @@
+/* SecureTixx sign-in — split panel mockup */
+
+.stx-login-page {
+  background: #f4f1ea !important;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.stx-login-page .stx-header--mock {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.stx-login-page .stx-header--mock .stx-nav--center a,
+.stx-login-page .stx-header--mock .stx-nav-soon,
+.stx-login-page .stx-header--mock .stx-nav-help-btn {
+  color: #374151;
+}
+
+.stx-login-page .stx-header--mock .stx-nav--center a:hover,
+.stx-login-page .stx-header--mock .stx-nav--center a.is-active {
+  color: #111827;
+}
+
+.stx-login-page .stx-brand-name {
+  color: #111827 !important;
+}
+
+.stx-login-page .stx-header-actions {
+  display: none;
+}
+
+.stx-login-shell {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.stx-login-grid {
+  width: min(100%, 1080px);
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 28px 70px rgba(17, 24, 39, 0.12);
+  min-height: min(720px, calc(100vh - 140px));
+}
+
+.stx-login-promo {
+  position: relative;
+  overflow: hidden;
+  padding: 2.25rem 2rem;
+  color: #fff;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 0%, rgba(198, 255, 0, 0.12), transparent 55%),
+    linear-gradient(180deg, #000a05 0%, #021208 55%, #04150c 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+.stx-login-promo-mesh {
+  position: absolute;
+  inset: 0;
+  opacity: 0.45;
+  background:
+    linear-gradient(rgba(198, 255, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(198, 255, 0, 0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(180deg, #000 0%, transparent 85%);
+  pointer-events: none;
+}
+
+.stx-login-promo-inner {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.stx-login-promo-mark {
+  width: 36px;
+  height: 42px;
+  filter: drop-shadow(0 0 12px rgba(198, 255, 0, 0.4));
+}
+
+.stx-login-promo-mark svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.stx-login-promo h1 {
+  margin: 1.5rem 0 0.85rem;
+  font-family: "Outfit", system-ui, sans-serif;
+  font-size: clamp(1.65rem, 3vw, 2.15rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+}
+
+.stx-login-promo h1 em {
+  font-style: normal;
+  color: #c6ff00;
+}
+
+.stx-login-promo-lead {
+  margin: 0 0 1.5rem;
+  max-width: 34ch;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.stx-login-promo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stx-login-promo-list li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.stx-login-promo-list svg {
+  width: 18px;
+  height: 18px;
+  color: #c6ff00;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.stx-login-promo-list strong {
+  display: block;
+  font-size: 0.875rem;
+  margin-bottom: 0.12rem;
+}
+
+.stx-login-promo-list span {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.58);
+  line-height: 1.4;
+}
+
+.stx-login-promo-art {
+  margin-top: auto;
+  padding-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.stx-login-promo-scene {
+  position: relative;
+  width: 180px;
+  height: 180px;
+}
+
+.stx-login-promo-scene-glow {
+  position: absolute;
+  inset: 20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(198, 255, 0, 0.35), transparent 68%);
+  filter: blur(10px);
+}
+
+.stx-login-promo-scene-shield {
+  position: relative;
+  z-index: 1;
+  width: 88px;
+  height: 102px;
+  margin: 28px auto 0;
+  filter: drop-shadow(0 0 16px rgba(198, 255, 0, 0.45));
+}
+
+.stx-login-promo-scene-ring {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(198, 255, 0, 0.2);
+  box-shadow: 0 0 20px rgba(198, 255, 0, 0.12);
+}
+
+.stx-login-promo-foot {
+  margin-top: 1.25rem;
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+}
+
+.stx-login-form-panel {
+  background: #fff;
+  padding: 2.5rem 2.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.stx-login-form-head h2 {
+  margin: 0 0 0.35rem;
+  font-family: "Outfit", system-ui, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #111827;
+}
+
+.stx-login-form-head p {
+  margin: 0 0 1.65rem;
+  font-size: 0.9375rem;
+  color: #6b7280;
+}
+
+.stx-login-field {
+  margin-bottom: 1rem;
+}
+
+.stx-login-field label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #374151;
+}
+
+.stx-login-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.stx-login-input-wrap svg {
+  position: absolute;
+  left: 0.85rem;
+  width: 18px;
+  height: 18px;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.stx-login-input-wrap input {
+  width: 100%;
+  padding: 0.78rem 0.85rem 0.78rem 2.65rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 0.9375rem;
+  color: #111827;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.stx-login-input-wrap input:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+}
+
+.stx-login-input-wrap--pass input {
+  padding-right: 2.75rem;
+}
+
+.stx-login-toggle-pass {
+  position: absolute;
+  right: 0.65rem;
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+}
+
+.stx-login-toggle-pass:hover {
+  color: #6b7280;
+  background: #f3f4f6;
+}
+
+.stx-login-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: -0.25rem 0 1.15rem;
+}
+
+.stx-login-forgot {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #16a34a;
+  text-decoration: none;
+}
+
+.stx-login-forgot:hover {
+  text-decoration: underline;
+}
+
+.stx-login-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.stx-login-btn {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: filter 0.15s, opacity 0.15s;
+}
+
+.stx-login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.stx-login-btn--primary {
+  background: linear-gradient(180deg, #22c55e 0%, #15803d 100%);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(21, 128, 61, 0.22);
+}
+
+.stx-login-btn--primary:hover:not(:disabled) {
+  filter: brightness(1.04);
+}
+
+.stx-login-btn--ghost {
+  background: #fff;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.stx-login-btn--ghost:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.stx-login-status {
+  min-height: 1.25rem;
+  margin: 0.85rem 0 0;
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+.stx-login-status.is-error {
+  color: #b91c1c;
+}
+
+.stx-login-switch {
+  margin-top: 1.35rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.stx-login-switch button {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: #16a34a;
+  cursor: pointer;
+}
+
+.stx-login-switch button:hover {
+  text-decoration: underline;
+}
+
+.stx-login-page .stx-trust-footer {
+  margin-top: auto;
+}
+
+@media (max-width: 900px) {
+  .stx-login-grid {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .stx-login-promo {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .stx-login-promo-art {
+    display: none;
+  }
+
+  .stx-login-form-panel {
+    padding: 1.75rem 1.25rem 2rem;
+  }
+}

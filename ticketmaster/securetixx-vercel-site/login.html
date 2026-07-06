@@ -2,1416 +2,118 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <meta name="theme-color" content="#059669"/>
-  <title>SecureTixx · Sign in</title>
-  <link rel="icon" href="/favicon.ico?v=tm1" type="image/x-icon" sizes="any"/>
-  <link rel="shortcut icon" href="/favicon.ico?v=tm1" type="image/x-icon"/>
-  <link rel="preconnect" href="https://upload.wikimedia.org"/>
-  <link rel="dns-prefetch" href="https://upload.wikimedia.org"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#000a05"/>
+  <title>Sign in — SecureTixx</title>
+  <link rel="icon" href="/public/favicon-32.png" type="image/png" sizes="32x32"/>
+  <link rel="apple-touch-icon" href="/public/apple-touch-icon.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/public/securetixx-theme.css"/>
-  <style>
-    :root {
-      --tm-blue: #059669;
-      --tm-blue-mid: #34d399;
-      --tm-blue-dark: #047857;
-      --tm-blue-soft: rgba(5, 150, 105, 0.14);
-      --tm-navy: #02121f;
-      --tm-navy-panel: #061c2e;
-      --tm-navy-deep: #010a12;
-      --bg: #ffffff;
-      --tm-retail-black: #121212;
-      --tm-retail-bar: #000000;
-      --tm-page-gray: #f6f7f8;
-      --surface: #ffffff;
-      --border: #c5ced8;
-      --text: #121212;
-      --muted: #5c6570;
-      --accent: #059669;
-      --accent2: #059669;
-    }
-    * { box-sizing: border-box; }
-    body.tm-app-body {
-      margin: 0;
-      font-family: 'Sora', 'Inter', system-ui, sans-serif;
-      color: var(--text);
-      min-height: 100vh;
-      line-height: 1.45;
-      background-color: var(--bg);
-      display: flex;
-      flex-direction: column;
-    }
-    .topbar {
-      padding: 0;
-      background: var(--tm-blue);
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
-    }
-    .tm-util-bar {
-      background: var(--tm-retail-bar);
-      color: #fff;
-      font-size: 0.6875rem;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-    }
-    .tm-util-nav {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0.4rem 1rem;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 0.35rem 1rem;
-    }
-    .tm-util-nav a {
-      color: rgba(255, 255, 255, 0.92);
-      text-decoration: none;
-      white-space: nowrap;
-    }
-    .tm-util-nav a:hover { text-decoration: underline; color: #fff; }
-    .tm-main-nav {
-      background: var(--tm-blue);
-      color: #fff;
-      padding: 0 0 0.65rem;
-    }
-    .tm-main-nav-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0.65rem 1rem 0;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.5rem 0.75rem;
-    }
-    .tm-cat-nav {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 0.25rem 0.65rem;
-      flex: 1 1 auto;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-    .tm-cat-nav a {
-      color: #fff;
-      text-decoration: none;
-      white-space: nowrap;
-      padding: 0.2rem 0;
-    }
-    .tm-cat-nav a:hover { text-decoration: underline; opacity: 0.95; }
-    .tm-nav-user {
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-    .tm-nav-user a {
-      color: #fff;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-    }
-    .tm-nav-user a:hover { text-decoration: underline; }
-    .tm-nav-user svg { flex-shrink: 0; opacity: 0.95; }
-    .tm-context-line {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0.35rem 1rem 0;
-      font-size: 0.6875rem;
-      font-weight: 700;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.78);
-      text-align: center;
-    }
-    .topbar--simple { box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06); }
-    .tm-simple-bar {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0.7rem 1rem;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.5rem 1rem;
-    }
-    .tm-brand-lockup--simple { margin-bottom: 0; }
-    .tm-simple-context {
-      margin: 0;
-      font-size: 0.6875rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.88);
-    }
-    .tm-topbar-login-btn {
-      margin: 0;
-      padding: 0.4rem 1rem;
-      font-size: 0.6875rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #059669;
-      background: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    .tm-topbar-login-btn:hover { filter: brightness(0.97); }
-    .tm-topbar-account-slot {
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-    }
-    #tm-topbar-guest[hidden],
-    #tm-topbar-signed[hidden] {
-      display: none !important;
-    }
-    .tm-account-wrap {
-      position: relative;
-    }
-    .tm-topbar-account-trigger {
-      margin: 0;
-      padding: 0.35rem 0.65rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.6875rem;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: #fff;
-      background: rgba(255, 255, 255, 0.18);
-      border: 1px solid rgba(255, 255, 255, 0.35);
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    .tm-topbar-account-trigger:hover {
-      background: rgba(255, 255, 255, 0.28);
-    }
-    .tm-account-ico {
-      flex-shrink: 0;
-      opacity: 0.95;
-    }
-    .tm-topbar-account-label {
-      max-width: 120px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .tm-account-menu {
-      position: absolute;
-      right: 0;
-      top: calc(100% + 8px);
-      min-width: 260px;
-      max-width: min(320px, calc(100vw - 24px));
-      padding: 0;
-      background: #fff;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      box-shadow: 0 12px 40px rgba(2, 18, 31, 0.14), 0 2px 8px rgba(2, 18, 31, 0.06);
-      z-index: 50;
-      overflow: hidden;
-    }
-    .tm-account-menu-header {
-      padding: 0.875rem 1rem 0.7rem;
-      border-bottom: 1px solid #f1f5f9;
-    }
-    .tm-account-menu-email {
-      margin: 0;
-      font-size: 0.8125rem;
-      font-weight: 600;
-      color: var(--text);
-      line-height: 1.45;
-      word-break: break-word;
-    }
-    .tm-account-menu-body {
-      padding: 0.25rem 0 0.15rem;
-    }
-    .tm-account-menu-item {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      margin: 0;
-      padding: 0.7rem 1rem;
-      font-size: 0.875rem;
-      font-weight: 600;
-      text-align: left;
-      text-decoration: none;
-      color: var(--tm-blue);
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-      box-sizing: border-box;
-      transition: background-color 0.12s ease, color 0.12s ease;
-    }
-    .tm-account-menu-item:focus-visible {
-      outline: 2px solid var(--tm-blue);
-      outline-offset: -2px;
-    }
-    a.tm-account-menu-item:hover,
-    a.tm-account-menu-item:focus-visible {
-      background: rgba(2, 108, 223, 0.1);
-      color: #047857;
-    }
-    .tm-account-menu-hint {
-      margin: 0;
-      padding: 0.3rem 1rem 0.65rem;
-      font-size: 0.75rem;
-      color: var(--muted);
-      line-height: 1.45;
-    }
-    .tm-account-menu-sep {
-      height: 1px;
-      margin: 0;
-      background: #e8eaed;
-    }
-    .tm-account-menu-signout {
-      color: #b91c1c !important;
-      padding: 0.75rem 1rem;
-    }
-    .tm-account-menu-signout:focus-visible {
-      outline-color: #b91c1c;
-    }
-    .tm-account-menu-signout:hover,
-    .tm-account-menu-signout:focus-visible {
-      background: rgba(185, 28, 28, 0.09);
-      color: #991b1b !important;
-    }
-    .tm-viewer-empty-tickets {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 0.5rem 1rem 1.25rem;
-    }
-    .tm-viewer-empty-tickets p {
-      margin: 0;
-      font-size: 0.9rem;
-      color: var(--muted);
-      line-height: 1.45;
-    }
-    .tm-site-footer--simple {
-      padding: 1.1rem 1rem 1.5rem;
-      text-align: center;
-      border-top: 1px solid #e8eaed;
-    }
-    .tm-site-footer--simple .tm-footer-legal {
-      margin: 0;
-      font-size: 0.8125rem;
-      color: var(--muted);
-    }
-    .tm-site-footer--simple a {
-      color: var(--tm-blue);
-      font-weight: 700;
-      text-decoration: none;
-    }
-    .tm-site-footer--simple a:hover { text-decoration: underline; }
-    .tm-site-footer--simple .tm-footer-disclaimer {
-      margin: 0 auto 0.6rem;
-      max-width: 40rem;
-      padding: 0 0.75rem;
-      font-size: 0.6875rem;
-      line-height: 1.45;
-      color: #94a3b8;
-      font-weight: 400;
-    }
-    body.tm-shell-ticket-minimal {
-      background: #f4f4f4 !important;
-      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    }
-    body.tm-shell-ticket-minimal main {
-      max-width: 420px;
-      margin: 0 auto;
-      padding: 12px 14px 36px;
-      background: transparent;
-    }
-    body.tm-shell-ticket-minimal .tm-pass-card {
-      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    }
-    .tm-topbar-inner {
-      max-width: 430px;
-      margin: 0 auto;
-      padding: 0.85rem 1rem 0.95rem;
-      text-align: center;
-    }
-    .tm-brand-lockup {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-      margin-bottom: 0.35rem;
-    }
-    .tm-wordmark-img {
-      display: block;
-      height: 30px;
-      width: auto;
-      max-width: min(260px, 92vw);
-      object-fit: contain;
-      image-rendering: -webkit-optimize-contrast;
-    }
-    .tm-wordmark-img--light {
-      filter: brightness(0) invert(1);
-    }
-    .tm-brand-lockup:hover .tm-wordmark-img {
-      opacity: 0.88;
-    }
-    .tm-footer-wordmark {
-      height: 24px;
-      margin: 0 auto 0.35rem;
-    }
-    .tm-main-nav-inner .tm-brand-lockup { margin-bottom: 0; }
-    .topbar--tm h1 { display: none; }
-    .topbar p { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.9rem; }
-    .tm-site-footer {
-      margin-top: auto;
-      padding: 1.75rem 1.25rem 2rem;
-      text-align: center;
-      font-size: 0.8125rem;
-      color: var(--muted);
-      background: var(--tm-page-gray);
-      border-top: 1px solid #e8eaed;
-    }
-    .tm-site-footer-inner {
-      max-width: 720px;
-      margin: 0 auto;
-    }
-    .tm-footer-tagline {
-      margin: 0 0 0.65rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .tm-wordmark-img--footer {
-      filter: none;
-      height: 22px;
-      width: auto;
-    }
-    .tm-site-footer a {
-      color: var(--tm-blue);
-      font-weight: 700;
-      text-decoration: none;
-    }
-    .tm-site-footer a:hover { text-decoration: underline; color: var(--tm-blue-dark); }
-    .tm-footer-legal { margin: 0; line-height: 1.55; }
-    body.tm-page--home .demo-banner {
-      max-width: 960px;
-      margin-left: auto;
-      margin-right: auto;
-      margin-bottom: 0.5rem;
-    }
-    .demo-banner {
-      margin: 0 1.5rem 0;
-      padding: 0.65rem 1rem;
-      background: rgba(255, 180, 80, 0.12);
-      border: 1px solid rgba(255, 180, 80, 0.35);
-      border-radius: 8px;
-      color: #e8c48a;
-      font-size: 0.88rem;
-    }
-    main {
-      max-width: 430px;
-      margin: 0 auto;
-      padding: 1.25rem 1rem 2rem;
-      position: relative;
-      z-index: 1;
-    }
-    body.tm-page--home main {
-      max-width: none;
-      padding: 0;
-      width: 100%;
-    }
-    .barcode-panel { background: transparent !important; border: none !important; box-shadow: none !important; }
-    .tickets-only-panel { padding: 0 !important; }
-    .acct.acct--tickets-only {
-      background: transparent;
-      border: none;
-      border-radius: 0;
-      box-shadow: none;
-      margin-bottom: 0;
-      overflow: visible;
-    }
-    .acct {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      margin-bottom: 1.5rem;
-      overflow: hidden;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.35);
-    }
-    .acct-hd {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: flex-start;
-      gap: 0.75rem;
-      background: linear-gradient(105deg, rgba(79,140,255,0.08), transparent 40%);
-    }
-    .acct-hd-inner { flex: 1; min-width: 0; }
-    .acct-hd h2 {
-      margin: 0 0 0.35rem;
-      font-size: 1.15rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      word-break: break-word;
-      color: var(--text);
-    }
-    .chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.4rem; }
-    .chip {
-      font-size: 0.78rem;
-      padding: 0.2rem 0.55rem;
-      border-radius: 999px;
-      background: rgba(79, 140, 255, 0.2);
-      color: #b8d0ff;
-    }
-    .chip.dim { background: rgba(46, 230, 166, 0.12); color: var(--accent2); }
-    .credline { margin: 0 0 0.35rem; font-size: 0.82rem; }
-    .header-full {
-      margin: 0;
-      font-size: 0.68rem;
-      color: var(--muted);
-      word-break: break-all;
-      line-height: 1.35;
-    }
-    .mono { font-family: 'IBM Plex Mono', monospace; }
-    .badge {
-      flex-shrink: 0;
-      background: var(--accent);
-      color: #061018;
-      font-weight: 700;
-      font-size: 0.75rem;
-      padding: 0.2rem 0.5rem;
-      border-radius: 6px;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0;
-      border-bottom: 1px solid var(--border);
-    }
-    @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
-    .panel {
-      padding: 1rem 1.25rem;
-      border-right: 1px solid var(--border);
-    }
-    .panel:last-of-type { border-right: none; }
-    .panel.full { border-right: none; border-top: 1px solid var(--border); }
-    .panel h3 {
-      margin: 0 0 0.65rem;
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--accent2);
-      font-weight: 600;
-    }
-    .evlist {
-      margin: 0;
-      padding-left: 1.1rem;
-      color: var(--text);
-      font-size: 0.88rem;
-    }
-    .evlist li { margin-bottom: 0.45rem; }
-    .evlist.past { opacity: 0.85; }
-    .muted { color: var(--muted); font-size: 0.88rem; margin: 0; }
-    .cards {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.82rem;
-      background: #0a0c10;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-    .tm-ticket-carousel {
-      position: relative;
-      max-width: 400px;
-      margin: 0 auto 1.5rem;
-    }
-    .tm-carousel-viewport {
-      overflow: hidden;
-      width: 100%;
-    }
-    .tm-carousel-track {
-      display: flex;
-      transition: transform 0.38s cubic-bezier(0.25, 0.1, 0.25, 1);
-    }
-    .tm-carousel-slide {
-      flex: 0 0 100%;
-      width: 100%;
-      min-width: 0;
-    }
-    .tm-carousel-slide .tm-pass-card {
-      margin: 0;
-    }
-    .tm-carousel-arrow {
-      position: absolute;
-      top: 42%;
-      transform: translateY(-50%);
-      z-index: 8;
-      width: 38px;
-      height: 38px;
-      padding: 0;
-      border: 1.5px solid var(--tm-blue-soft);
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.97);
-      color: var(--tm-blue);
-      font-size: 1.45rem;
-      font-weight: 300;
-      line-height: 1;
-      cursor: pointer;
-      box-shadow: 0 2px 14px rgba(2, 108, 223, 0.12);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .tm-carousel-arrow:hover {
-      background: #fff;
-      border-color: rgba(2, 108, 223, 0.35);
-    }
-    .tm-carousel-arrow:disabled {
-      opacity: 0.28;
-      cursor: default;
-      pointer-events: none;
-    }
-    .tm-carousel-prev { left: 4px; }
-    .tm-carousel-next { right: 4px; }
-    .tm-ticket-carousel--single .tm-carousel-arrow,
-    .tm-ticket-carousel--single .tm-carousel-dots {
-      display: none;
-    }
-    .tm-carousel-dots {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 12px;
-    }
-    .tm-carousel-dot {
-      width: 7px;
-      height: 7px;
-      padding: 0;
-      border: none;
-      border-radius: 50%;
-      background: #cbd5e1;
-      cursor: pointer;
-    }
-    .tm-carousel-dot.is-active {
-      background: var(--tm-blue);
-      transform: scale(1.2);
-    }
-    .tm-pass-card {
-      max-width: 400px;
-      margin: 0 auto;
-      background: #fff;
-      color: #000;
-      border-radius: 14px;
-      overflow: hidden;
-      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
-      border: 1px solid rgba(0, 0, 0, 0.06);
-      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    }
-    .tm-pass-rail {
-      height: 3px;
-      background: #059669;
-      flex-shrink: 0;
-    }
-    .tm-pass-warn {
-      font-size: 0.78rem;
-      color: #9a3412;
-      background: #fff7ed;
-      padding: 8px 12px;
-      margin: 0 12px 0;
-      border-radius: 8px;
-      text-align: center;
-      border: 1px solid #fed7aa;
-    }
-    .tm-pass-head {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 14px 16px 12px;
-      background: #fff;
-      border-bottom: 1px solid #eee;
-    }
-    .tm-pass-menu {
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      color: #000;
-      width: 40px;
-      height: 40px;
-      padding: 0;
-      margin: -4px 0 0 -6px;
-      line-height: 1;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      text-decoration: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    a.tm-pass-menu { color: #000; }
-    .tm-pass-menu:hover { background: rgba(2, 108, 223, 0.08); color: #059669; }
-    .tm-pass-menu-ico { display: block; }
-    .tm-pass-head-text { flex: 1; min-width: 0; padding-top: 2px; }
-    .tm-pass-title {
-      margin: 0;
-      font-size: 0.9375rem;
-      font-weight: 800;
-      letter-spacing: 0.02em;
-      line-height: 1.2;
-      word-break: break-word;
-      text-transform: uppercase;
-      color: #000;
-    }
-    .tm-pass-sub {
-      margin: 6px 0 0;
-      font-size: 0.8125rem;
-      font-weight: 400;
-      color: #666;
-      line-height: 1.4;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-    .tm-pass-visual { position: relative; }
-    .tm-pass-hero {
-      position: relative;
-      height: 308px;
-      min-height: 308px;
-      max-height: 308px;
-    }
-    .tm-pass-hero-bg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 30%;
-    }
-    .tm-pass-hero--grad {
-      background: linear-gradient(165deg, hsl(var(--tm-hue) 52% 34%) 0%, hsl(var(--tm-hue) 44% 14%) 100%);
-      height: 308px;
-      min-height: 308px;
-      max-height: 308px;
-    }
-    .tm-pass-hero-shade {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.22) 55%, rgba(0,0,0,0.45) 100%);
-      pointer-events: none;
-      z-index: 1;
-    }
-    .tm-pass-bar-sheet {
-      position: absolute;
-      left: 12px;
-      right: 12px;
-      bottom: 12px;
-      z-index: 3;
-      padding: 12px 12px 10px;
-      background: #eceeef;
-      border-radius: 10px;
-      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 14px rgba(0, 0, 0, 0.12);
-      border: 1px solid rgba(0, 0, 0, 0.05);
-    }
-    .tm-pass-screen-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      flex-wrap: wrap;
-      font-size: 0.625rem;
-      font-weight: 700;
-      color: #000;
-      margin-bottom: 8px;
-      letter-spacing: 0.02em;
-    }
-    .tm-pass-phone-ico {
-      flex-shrink: 0;
-      color: #059669;
-      opacity: 0.9;
-    }
-    .tm-pass-refresh {
-      font-size: 0.95rem;
-      opacity: 0.4;
-      animation: tm-pass-spin 4s linear infinite;
-    }
-    @keyframes tm-pass-spin { to { transform: rotate(360deg); } }
-    .tm-pass-bc {
-      position: relative;
-      display: block;
-      margin: 0 auto;
-      max-width: 100%;
-      isolation: isolate;
-    }
-    .tm-pass-card .tm-pass-bc.barcode-frame {
-      background: #fff;
-      border: 1px solid rgba(0, 0, 0, 0.06);
-      padding: 10px 12px 8px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
-      border-radius: 8px;
-      margin-top: 2px;
-    }
-    .tm-pass-card .barcode-frame canvas.safetix-canvas {
-      position: relative;
-      z-index: 1;
-    }
-    @keyframes tm-pass-scan {
-      0%, 100% { left: 8%; opacity: 0.52; }
-      50% { left: 92%; opacity: 1; }
-    }
-    .tm-scan-line,
-    .tm-scan-glow {
-      position: absolute;
-      top: 2px;
-      bottom: 2px;
-      left: 15%;
-      pointer-events: none;
-      animation: tm-pass-scan 2.5s cubic-bezier(0.42, 0, 0.58, 1) infinite;
-    }
-    .tm-scan-glow {
-      width: 14px;
-      margin-left: -7px;
-      z-index: 4;
-      border-radius: 4px;
-      transform: translateX(5px);
-      background: linear-gradient(
-        90deg,
-        rgba(2, 108, 223, 0.06) 0%,
-        rgba(2, 108, 223, 0.2) 35%,
-        rgba(2, 108, 223, 0.48) 55%,
-        rgba(2, 108, 223, 0.25) 72%,
-        transparent 100%
-      );
-      filter: blur(2px);
-      opacity: 0.92;
-    }
-    .tm-scan-line {
-      width: 4px;
-      margin-left: -2px;
-      z-index: 5;
-      border-radius: 2px;
-      background: linear-gradient(
-        180deg,
-        rgba(2, 108, 223, 0) 0%,
-        var(--tm-blue) 18%,
-        var(--tm-blue-mid) 50%,
-        var(--tm-blue) 82%,
-        rgba(2, 108, 223, 0) 100%
-      );
-      box-shadow:
-        0 0 5px 1px rgba(2, 108, 223, 0.4),
-        0 0 10px 3px rgba(2, 108, 223, 0.22);
-    }
-    .tm-pass-status {
-      text-align: center;
-      font-size: 0.625rem !important;
-      color: #666 !important;
-      margin: 8px 0 0 !important;
-      line-height: 1.35 !important;
-    }
-    .tm-pass-body { background: #fff; padding: 18px 16px 20px; }
-    .tm-pass-type-block { text-align: center; margin-bottom: 16px; }
-    .tm-pass-kind {
-      display: block;
-      font-size: 1rem;
-      font-weight: 800;
-      color: #000;
-      letter-spacing: -0.01em;
-    }
-    .tm-pass-verified-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      margin-top: 8px;
-    }
-    .tm-pass-verified-txt {
-      font-size: 0.8125rem;
-      font-weight: 600;
-      color: #059669;
-    }
-    .tm-pass-type-detail {
-      display: block;
-      font-size: 0.75rem;
-      color: #666;
-      margin-top: 6px;
-      font-weight: 400;
-    }
-    .tm-pass-type-block .tm-pass-type-sub {
-      display: block;
-      font-size: 0.8125rem;
-      color: var(--muted);
-      margin-top: 6px;
-      font-weight: 500;
-    }
-    .tm-pass-type-secondary {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    .tm-pass-type-sub--verified {
-      color: var(--tm-blue);
-      font-weight: 600;
-      margin-top: 0;
-    }
-    .tm-verified-check {
-      flex-shrink: 0;
-      display: block;
-    }
-    .tm-pass-seats {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 10px 8px;
-      text-align: center;
-      margin-bottom: 16px;
-      padding: 0 2px;
-    }
-    .tm-pass-lbl {
-      display: block;
-      font-size: 0.5625rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      color: #888;
-      margin-bottom: 5px;
-    }
-    .tm-pass-seats b {
-      font-size: 1.2rem;
-      font-weight: 800;
-      color: #000;
-      letter-spacing: -0.02em;
-    }
-    .tm-pass-gate {
-      display: block;
-      width: 100%;
-      box-sizing: border-box;
-      background: #000;
-      color: #fff;
-      text-align: center;
-      font-size: 0.6875rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      padding: 14px 20px;
-      border-radius: 10px;
-      margin-bottom: 14px;
-      border: none;
-      box-shadow: none;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .tm-pass-actions { display: flex; gap: 10px; align-items: stretch; }
-    .tm-pass-btn {
-      flex: 1;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 12px 10px;
-      font-size: 0.6875rem;
-      font-weight: 700;
-      border-radius: 10px;
-      text-decoration: none;
-      cursor: pointer;
-      border: none;
-      text-align: center;
-      line-height: 1.25;
-      font-family: inherit;
-      letter-spacing: 0.02em;
-    }
-    .tm-pass-wallet { background: #000; color: #fff !important; }
-    .tm-pass-wallet--badge {
-      flex: 1.35;
-      justify-content: flex-start;
-      padding: 10px 12px 10px 10px;
-      gap: 10px;
-      border-radius: 10px;
-      min-height: 46px;
-    }
-    .tm-pass-wallet-badge-ico {
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .tm-pass-wallet-badge-svg {
-      display: block;
-      width: 40px;
-      height: 28px;
-    }
-    .tm-pass-wallet-badge-text {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      justify-content: center;
-      text-align: left;
-      line-height: 1.12;
-    }
-    .tm-pass-wallet-l1 {
-      font-size: 0.65rem;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-      opacity: 0.92;
-    }
-    .tm-pass-wallet-l2 {
-      font-size: 0.78rem;
-      font-weight: 700;
-      letter-spacing: 0.01em;
-    }
-    .tm-pass-btn--disabled:not(.tm-pass-wallet--badge) {
-      background: #cbd5e1;
-      color: #f8fafc !important;
-      cursor: not-allowed;
-    }
-    .tm-pass-btn--disabled.tm-pass-wallet--badge {
-      background: #94a3b8;
-      color: #f8fafc !important;
-      cursor: not-allowed;
-    }
-    .tm-pass-btn--disabled .tm-pass-wallet-badge-svg {
-      opacity: 0.75;
-    }
-    .tm-pass-info {
-      background: #fff;
-      color: #059669 !important;
-      border: 1.5px solid #059669;
-      box-shadow: none;
-    }
-    a.tm-pass-info:hover {
-      border-color: #047857;
-      background: rgba(2, 108, 223, 0.06);
-      color: #047857 !important;
-    }
-    .tm-pass-btn--ghost { background: #f8fafc; color: #94a3b8 !important; cursor: default; border: 1.5px solid #e2e8f0; }
-    .tm-pass-info-ico {
-      width: 17px;
-      height: 17px;
-      border-radius: 50%;
-      border: 2px solid currentColor;
-      font-size: 0.62rem;
-      font-weight: 800;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      line-height: 1;
-    }
-    a.tm-pass-info .tm-pass-info-ico {
-      border-color: #059669;
-      color: #059669;
-    }
-    .barcode-frame {
-      display: inline-block;
-      background: #fff;
-      padding: 14px 18px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      max-width: 100%;
-    }
-    .barcode-frame img {
-      display: block;
-      max-width: min(100%, 520px);
-      height: auto;
-    }
-    .barcode-frame canvas.safetix-canvas {
-      display: block;
-      max-width: 100%;
-      height: auto;
-    }
-    .safetix-slot { margin-bottom: 0; }
-    .bc-label {
-      margin: 0 0 0.45rem;
-      font-size: 0.84rem;
-      font-weight: 600;
-      color: #b8f5e0;
-      line-height: 1.35;
-    }
-    .barcode-warn {
-      font-size: 0.85rem;
-      color: #ffb86c;
-      margin: 0 0 0.75rem;
-    }
-    code.tiny { font-size: 0.65rem; word-break: break-all; }
-    p.small { font-size: 0.78rem; margin: 0.5rem 0 0; }
-    pre.cookies {
-      margin: 0;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.68rem;
-      line-height: 1.35;
-      background: #07080c;
-      color: #c5d4ea;
-      padding: 1rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      overflow-x: auto;
-      white-space: pre-wrap;
-      word-break: break-all;
-      max-height: 420px;
-      overflow-y: auto;
-    }
-    details.raw {
-      border-top: 1px solid var(--border);
-      padding: 0.75rem 1.25rem;
-      font-size: 0.8rem;
-    }
-    details.raw summary {
-      cursor: pointer;
-      color: var(--muted);
-      user-select: none;
-    }
-    details.raw pre {
-      margin-top: 0.75rem;
-      font-size: 0.65rem;
-      white-space: pre-wrap;
-      word-break: break-all;
-      color: var(--muted);
-    }
-    .tm-home-wrap.tm-home-retail {
-      width: 100%;
-      padding-bottom: 2.5rem;
-    }
-    .tm-retail-hero {
-      position: relative;
-      min-height: 260px;
-      background: linear-gradient(125deg, #047857 0%, var(--tm-blue) 45%, #2088e8 100%);
-    }
-    .tm-retail-hero-img {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 28%;
-    }
-    .tm-retail-hero-overlay {
-      position: relative;
-      z-index: 1;
-      min-height: 260px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      align-items: flex-start;
-      padding: 1.5rem 1.25rem 2rem;
-      max-width: 1200px;
-      margin: 0 auto;
-      background: linear-gradient(180deg, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.55) 100%);
-      box-sizing: border-box;
-    }
-    .tm-retail-kicker {
-      margin: 0 0 0.4rem;
-      font-size: 0.625rem;
-      font-weight: 700;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.92);
-    }
-    .tm-retail-hero h1 {
-      margin: 0 0 0.5rem;
-      font-size: clamp(1.28rem, 4.2vw, 1.85rem);
-      font-weight: 800;
-      line-height: 1.12;
-      color: #fff;
-      max-width: 20ch;
-    }
-    .tm-retail-sub {
-      margin: 0 0 1rem;
-      font-size: 0.875rem;
-      line-height: 1.45;
-      color: rgba(255, 255, 255, 0.94);
-      max-width: 36ch;
-    }
-    .tm-retail-cta {
-      display: inline-block;
-      padding: 0.55rem 1.35rem;
-      border-radius: 4px;
-      background: var(--tm-blue);
-      color: #fff !important;
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 0.8125rem;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    }
-    .tm-retail-cta:hover { filter: brightness(1.07); }
-    .tm-search-strip-wrap {
-      max-width: 960px;
-      margin: -1.25rem auto 0;
-      padding: 0 1rem 1.75rem;
-      position: relative;
-      z-index: 3;
-    }
-    .tm-search-strip {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: stretch;
-      background: #fff;
-      border-radius: 6px;
-      box-shadow: 0 6px 28px rgba(0, 0, 0, 0.14);
-      border: 1px solid #e5e7eb;
-      overflow: hidden;
-    }
-    .tm-search-seg {
-      flex: 1 1 120px;
-      padding: 11px 14px 13px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      border-right: 1px solid #e8eaed;
-      min-width: 0;
-    }
-    .tm-search-seg--grow { flex: 2 1 180px; }
-    .tm-sico {
-      width: 18px;
-      height: 18px;
-      color: var(--tm-blue);
-      flex-shrink: 0;
-    }
-    .tm-slab {
-      font-size: 0.5625rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #6b7280;
-    }
-    .tm-sval {
-      font-size: 0.8125rem;
-      font-weight: 500;
-      color: #9ca3af;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .tm-search-go {
-      flex: 0 0 auto;
-      align-self: stretch;
-      width: 52px;
-      padding: 0;
-      border: none;
-      background: var(--tm-blue);
-      color: #fff;
-      font-family: inherit;
-      font-weight: 700;
-      font-size: 0.8125rem;
-      cursor: default;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .tm-search-go-ico {
-      width: 22px;
-      height: 22px;
-    }
-    .tm-sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-    .tm-ticket-list-section {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 0.5rem 1rem 0;
-    }
-    .tm-email-gate {
-      margin-bottom: 1.25rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid #e8eaed;
-    }
-    .tm-email-hint {
-      font-size: 0.875rem;
-      color: var(--muted);
-      margin: 0 0 0.65rem;
-      line-height: 1.4;
-    }
-    .tm-email-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .tm-email-row input {
-      flex: 1 1 220px;
-      min-width: 0;
-      padding: 0.55rem 0.75rem;
-      border: 1px solid #d1d5db;
-      border-radius: 4px;
-      font-size: 0.9rem;
-      font-family: inherit;
-    }
-    .tm-email-row button {
-      padding: 0.55rem 1.1rem;
-      background: var(--tm-blue);
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      font-weight: 700;
-      font-size: 0.8125rem;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    .tm-email-row button:hover { filter: brightness(1.06); }
-    .tm-otp-row { margin-top: 0.65rem; }
-    .tm-login-gate-section .tm-login-gate-lead {
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--text);
-      margin: 0 0 0.65rem;
-      line-height: 1.45;
-    }
-    .tm-login-gate-hint {
-      margin-bottom: 1.1rem;
-    }
-    .tm-login-gate-actions {
-      margin: 0;
-    }
-    .tm-login-gate-cta {
-      display: inline-block;
-      padding: 0.75rem 1.5rem;
-      background: var(--tm-blue);
-      color: #fff !important;
-      font-weight: 800;
-      font-size: 0.875rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      text-decoration: none;
-      border-radius: 4px;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-      box-shadow: 0 2px 10px rgba(2, 108, 223, 0.35);
-    }
-    .tm-login-gate-cta:hover { filter: brightness(1.06); color: #fff !important; }
-    /* display:flex on these classes wins over the [hidden] attribute otherwise */
-    .tm-logged-in-bar[hidden],
-    #tm-otp-row[hidden],
-    #tm-home-login-teaser[hidden] {
-      display: none !important;
-    }
-    .tm-ticket-load-err {
-      color: #b91c1c;
-      font-size: 0.85rem;
-      margin: 0.6rem 0 0;
-    }
-    .tm-muted-inline {
-      margin: 0;
-      font-size: 0.875rem;
-      color: var(--muted);
-    }
-    .tm-ticket-tile--loaded {
-      animation: tm-tile-in 0.35s ease both;
-    }
-    @keyframes tm-tile-in {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .tm-section-heading {
-      margin: 0 0 1rem;
-      font-size: 1.125rem;
-      font-weight: 800;
-      color: var(--text);
-      letter-spacing: -0.02em;
-    }
-    .tm-ticket-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 0.85rem;
-    }
-    .tm-ticket-tile {
-      display: block;
-      padding: 1rem 1.15rem;
-      border-radius: 6px;
-      background: #fff;
-      color: var(--text);
-      text-decoration: none;
-      border: 1px solid #e8eaed;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    .tm-ticket-tile:hover {
-      border-color: rgba(2, 108, 223, 0.45);
-      box-shadow: 0 6px 20px rgba(2, 108, 223, 0.12);
-    }
-    .tm-tile-ev {
-      font-weight: 800;
-      font-size: 0.92rem;
-      line-height: 1.3;
-      margin-bottom: 0.35rem;
-      text-transform: uppercase;
-      letter-spacing: 0.02em;
-    }
-    .tm-tile-meta {
-      font-size: 0.78rem;
-      color: var(--muted);
-      margin-bottom: 0.4rem;
-    }
-    .tm-tile-seat {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: #334155;
-    }
-    .tm-tile-cta {
-      display: inline-block;
-      margin-top: 0.65rem;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--tm-blue);
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-    .tm-pass-pager {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem 1rem;
-      margin: 1rem auto 0;
-      max-width: 420px;
-      padding: 0 0.5rem;
-      font-size: 0.82rem;
-    }
-    .tm-pass-pager__a {
-      color: var(--tm-blue);
-      text-decoration: none;
-      font-weight: 600;
-    }
-    .tm-pass-pager__a:hover { text-decoration: underline; }
-    .tm-pass-pager__home { color: #64748b; font-weight: 700; }
-    .tm-pass-pager--disabled {
-      color: #94a3b8;
-      cursor: default;
-      user-select: none;
-    }
-  </style>
+  <link rel="stylesheet" href="/public/securetixx-shop-v2.css?v=7"/>
+  <link rel="stylesheet" href="/public/securetixx-login.css?v=1"/>
 </head>
-<header class="stx-header" role="banner"><div class="stx-header-inner"><a class="stx-logo" href="/"><img src="/public/securetixx-logo-header.svg" alt="SecureTixx" height="34"/></a><nav class="stx-nav"><a href="/">Home</a><a href="/shop.html">Marketplace</a></nav></div></header>
-<body class="tm-app-body stx-app stx-login tm-shell-retail-simple tm-page--login">
-  <header class="topbar topbar--tm topbar--simple" role="banner"><div class="tm-simple-bar"><a class="tm-brand-lockup tm-brand-lockup--simple tixx-brand" href="/" aria-label="SecureTixx home"><img class="tixx-logo tixx-logo--on-dark" src="/public/securetixx-logo-header.svg" alt="SecureTixx" width="100" height="32" style="height:32px;width:auto;display:block"/></a><div id="tm-topbar-guest" class="tm-topbar-account-slot"><button type="button" class="tm-topbar-login-btn" id="tm-topbar-login">Log in</button></div><div id="tm-topbar-signed" class="tm-topbar-account-slot" hidden><div class="tm-account-wrap"><button type="button" class="tm-topbar-account-trigger" id="tm-topbar-account-btn" aria-expanded="false" aria-haspopup="true"><svg class="tm-account-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/></svg><span id="tm-topbar-account-label" class="tm-topbar-account-label">Account</span></button><div id="tm-account-menu" class="tm-account-menu" hidden role="menu"><div class="tm-account-menu-header"><p class="tm-account-menu-email" id="tm-account-menu-email"></p></div><div class="tm-account-menu-body"><a href="/my-tickets" class="tm-account-menu-item" id="tm-menu-my-tickets" role="menuitem">My tickets</a><p class="tm-account-menu-hint">More settings soon.</p></div><div class="tm-account-menu-sep" aria-hidden="true"></div><button type="button" class="tm-account-menu-item tm-account-menu-signout" id="tm-menu-sign-out" role="menuitem">Sign out</button></div></div></div></div></header>
+<body class="stx-app stx-shop-v2 stx-login-page">
+<header class="stx-header stx-header--mock" role="banner"><div class="stx-header-inner"><a class="stx-brand-lockup" href="/" aria-label="SecureTixx home"><span class="stx-brand-mark" aria-hidden="true"><svg viewBox="0 0 120 140" fill="none"><defs><linearGradient id="stxBrandShieldGrad" x1="24" y1="16" x2="96" y2="124" gradientUnits="userSpaceOnUse"><stop stop-color="#efffb8"/><stop offset="0.42" stop-color="#c6ff00"/><stop offset="1" stop-color="#3f6212"/></linearGradient></defs><path d="M60 10 104 28.5V72.5C104 101.5 86.5 122 60 132 33.5 122 16 101.5 16 72.5V28.5L60 10Z" fill="url(#stxBrandShieldGrad)" stroke="#d4ff4d" stroke-width="2.5"/><text x="60" y="88" text-anchor="middle" fill="#052e16" font-size="52" font-weight="800" font-family="Outfit,sans-serif">S</text></svg></span><span class="stx-brand-name">SecureTixx</span></a><nav class="stx-nav stx-nav--center" aria-label="Primary"><a href="/">Home</a><a href="/shop.html">Events</a><a href="/help.html">Help</a></nav><div class="stx-header-actions"></div></div></header>
 
-  <main>
-    <div class="tm-login-page-inner" style="max-width:640px;margin:0 auto;padding:1.5rem 1rem 2.5rem"><section class="tm-ticket-list-section tm-login-gate-section" aria-label="Sign in"><h2 class="tm-section-heading">Sign in</h2><p class="tm-login-gate-lead">Enter the email on your ticket order. We will send a one-time code to that address.</p><div id="tm-viewer-auth" class="tm-email-gate"><div class="tm-email-row"><input type="email" id="tm-viewer-email" name="email" autocomplete="email" placeholder="Email address" /><button type="button" id="tm-viewer-send-otp">Send code</button></div><div id="tm-otp-row" class="tm-otp-row" hidden><div class="tm-email-row"><input type="text" id="tm-viewer-otp" inputmode="numeric" pattern="[0-9]*" maxlength="12" autocomplete="one-time-code" placeholder="6-digit code" /><button type="button" id="tm-viewer-verify-otp">Verify</button></div></div><p id="tm-viewer-auth-status" class="tm-email-hint" role="status" style="margin-top:0.75rem"></p><p class="tm-muted-inline" style="margin-top:1rem"><a href="/">Back to home</a></p></div></section></div><script src="/tm_viewer_api_base.js"></script>
+<main class="stx-login-shell">
+  <div class="stx-login-grid">
+    <aside class="stx-login-promo" aria-hidden="false">
+      <div class="stx-login-promo-mesh" aria-hidden="true"></div>
+      <div class="stx-login-promo-inner">
+        <span class="stx-login-promo-mark" aria-hidden="true"><svg viewBox="0 0 120 140" fill="none"><defs><linearGradient id="stxLoginShieldGrad" x1="24" y1="16" x2="96" y2="124" gradientUnits="userSpaceOnUse"><stop stop-color="#efffb8"/><stop offset="0.42" stop-color="#c6ff00"/><stop offset="1" stop-color="#3f6212"/></linearGradient></defs><path d="M60 10 104 28.5V72.5C104 101.5 86.5 122 60 132 33.5 122 16 101.5 16 72.5V28.5L60 10Z" fill="url(#stxLoginShieldGrad)" stroke="#d4ff4d" stroke-width="2.5"/><text x="60" y="88" text-anchor="middle" fill="#052e16" font-size="52" font-weight="800" font-family="Outfit,sans-serif">S</text></svg></span>
+        <h1>Verified tickets.<br><em>Total peace of mind.</em></h1>
+        <p class="stx-login-promo-lead">Buy, sell, and transfer tickets with confidence. Every ticket is verified for authenticity and delivered instantly.</p>
+        <ul class="stx-login-promo-list">
+          <li><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-.5-8-5-8-10V6l8-4Z" stroke="currentColor" stroke-width="2"/></svg><div><strong>100% Verified</strong><span>Every ticket is checked for authenticity.</span></div></li>
+          <li><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg><div><strong>Secure &amp; Private</strong><span>Your data is encrypted and protected.</span></div></li>
+          <li><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><div><strong>Instant Delivery</strong><span>Get your tickets in seconds, every time.</span></div></li>
+        </ul>
+        <div class="stx-login-promo-art" aria-hidden="true">
+          <div class="stx-login-promo-scene">
+            <div class="stx-login-promo-scene-glow"></div>
+            <svg class="stx-login-promo-scene-shield" viewBox="0 0 120 140" fill="none"><defs><linearGradient id="stxLoginShieldGrad2" x1="24" y1="16" x2="96" y2="124" gradientUnits="userSpaceOnUse"><stop stop-color="#efffb8"/><stop offset="0.42" stop-color="#c6ff00"/><stop offset="1" stop-color="#3f6212"/></linearGradient></defs><path d="M60 10 104 28.5V72.5C104 101.5 86.5 122 60 132 33.5 122 16 101.5 16 72.5V28.5L60 10Z" fill="url(#stxLoginShieldGrad2)" stroke="#d4ff4d" stroke-width="2.5"/><text x="60" y="88" text-anchor="middle" fill="#052e16" font-size="52" font-weight="800" font-family="Outfit,sans-serif">S</text></svg>
+            <div class="stx-login-promo-scene-ring"></div>
+          </div>
+        </div>
+        <p class="stx-login-promo-foot">Trusted by 250K+ users worldwide</p>
+      </div>
+    </aside>
+
+    <section class="stx-login-form-panel" aria-label="Sign in">
+      <div class="stx-login-form-head">
+        <h2 id="stx-auth-title">Welcome back</h2>
+        <p id="stx-auth-sub">Sign in to your SecureTixx account</p>
+      </div>
+
+      <form id="stx-auth-form" novalidate>
+        <div class="stx-login-field">
+          <label for="tm-viewer-email">Email address</label>
+          <div class="stx-login-input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/></svg>
+            <input type="email" id="tm-viewer-email" name="email" autocomplete="email" placeholder="Enter your email" required/>
+          </div>
+        </div>
+
+        <div class="stx-login-field">
+          <label for="stx-login-password">Password</label>
+          <div class="stx-login-input-wrap stx-login-input-wrap--pass">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg>
+            <input type="password" id="stx-login-password" name="password" autocomplete="current-password" placeholder="Enter your password"/>
+            <button type="button" class="stx-login-toggle-pass" id="stx-toggle-pass" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg></button>
+          </div>
+        </div>
+
+        <div class="stx-login-field">
+          <label for="tm-viewer-otp">Sign-in code</label>
+          <div class="stx-login-input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 4 7v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V7l-8-4Z" stroke="currentColor" stroke-width="2"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <input type="text" id="tm-viewer-otp" name="code" inputmode="numeric" pattern="[0-9]*" maxlength="12" autocomplete="one-time-code" placeholder="Enter 6-digit code from email"/>
+          </div>
+        </div>
+
+        <div class="stx-login-row-actions">
+          <span></span>
+          <a class="stx-login-forgot" href="mailto:support@securetixx.com?subject=Password%20help">Forgot password?</a>
+        </div>
+
+        <div class="stx-login-actions">
+          <button type="button" class="stx-login-btn stx-login-btn--primary" id="tm-viewer-verify-otp">Sign in</button>
+          <button type="button" class="stx-login-btn stx-login-btn--ghost" id="tm-viewer-send-otp">Send sign-in code</button>
+        </div>
+      </form>
+
+      <p id="tm-viewer-auth-status" class="stx-login-status" role="status"></p>
+
+      <p class="stx-login-switch">
+        <span id="stx-auth-switch-label">Don&apos;t have an account?</span>
+        <button type="button" id="stx-auth-mode-toggle">Create one</button>
+      </p>
+    </section>
+  </div>
+</main>
+
+<footer class="stx-trust-footer" role="contentinfo">
+  <div class="stx-trust-footer-grid">
+    <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-.5-8-5-8-10V6l8-4Z" stroke="currentColor" stroke-width="2"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><div><strong>Buyer Guarantee</strong><span>Get a full refund if your event is canceled.</span></div></div>
+    <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/></svg><div><strong>Secure Payments</strong><span>Your payment information is encrypted.</span></div></div>
+    <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><div><strong>Instant Transfer</strong><span>Tickets sent to you in seconds.</span></div></div>
+    <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><div><strong>24/7 Support</strong><span>We&apos;re here whenever you need us.</span></div></div>
+  </div>
+</footer>
+
+<script src="/tm_viewer_api_base.js"></script>
+<script src="/public/tixx-public.js"></script>
 <script>
 (function () {
   var TOKEN_KEY = 'tm_viewer_session_token';
   var EMAIL_KEY = 'tm_viewer_session_email';
+  var SAVE_EMAIL_KEY = 'stx_login_email';
+  var SAVE_PASS_KEY = 'stx_login_password';
+  var SAVE_CODE_KEY = 'stx_login_code';
+  var ACCOUNTS_KEY = 'stx_accounts';
+
   function authStore() {
     try {
       var z = '__tm_vs';
@@ -1423,26 +125,7 @@
     }
   }
   var AUTH = authStore();
-  function migrateLegacyViewerSession() {
-    if (AUTH !== localStorage) return;
-    try {
-      var t = sessionStorage.getItem(TOKEN_KEY);
-      var em0 = sessionStorage.getItem(EMAIL_KEY);
-      if (t) {
-        try {
-          localStorage.setItem(TOKEN_KEY, t);
-          sessionStorage.removeItem(TOKEN_KEY);
-        } catch (eL) {}
-      }
-      if (em0) {
-        try {
-          localStorage.setItem(EMAIL_KEY, em0);
-          sessionStorage.removeItem(EMAIL_KEY);
-        } catch (eM) {}
-      }
-    } catch (e2) {}
-  }
-  migrateLegacyViewerSession();
+
   function authGet(k) {
     if (!AUTH) return null;
     try { return AUTH.getItem(k); } catch (e) { return null; }
@@ -1454,36 +137,72 @@
       else AUTH.setItem(k, v);
     } catch (e) {}
   }
-  function authClearViewer() {
-    [TOKEN_KEY, EMAIL_KEY].forEach(function (key) {
-      try { localStorage.removeItem(key); } catch (e0) {}
-      try { sessionStorage.removeItem(key); } catch (e1) {}
-    });
-  }
-  var AFTER_LOGIN_URL = '/my-tickets';
+
   try {
-    var _tRedir = authGet(TOKEN_KEY);
-    if (_tRedir && String(_tRedir).trim()) {
-      window.location.replace(AFTER_LOGIN_URL);
+    if (authGet(TOKEN_KEY)) {
+      window.location.replace('/my-tickets');
       return;
     }
   } catch (eRedir) {}
+
+  var mode = 'signin';
+  var emailIn = document.getElementById('tm-viewer-email');
+  var passIn = document.getElementById('stx-login-password');
+  var codeIn = document.getElementById('tm-viewer-otp');
+  var btnSend = document.getElementById('tm-viewer-send-otp');
+  var btnVerify = document.getElementById('tm-viewer-verify-otp');
+  var statusEl = document.getElementById('tm-viewer-auth-status');
+  var titleEl = document.getElementById('stx-auth-title');
+  var subEl = document.getElementById('stx-auth-sub');
+  var switchLabel = document.getElementById('stx-auth-switch-label');
+  var modeToggle = document.getElementById('stx-auth-mode-toggle');
+  var togglePass = document.getElementById('stx-toggle-pass');
+
+  function loadAccounts() {
+    try {
+      var raw = authGet(ACCOUNTS_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveAccounts(map) {
+    try { authSet(ACCOUNTS_KEY, JSON.stringify(map || {})); } catch (e) {}
+  }
+
+  function persistFields() {
+    authSet(SAVE_EMAIL_KEY, ((emailIn && emailIn.value) || '').trim().toLowerCase());
+    authSet(SAVE_PASS_KEY, (passIn && passIn.value) || '');
+    authSet(SAVE_CODE_KEY, ((codeIn && codeIn.value) || '').trim());
+  }
+
+  function restoreFields() {
+    var em = authGet(SAVE_EMAIL_KEY);
+    var pw = authGet(SAVE_PASS_KEY);
+    var cd = authGet(SAVE_CODE_KEY);
+    if (emailIn && em) emailIn.value = em;
+    if (passIn && pw) passIn.value = pw;
+    if (codeIn && cd) codeIn.value = cd;
+  }
+
+  function setStatus(msg, isErr) {
+    if (!statusEl) return;
+    statusEl.textContent = msg || '';
+    statusEl.classList.toggle('is-error', !!isErr);
+  }
+
   function apiBase() {
     var b = typeof window.TM_VIEWER_API_BASE === 'string' ? window.TM_VIEWER_API_BASE.trim() : '';
     b = b ? b.replace(/\/+$/, '') : '';
     if (b) return b;
     try {
-      if (typeof window.location !== 'undefined' && window.location.origin)
+      if (window.location && window.location.origin)
         return String(window.location.origin).replace(/\/+$/, '');
     } catch (e0) {}
     return '';
   }
-  function setStatus(msg, isErr) {
-    var el = document.getElementById('tm-viewer-auth-status');
-    if (!el) return;
-    el.textContent = msg || '';
-    el.style.color = isErr ? '#b91c1c' : '';
-  }
+
   function mapErr(data) {
     if (!data || typeof data !== 'object') return 'Something went wrong.';
     var e = data.error;
@@ -1497,21 +216,89 @@
     if (e === 'proxy_misconfigured' || e === 'upstream_unreachable') return 'Sign-in is temporarily unavailable. Please try again in a moment.';
     return (window.TixxPublic && window.TixxPublic.loginError(e)) || 'Something went wrong. Please try again.';
   }
-  var btnSend = document.getElementById('tm-viewer-send-otp');
-  var btnVerify = document.getElementById('tm-viewer-verify-otp');
-  var otpRow = document.getElementById('tm-otp-row');
+
+  function getEmail() {
+    return ((emailIn && emailIn.value) || '').trim().toLowerCase();
+  }
+
+  function getPassword() {
+    return (passIn && passIn.value) || '';
+  }
+
+  function getCode() {
+    return ((codeIn && codeIn.value) || '').trim().replace(/\s/g, '');
+  }
+
+  function validatePasswordForSignIn(email, password) {
+    var accounts = loadAccounts();
+    if (!accounts[email]) return true;
+    return accounts[email] === password;
+  }
+
+  function saveAccount(email, password) {
+    var accounts = loadAccounts();
+    accounts[email] = password;
+    saveAccounts(accounts);
+  }
+
+  function applyMode() {
+    var isSignUp = mode === 'signup';
+    if (titleEl) titleEl.textContent = isSignUp ? 'Create your account' : 'Welcome back';
+    if (subEl) subEl.textContent = isSignUp
+      ? 'Sign up with your email, password, and one-time code'
+      : 'Sign in to your SecureTixx account';
+    if (btnVerify) btnVerify.textContent = isSignUp ? 'Create account' : 'Sign in';
+    if (switchLabel) switchLabel.textContent = isSignUp ? 'Already have an account?' : "Don't have an account?";
+    if (modeToggle) modeToggle.textContent = isSignUp ? 'Sign in' : 'Create one';
+    if (passIn) passIn.autocomplete = isSignUp ? 'new-password' : 'current-password';
+  }
+
+  restoreFields();
+  applyMode();
+
+  [emailIn, passIn, codeIn].forEach(function (el) {
+    if (!el) return;
+    el.addEventListener('input', persistFields);
+    el.addEventListener('change', persistFields);
+  });
+
+  if (togglePass && passIn) {
+    togglePass.addEventListener('click', function () {
+      var show = passIn.type === 'password';
+      passIn.type = show ? 'text' : 'password';
+      togglePass.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    });
+  }
+
+  if (modeToggle) {
+    modeToggle.addEventListener('click', function () {
+      mode = mode === 'signin' ? 'signup' : 'signin';
+      applyMode();
+      setStatus('');
+    });
+  }
+
   if (btnSend) {
     btnSend.addEventListener('click', function () {
       setStatus('');
+      persistFields();
       var base = apiBase();
       if (!base) {
         setStatus('Open this page from your live site (HTTPS), not as a local file.', true);
         return;
       }
-      var inp = document.getElementById('tm-viewer-email');
-      var email = ((inp && inp.value) || '').trim().toLowerCase();
+      var email = getEmail();
       if (!email || email.indexOf('@') < 0) {
-        setStatus('Enter the email on your ticket order.', true);
+        setStatus('Enter a valid email address.', true);
+        return;
+      }
+      var password = getPassword();
+      if (mode === 'signup' && password.length < 6) {
+        setStatus('Choose a password with at least 6 characters.', true);
+        return;
+      }
+      if (mode === 'signin' && !validatePasswordForSignIn(email, password)) {
+        setStatus('Incorrect password for this account.', true);
         return;
       }
       btnSend.disabled = true;
@@ -1524,10 +311,8 @@
         .then(function (x) {
           btnSend.disabled = false;
           if (x.j && x.j.ok) {
-            if (otpRow) otpRow.hidden = false;
-            setStatus('Check your email for the code.');
-            var op = document.getElementById('tm-viewer-otp');
-            if (op) op.focus();
+            setStatus('Check your email for the sign-in code.');
+            if (codeIn) codeIn.focus();
             return;
           }
           if (x.status === 429 && x.j && x.j.retry_after_sec)
@@ -1540,17 +325,30 @@
         });
     });
   }
+
   if (btnVerify) {
     btnVerify.addEventListener('click', function () {
       setStatus('');
+      persistFields();
       var base = apiBase();
       if (!base) return;
-      var inp = document.getElementById('tm-viewer-email');
-      var email = ((inp && inp.value) || '').trim().toLowerCase();
-      var op = document.getElementById('tm-viewer-otp');
-      var code = ((op && op.value) || '').trim().replace(/\s/g, '');
+      var email = getEmail();
+      var password = getPassword();
+      var code = getCode();
+      if (!email || email.indexOf('@') < 0) {
+        setStatus('Enter a valid email address.', true);
+        return;
+      }
+      if (mode === 'signup' && password.length < 6) {
+        setStatus('Choose a password with at least 6 characters.', true);
+        return;
+      }
+      if (mode === 'signin' && !validatePasswordForSignIn(email, password)) {
+        setStatus('Incorrect password for this account.', true);
+        return;
+      }
       if (!code) {
-        setStatus('Enter the code from your email.', true);
+        setStatus('Enter the sign-in code from your email, or send a new code.', true);
         return;
       }
       btnVerify.disabled = true;
@@ -1566,12 +364,11 @@
             setStatus(mapErr(x.j), true);
             return;
           }
-          try { authSet(TOKEN_KEY, x.j.token); } catch (e2) {}
-          try {
-            var emStore = ((x.j && x.j.email) || email || '').trim().toLowerCase();
-            if (emStore) authSet(EMAIL_KEY, emStore);
-          } catch (e7) {}
-          setStatus('Signed in. Redirecting...');
+          if (password) saveAccount(email, password);
+          authSet(TOKEN_KEY, x.j.token);
+          authSet(EMAIL_KEY, ((x.j && x.j.email) || email).trim().toLowerCase());
+          persistFields();
+          setStatus(mode === 'signup' ? 'Account created. Redirecting…' : 'Signed in. Redirecting…');
           window.location.href = '/my-tickets';
         })
         .catch(function () {
@@ -1580,194 +377,6 @@
         });
     });
   }
-  var topLogin = document.getElementById('tm-topbar-login');
-  if (topLogin) {
-    topLogin.addEventListener('click', function (e) {
-      e.preventDefault();
-      var em = document.getElementById('tm-viewer-email');
-      if (em) em.focus();
-    });
-  }
-})();
-</script>
-  </main>
-  <footer class="tm-site-footer tm-site-footer--simple" role="contentinfo"><p class="tm-footer-disclaimer" role="note">Independent site — not Ticketmaster, Live Nation, or ticketmaster.com. Sign-in here is for passes on this site only.</p><p class="tm-footer-legal"><a href="https://www.ticketmaster.com" target="_blank" rel="noopener noreferrer">Ticketmaster.com</a></p></footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bwip-js@4.5.2/dist/bwip-js-min.js" crossorigin="anonymous"></script>
-<script>
-(function () {
-  function packU64BE(counter) {
-    var arr = new Uint8Array(8);
-    var c = counter;
-    for (var j = 7; j >= 0; j--) {
-      arr[j] = c & 255;
-      c = Math.floor(c / 256);
-    }
-    return arr;
-  }
-  function u8ToWordArray(u8) {
-    var words = [];
-    for (var i = 0; i < u8.length; i++) {
-      words[i >>> 2] |= u8[i] << (24 - (i % 4) * 8);
-    }
-    return CryptoJS.lib.WordArray.create(words, u8.length);
-  }
-  function hexToKeyWA(hex) {
-    var h = (hex || "").replace(/\s/g, "");
-    if (h.length % 2) h = "0" + h;
-    return CryptoJS.enc.Hex.parse(h);
-  }
-  function hotpHexKey(keyHex, counter, digits) {
-    var msg = u8ToWordArray(packU64BE(counter));
-    var key = hexToKeyWA(keyHex);
-    var mac = CryptoJS.HmacSHA1(msg, key);
-    var hex = mac.toString(CryptoJS.enc.Hex);
-    var h = new Uint8Array(20);
-    for (var i = 0; i < 20; i++) h[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
-    var off = h[19] & 15;
-    var code = ((h[off] & 127) << 24 | (h[off + 1] << 16) | (h[off + 2] << 8) | h[off + 3]) >>> 0;
-    var mod = Math.pow(10, digits);
-    var s = String(code % mod);
-    while (s.length < digits) s = "0" + s;
-    return s;
-  }
-  function totpHex(keyHex, unixTime, period, digits) {
-    return hotpHexKey(keyHex, Math.floor(unixTime / period), digits);
-  }
-  function drawPdf417(canvas, text) {
-    if (typeof bwipjs === "undefined") throw new Error("bwip-js not loaded");
-    bwipjs.toCanvas(canvas, {
-      bcid: "pdf417",
-      text: text,
-      columns: 10,
-      scale: 3,
-      backgroundcolor: "FFFFFF",
-    });
-  }
-  function initArticle(article) {
-    article.querySelectorAll(".safetix-slot").forEach(function (slot) {
-      var holder = slot.querySelector("[data-tm-safetix]");
-      if (!holder) return;
-      var st = holder.getAttribute("data-tm-safetix");
-      if (!st) return;
-      var cfg;
-      try {
-        cfg = JSON.parse(atob(st));
-      } catch (e) {
-        var bad = slot.querySelector(".safetix-status");
-        if (bad) bad.textContent = "Invalid embedded SecureToken data.";
-        return;
-      }
-      var canvas = holder.querySelector("canvas");
-      var statusEl = slot.querySelector(".safetix-status");
-      var period = cfg.period || 15;
-      var digits = cfg.digits || 6;
-      var lastStep = -1;
-      function tick() {
-        if (typeof CryptoJS === "undefined") {
-          if (statusEl) statusEl.textContent = "CryptoJS not loaded (check CDN / offline).";
-          return;
-        }
-        if (typeof bwipjs === "undefined") {
-          if (statusEl) statusEl.textContent = "bwip-js not loaded (check CDN / offline).";
-          return;
-        }
-        try {
-          var now = Math.floor(Date.now() / 1000);
-          var step = Math.floor(now / period);
-          if (step === lastStep && lastStep >= 0) return;
-          lastStep = step;
-          var eo = totpHex(cfg.ek, now, period, digits);
-          var co = totpHex(cfg.ck, now, period, digits);
-          var payload = cfg.t + "::" + eo + "::" + co + "::" + now;
-          drawPdf417(canvas, payload);
-          var left = period - (now % period);
-          if (statusEl) {
-            statusEl.textContent =
-              "Hold your phone near the reader when you arrive — you're good to go.";
-          }
-        } catch (err) {
-          if (statusEl)
-            statusEl.textContent = "Barcode error: " + (err && err.message ? err.message : String(err));
-        }
-      }
-      setInterval(tick, 200);
-      tick();
-    });
-  }
-  function initCarousels() {
-    document.querySelectorAll(".tm-ticket-carousel").forEach(function (root) {
-      var track = root.querySelector(".tm-carousel-track");
-      if (!track) return;
-      var slides = root.querySelectorAll(".tm-carousel-slide");
-      var n = slides.length;
-      var prev = root.querySelector(".tm-carousel-prev");
-      var next = root.querySelector(".tm-carousel-next");
-      var dotBtns = root.querySelectorAll(".tm-carousel-dot");
-      var i = 0;
-      function apply() {
-        track.style.transform = "translateX(-" + i * 100 + "%)";
-        if (prev) prev.disabled = i <= 0;
-        if (next) next.disabled = i >= n - 1;
-        dotBtns.forEach(function (b, j) {
-          var on = j === i;
-          b.classList.toggle("is-active", on);
-          b.setAttribute("aria-selected", on ? "true" : "false");
-        });
-      }
-      function go(delta) {
-        i = Math.max(0, Math.min(n - 1, i + delta));
-        apply();
-      }
-      function goTo(j) {
-        i = Math.max(0, Math.min(n - 1, j));
-        apply();
-      }
-      if (prev) prev.addEventListener("click", function () { go(-1); });
-      if (next) next.addEventListener("click", function () { go(1); });
-      dotBtns.forEach(function (b, j) {
-        b.addEventListener("click", function () { goTo(j); });
-      });
-      var sx = 0;
-      root.addEventListener(
-        "touchstart",
-        function (e) {
-          if (n < 2) return;
-          sx = e.changedTouches[0].screenX;
-        },
-        { passive: true }
-      );
-      root.addEventListener(
-        "touchend",
-        function (e) {
-          if (n < 2) return;
-          var dx = e.changedTouches[0].screenX - sx;
-          if (dx > 56) go(-1);
-          else if (dx < -56) go(1);
-        },
-        { passive: true }
-      );
-      if (n > 1) {
-        root.setAttribute("tabindex", "0");
-        root.addEventListener("keydown", function (e) {
-          if (e.key === "ArrowLeft") {
-            e.preventDefault();
-            go(-1);
-          } else if (e.key === "ArrowRight") {
-            e.preventDefault();
-            go(1);
-          }
-        });
-      }
-      apply();
-    });
-  }
-  function boot() {
-    document.querySelectorAll("article.acct").forEach(initArticle);
-    initCarousels();
-  }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
-  else boot();
 })();
 </script>
 </body>
