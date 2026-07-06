@@ -444,7 +444,7 @@
 .stx-field--wide {
   grid-column: 1 / -1;
 }
-.stx-search-submit {
+.stx-search-card .stx-search-submit {
   grid-column: 1 / -1;
   margin-top: 0.25rem;
   padding: 0.75rem 1rem;
@@ -457,7 +457,7 @@
   font-size: 0.9375rem;
   cursor: pointer;
 }
-.stx-search-submit:hover {
+.stx-search-card .stx-search-submit:hover {
   background: var(--stx-emerald-dark);
 }
 
