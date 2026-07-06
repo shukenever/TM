@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/public/securetixx-theme.css"/>
-  <link rel="stylesheet" href="/public/securetixx-shop-v2.css?v=12"/>
+  <link rel="stylesheet" href="/public/securetixx-shop-v2.css?v=13"/>
   <style>
     :root {
       --tm-blue: #059669;
@@ -2214,6 +2214,9 @@
       text-decoration: none;
     }
     .home-guest-strip a:hover { text-decoration: underline; }
+    body.tm-page--home #tm-ticket-list {
+      display: none !important;
+    }
     body.tm-page--home .tm-ticket-list-section {
       max-width: 1200px;
       margin: 2rem auto 2.25rem;
@@ -2996,7 +2999,7 @@
       <div class="stx-main-col">
         <div class="home-content">
           <div id="home-discover" class="home-discover">
-            <p id="home-load" class="home-load">Loading events…</p><section class="stx-events-panel home-events-panel" id="home-sec-popular" hidden><div class="stx-events-head home-section-head"><div><h2>Popular Events</h2></div><div class="stx-events-head-right"><a class="stx-view-all home-section-link" href="/shop.html">View all</a></div></div><div class="stx-event-list" id="home-carousel-popular"></div></section><section class="home-carousel-section" id="home-sec-concerts" hidden><div class="home-section-head"><h2>Concerts</h2><a class="home-section-link" href="/shop.html?cat=concerts">See all</a></div><div class="home-carousel-track" id="home-carousel-concerts"></div></section><section class="home-carousel-section" id="home-sec-sports" hidden><div class="home-section-head"><h2>Sports</h2><a class="home-section-link" href="/shop.html?cat=sports">See all</a></div><div class="home-carousel-track" id="home-carousel-sports"></div></section><section class="home-carousel-section home-grid-section" id="home-sec-shows" hidden><div class="home-section-head"><h2>Shows &amp; theater</h2><a class="home-section-link" href="/shop.html?cat=events">See all</a></div><div class="home-event-grid" id="home-grid-shows"></div></section><div class="home-shop-banner" id="home-shop-banner"><div><h3 id="home-shop-banner-title">Thousands of verified listings</h3><p>Search by artist, venue, or city — filter by date and category on the shop.</p></div><a href="/shop.html">Open full shop</a></div></div></div></div></div></div><div id="home-guest-strip" class="home-guest-strip stx-guest-bar">Already bought on SecureTixx? <a href="/login" id="home-guest-signin">Sign in</a> to view your tickets.</div></div><section id="tm-ticket-list" class="tm-ticket-list-section tm-login-gate-section" hidden aria-label="Your tickets"><h2 class="tm-section-heading">Your tickets</h2><div id="tm-home-login-teaser" hidden><p class="tm-login-gate-lead">Your passes appear here after you authenticate with the email on your order.</p><p class="tm-email-hint tm-login-gate-hint">Open the secure sign-in page to receive a one-time code, then return to this home screen.</p><p class="tm-login-gate-actions"><a class="tm-login-gate-cta" id="tm-login-redirect" href="/login">Sign in</a></p></div><div id="tm-viewer-ticket-grid" class="tm-ticket-grid" hidden></div><div id="tm-viewer-empty-tickets" class="tm-viewer-empty-tickets" hidden><p>You&rsquo;re signed in. There are no passes linked to this email yet. If you just ordered, they may appear after delivery updates.</p></div><div id="tm-transfer-modal" class="tm-transfer-modal" hidden aria-hidden="true"><div class="tm-transfer-modal__backdrop" id="tm-transfer-backdrop"></div><div class="tm-transfer-modal__panel" role="dialog" aria-labelledby="tm-transfer-title"><h3 id="tm-transfer-title">Transfer to buyer</h3><p class="tm-muted">Sends a transfer email with the accept link. Add an optional personal note below to include the &ldquo;Message from&hellip;&rdquo; block.</p><div class="tm-transfer-field"><label for="tm-transfer-buyer-email">Buyer email</label><input type="email" id="tm-transfer-buyer-email" autocomplete="email" placeholder="buyer@email.com" /></div><div class="tm-transfer-field"><label for="tm-transfer-buyer-name">Buyer first name <span style="font-weight:400">(optional)</span></label><input type="text" id="tm-transfer-buyer-name" autocomplete="given-name" placeholder="First name" /></div><div class="tm-transfer-field"><label for="tm-transfer-personal-from">Message from <span style="font-weight:400">(optional, default Chris)</span></label><input type="text" id="tm-transfer-personal-from" maxlength="120" placeholder="Chris" autocomplete="off" /></div><div class="tm-transfer-field"><label for="tm-transfer-personal-msg">Personal message <span style="font-weight:400">(optional)</span></label><textarea id="tm-transfer-personal-msg" rows="3" maxlength="4000" placeholder="e.g. For @alex — enjoy the show!"></textarea></div><p id="tm-transfer-status" role="status"></p><div class="tm-transfer-modal__actions"><button type="button" id="tm-transfer-cancel">Cancel</button><button type="button" id="tm-transfer-send">Send transfer</button></div></div></div></section><script src="tm_viewer_api_base.js"></script>
+            <p id="home-load" class="home-load">Loading events…</p><section class="stx-events-panel home-events-panel" id="home-sec-popular" hidden><div class="stx-events-head home-section-head"><div><h2>Popular Events</h2></div><div class="stx-events-head-right"><a class="stx-view-all home-section-link" href="/shop.html">View all</a></div></div><div class="stx-event-list" id="home-carousel-popular"></div></section><section class="stx-events-panel home-events-panel" id="home-sec-concerts" hidden><div class="stx-events-head home-section-head"><div><h2>Concerts</h2></div><div class="stx-events-head-right"><a class="stx-view-all home-section-link" href="/shop.html?cat=concerts">View all</a></div></div><div class="stx-event-list" id="home-carousel-concerts"></div></section><section class="home-carousel-section" id="home-sec-sports" hidden><div class="home-section-head"><h2>Sports</h2><a class="home-section-link" href="/shop.html?cat=sports">See all</a></div><div class="home-carousel-track" id="home-carousel-sports"></div></section><section class="home-carousel-section home-grid-section" id="home-sec-shows" hidden><div class="home-section-head"><h2>Shows &amp; theater</h2><a class="home-section-link" href="/shop.html?cat=events">See all</a></div><div class="home-event-grid" id="home-grid-shows"></div></section><div class="home-shop-banner" id="home-shop-banner"><div><h3 id="home-shop-banner-title">Thousands of verified listings</h3><p>Search by artist, venue, or city — filter by date and category on the shop.</p></div><a href="/shop.html">Open full shop</a></div></div></div></div></div></div><div id="home-guest-strip" class="home-guest-strip stx-guest-bar">Already bought on SecureTixx? <a href="/login" id="home-guest-signin">Sign in</a> to view your tickets.</div></div><section id="tm-ticket-list" class="tm-ticket-list-section tm-login-gate-section" hidden aria-label="Your tickets"><h2 class="tm-section-heading">Your tickets</h2><div id="tm-home-login-teaser" hidden><p class="tm-login-gate-lead">Your passes appear here after you authenticate with the email on your order.</p><p class="tm-email-hint tm-login-gate-hint">Open the secure sign-in page to receive a one-time code, then return to this home screen.</p><p class="tm-login-gate-actions"><a class="tm-login-gate-cta" id="tm-login-redirect" href="/login">Sign in</a></p></div><div id="tm-viewer-ticket-grid" class="tm-ticket-grid" hidden></div><div id="tm-viewer-empty-tickets" class="tm-viewer-empty-tickets" hidden><p>You&rsquo;re signed in. There are no passes linked to this email yet. If you just ordered, they may appear after delivery updates.</p></div><div id="tm-transfer-modal" class="tm-transfer-modal" hidden aria-hidden="true"><div class="tm-transfer-modal__backdrop" id="tm-transfer-backdrop"></div><div class="tm-transfer-modal__panel" role="dialog" aria-labelledby="tm-transfer-title"><h3 id="tm-transfer-title">Transfer to buyer</h3><p class="tm-muted">Sends a transfer email with the accept link. Add an optional personal note below to include the &ldquo;Message from&hellip;&rdquo; block.</p><div class="tm-transfer-field"><label for="tm-transfer-buyer-email">Buyer email</label><input type="email" id="tm-transfer-buyer-email" autocomplete="email" placeholder="buyer@email.com" /></div><div class="tm-transfer-field"><label for="tm-transfer-buyer-name">Buyer first name <span style="font-weight:400">(optional)</span></label><input type="text" id="tm-transfer-buyer-name" autocomplete="given-name" placeholder="First name" /></div><div class="tm-transfer-field"><label for="tm-transfer-personal-from">Message from <span style="font-weight:400">(optional, default Chris)</span></label><input type="text" id="tm-transfer-personal-from" maxlength="120" placeholder="Chris" autocomplete="off" /></div><div class="tm-transfer-field"><label for="tm-transfer-personal-msg">Personal message <span style="font-weight:400">(optional)</span></label><textarea id="tm-transfer-personal-msg" rows="3" maxlength="4000" placeholder="e.g. For @alex — enjoy the show!"></textarea></div><p id="tm-transfer-status" role="status"></p><div class="tm-transfer-modal__actions"><button type="button" id="tm-transfer-cancel">Cancel</button><button type="button" id="tm-transfer-send">Send transfer</button></div></div></div></section><script src="tm_viewer_api_base.js"></script>
 <script>window.TM_VIEWER_MAIL_API_BASE = typeof window.TM_VIEWER_MAIL_API_BASE === 'string' ? window.TM_VIEWER_MAIL_API_BASE : '';</script>
 <script src="/public/tixx-public.js"></script>
 <script src="/public/tixx-stock.js"></script>
@@ -3136,7 +3139,7 @@
   }
   var HERO_SUB_GATE = "Verified TM passes · Instant email delivery · Up to 50% off face value. Browse concerts, sports, and shows near you.";
   var HERO_SUB_SIGNED_EMPTY = "You're signed in. No tickets are linked to this email yet — browse events below or check back after delivery.";
-  var HERO_SUB_SIGNED_OK = "You're signed in. Your tickets are ready below.";
+  var HERO_SUB_SIGNED_OK = "You're signed in. Open My Tickets to view your passes.";
   function syncHeroBanner(signedIn, hasTickets) {
     var sub = document.querySelector('.tm-retail-hero-overlay .tm-retail-sub');
     var cta = document.querySelector('.tm-retail-hero-overlay .tm-retail-cta');
@@ -3145,7 +3148,7 @@
       sub.textContent = hasTickets ? HERO_SUB_SIGNED_OK : HERO_SUB_SIGNED_EMPTY;
       if (cta) {
         cta.textContent = hasTickets ? 'View tickets' : 'Browse events';
-        cta.setAttribute('href', hasTickets ? '#tm-ticket-list' : '#home-discover');
+        cta.setAttribute('href', hasTickets ? '/my-tickets' : '#home-discover');
       }
     } else {
       sub.textContent = HERO_SUB_GATE;
@@ -3206,22 +3209,8 @@
   function applySignedInHome(email, tickets) {
     var list = tickets || [];
     applySignedInChrome(email);
-    var teaser = document.getElementById('tm-home-login-teaser');
-    var h2 = document.querySelector('#tm-ticket-list > .tm-section-heading');
-    var emptyEl = document.getElementById('tm-viewer-empty-tickets');
-    var ticketSec = document.getElementById('tm-ticket-list');
     var guestStrip = document.getElementById('home-guest-strip');
-    if (teaser) teaser.hidden = true;
-    if (ticketSec) ticketSec.hidden = false;
     if (guestStrip) guestStrip.hidden = true;
-    if (h2) h2.textContent = 'Your tickets';
-    if (list.length) {
-      if (emptyEl) emptyEl.hidden = true;
-      fillTicketGrid(list);
-    } else {
-      fillTicketGrid([]);
-      if (emptyEl) emptyEl.hidden = false;
-    }
     syncHeroBanner(true, list.length > 0);
   }
   function tryRestore() {
@@ -3384,6 +3373,13 @@
         '<p class="home-event-meta">' + esc(ev.event_date_display || '') + '<br/>' + esc(ev.venue || '') + '</p>' +
         footer + '</div></a>';
     }
+    function sellableEvents(list) {
+      return (list || []).filter(function (e) {
+        var count = Number(e.count || e.ticket_count || 0);
+        var price = Number(e.min_price || e.min_price_usd || 0);
+        return count > 0 || price > 0;
+      });
+    }
     function fillHomeCarousel(trackId, events, sectionId, catalogTotals, layout) {
       var track = document.getElementById(trackId);
       var sec = sectionId ? document.getElementById(sectionId) : null;
@@ -3421,8 +3417,8 @@
         if (!row) return null;
         return { tickets: row.tickets || 0, events: row.events || 0 };
       }
-      fillHomeCarousel('home-carousel-popular', (sections.popular && sections.popular.events) || [], 'home-sec-popular', null, 'row');
-      fillHomeCarousel('home-carousel-concerts', (sections.concerts && sections.concerts.events) || [], 'home-sec-concerts', catTotals('concerts'));
+      fillHomeCarousel('home-carousel-popular', sellableEvents((sections.popular && sections.popular.events) || []), 'home-sec-popular', null, 'row');
+      fillHomeCarousel('home-carousel-concerts', sellableEvents((sections.concerts && sections.concerts.events) || []), 'home-sec-concerts', catTotals('concerts'), 'row');
       fillHomeCarousel('home-carousel-sports', (sections.sports && sections.sports.events) || [], 'home-sec-sports', catTotals('sports'));
       fillHomeGrid('home-grid-shows', (sections.shows && sections.shows.events) || [], 'home-sec-shows', catTotals('events'));
       applyHomeHero(data);
@@ -3444,14 +3440,14 @@
       });
     }
     function renderHomeDiscoverFromGroups(allEv) {
-      var popular = allEv.slice().sort(function (a, b) {
+      var popular = sellableEvents(allEv.slice().sort(function (a, b) {
         return (b.count + fameBoost(b.event_name)) - (a.count + fameBoost(a.event_name));
-      }).slice(0, 14);
-      var concerts = allEv.filter(function (e) { return e.category === 'concerts'; }).slice(0, 12);
-      var sports = allEv.filter(function (e) { return e.category === 'sports'; }).slice(0, 12);
-      var shows = allEv.filter(function (e) { return e.category === 'events'; }).slice(0, 12);
+      })).slice(0, 14);
+      var concerts = sellableEvents(allEv.filter(function (e) { return e.category === 'concerts'; })).slice(0, 12);
+      var sports = sellableEvents(allEv.filter(function (e) { return e.category === 'sports'; })).slice(0, 12);
+      var shows = sellableEvents(allEv.filter(function (e) { return e.category === 'events'; })).slice(0, 12);
       fillHomeCarousel('home-carousel-popular', popular, 'home-sec-popular', null, 'row');
-      fillHomeCarousel('home-carousel-concerts', concerts, 'home-sec-concerts');
+      fillHomeCarousel('home-carousel-concerts', concerts, 'home-sec-concerts', null, 'row');
       fillHomeCarousel('home-carousel-sports', sports, 'home-sec-sports');
       fillHomeCarousel('home-carousel-shows', shows, 'home-sec-shows');
     }

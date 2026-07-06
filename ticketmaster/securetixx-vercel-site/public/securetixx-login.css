@@ -304,10 +304,34 @@
   font-weight: 600;
   color: #16a34a;
   text-decoration: none;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
 }
 
 .stx-login-forgot:hover {
   text-decoration: underline;
+}
+
+.stx-login-step-hint {
+  margin: -0.5rem 0 1.15rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #6b7280;
+}
+
+.stx-login-btn--text {
+  border: none !important;
+  background: transparent !important;
+  color: #6b7280 !important;
+  box-shadow: none !important;
+}
+
+.stx-login-btn--text:hover:not(:disabled) {
+  color: #374151 !important;
+  background: #f3f4f6 !important;
 }
 
 .stx-login-actions {

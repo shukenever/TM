@@ -31,6 +31,10 @@
       if (c === 'code_expired') return 'Code expired. Request a new one.';
       if (c === 'too_many_attempts') return 'Too many attempts. Request a new code.';
       if (c === 'send_failed') return 'Could not send email. Try again later.';
+      if (c === 'invalid_credentials') return 'Incorrect email or password.';
+      if (c === 'account_exists') return 'An account with this email already exists.';
+      if (c === 'account_not_found') return 'No account found for that email.';
+      if (c === 'password_too_short') return 'Password must be at least 6 characters.';
       return MSG.loginFail;
     }
   };

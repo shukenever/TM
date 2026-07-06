@@ -24,6 +24,10 @@ const routes = {
   "tm-viewer-mail-api-base": require("../../lib/tm-viewer/routes/tm-viewer-mail-api-base"),
   "auth/send-otp": require("../../lib/tm-viewer/routes/auth-send-otp"),
   "auth/verify-otp": require("../../lib/tm-viewer/routes/auth-verify-otp"),
+  "auth/register": require("../../lib/tm-viewer/routes/auth-register"),
+  "auth/signin": require("../../lib/tm-viewer/routes/auth-signin"),
+  "auth/forgot-password": require("../../lib/tm-viewer/routes/auth-forgot-password"),
+  "auth/reset-password": require("../../lib/tm-viewer/routes/auth-reset-password"),
 };
 
 module.exports = async (req, res) => {

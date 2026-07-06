@@ -1207,11 +1207,16 @@
   color: #111827;
 }
 
-.stx-shop-v2.tm-page--home #home-carousel-popular.stx-event-list {
+.stx-shop-v2.tm-page--home #home-carousel-popular.stx-event-list,
+.stx-shop-v2.tm-page--home #home-carousel-concerts.stx-event-list {
   display: flex;
   flex-direction: column;
   gap: 0;
   overflow: visible;
+}
+
+.stx-shop-v2.tm-page--home .home-events-panel + .home-events-panel {
+  margin-top: 1.25rem;
 }
 
 .stx-events-head-right {

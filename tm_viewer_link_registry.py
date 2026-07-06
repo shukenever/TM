@@ -59,12 +59,25 @@ POST /api/tm-viewer/transfer-to-buyer  (or /api/tm-viewer/send-mail)  JSON {"tok
 ``tm_hit_viewer`` registry row (whoever can open the pass page / has the secret may transfer; no sign-in required).
 Purple “Message from …” only if ``personal_message`` is set.
 
-POST /api/tm-viewer/auth/send-otp  JSON {"email": "..."}
-→ {"ok": true} or {"ok": false, "error": "..."} — sends 6-digit code via Resend for any valid email;
-``GET /tickets`` may return an empty list if that email has no passes yet.
+POST /api/tm-viewer/auth/register  JSON {"email": "...", "password": "..."}
+→ sends verification code; finish with verify-otp purpose signup.
 
-POST /api/tm-viewer/auth/verify-otp  JSON {"email": "...", "code": "..."}
+POST /api/tm-viewer/auth/signin  JSON {"email": "...", "password": "..."}
+→ validates password, sends sign-in code; finish with verify-otp purpose signin.
+
+POST /api/tm-viewer/auth/forgot-password  JSON {"email": "..."}
+→ sends reset code to registered email.
+
+POST /api/tm-viewer/auth/reset-password  JSON {"email": "...", "code": "...", "new_password": "..."}
+→ resets password (old hash kept in password_history) and returns session token.
+
+POST /api/tm-viewer/auth/send-otp  JSON {"email": "..."}
+→ legacy OTP-only sign-in (no password check).
+
+POST /api/tm-viewer/auth/verify-otp  JSON {"email": "...", "code": "...", "purpose": "signin|signup"}
 → {"ok": true, "token": "..."} or error — exchanges code for a session token.
+
+Accounts persist in ``tm_viewer_accounts.json`` (override ``TM_VIEWER_ACCOUNTS_PATH``).
 
 **Timed ticket reminders:** pass HTML built with ``tm_hit_viewer.py`` emits metas consumed by ``tm-email-gate.js``.
 ``POST /api/ticket-reminders/register`` on this registry supports two modes:
@@ -1264,7 +1277,237 @@ def _load_sessions_from_disk() -> None:
         _signin_log(f"[ticketmaster-signin] restored {n} session(s) from {path}")
 
 
-def _deliveries_file_has_json_line() -> bool:
+_accounts: dict[str, dict] = {}
+_signup_pending: dict[str, dict] = {}
+_account_persist_warned: bool = False
+_PASSWORD_MIN_LEN = 6
+_PASSWORD_HISTORY_MAX = 12
+
+
+def _accounts_path() -> Path:
+    p = (os.environ.get("TM_VIEWER_ACCOUNTS_PATH") or "").strip()
+    return Path(p) if p else (_registry_path().parent / "tm_viewer_accounts.json")
+
+
+def _utc_now_iso() -> str:
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _hash_password(password: str, salt: bytes | None = None) -> tuple[str, str]:
+    if salt is None:
+        salt = secrets.token_bytes(16)
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 120_000)
+    return base64.b64encode(salt).decode("ascii"), base64.b64encode(dk).decode("ascii")
+
+
+def _verify_password(password: str, salt_b64: str, hash_b64: str) -> bool:
+    try:
+        salt = base64.b64decode(salt_b64)
+        _, check = _hash_password(password, salt)
+        return secrets.compare_digest(check, hash_b64)
+    except Exception:
+        return False
+
+
+def _persist_accounts_locked() -> None:
+    global _account_persist_warned
+    path = _accounts_path()
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        payload = json.dumps(
+            {"version": 1, "accounts": _accounts},
+            ensure_ascii=False,
+            indent=2,
+        )
+        tmp = path.with_suffix(path.suffix + ".tmp")
+        tmp.write_text(payload + "\n", encoding="utf-8")
+        tmp.replace(path)
+    except OSError as e:
+        if not _account_persist_warned:
+            _account_persist_warned = True
+            _signin_log(
+                f"[ticketmaster-signin] WARNING: cannot persist accounts to {path} ({e!s}). "
+                "Set TM_VIEWER_ACCOUNTS_PATH or fix permissions."
+            )
+
+
+def _load_accounts_from_disk() -> None:
+    path = _accounts_path()
+    if not path.is_file():
+        return
+    try:
+        raw = path.read_text(encoding="utf-8", errors="replace")
+        data = json.loads(raw)
+    except (OSError, json.JSONDecodeError):
+        return
+    if not isinstance(data, dict):
+        return
+    rows = data.get("accounts")
+    if not isinstance(rows, dict):
+        return
+    n = 0
+    with _auth_lock:
+        for em_raw, row in rows.items():
+            if not isinstance(row, dict):
+                continue
+            em = _normalize_email(str(row.get("email") or em_raw))
+            if not em or "@" not in em:
+                continue
+            row = dict(row)
+            row["email"] = em
+            _accounts[em] = row
+            n += 1
+    if n:
+        _signin_log(f"[ticketmaster-signin] restored {n} account(s) from {path}")
+
+
+def _get_account(em: str) -> dict | None:
+    row = _accounts.get(_normalize_email(em))
+    return row if isinstance(row, dict) else None
+
+
+def _account_password_ok(row: dict, password: str) -> bool:
+    pw = row.get("password")
+    if not isinstance(pw, dict):
+        return False
+    return _verify_password(
+        password,
+        str(pw.get("salt") or ""),
+        str(pw.get("hash") or ""),
+    )
+
+
+def _set_account_password(row: dict, password: str, *, reason: str) -> None:
+    now = _utc_now_iso()
+    cur = row.get("password")
+    hist = row.get("password_history")
+    if not isinstance(hist, list):
+        hist = []
+    if isinstance(cur, dict) and cur.get("hash"):
+        hist.append(
+            {
+                "salt": cur.get("salt"),
+                "hash": cur.get("hash"),
+                "changed_at": cur.get("updated_at") or now,
+                "reason": reason,
+            }
+        )
+    salt_b64, hash_b64 = _hash_password(password)
+    row["password"] = {"salt": salt_b64, "hash": hash_b64, "updated_at": now}
+    row["password_history"] = hist[-_PASSWORD_HISTORY_MAX:]
+    row["updated_at"] = now
+
+
+def _create_account(em: str, password: str) -> dict:
+    now = _utc_now_iso()
+    salt_b64, hash_b64 = _hash_password(password)
+    row = {
+        "email": em,
+        "password": {"salt": salt_b64, "hash": hash_b64, "updated_at": now},
+        "password_history": [],
+        "email_verified": True,
+        "email_verified_at": now,
+        "created_at": now,
+        "updated_at": now,
+        "last_login_at": None,
+        "login_count": 0,
+    }
+    with _auth_lock:
+        _accounts[em] = row
+        _persist_accounts_locked()
+    return row
+
+
+def _touch_account_login(em: str) -> None:
+    row = _get_account(em)
+    if not row:
+        return
+    now = _utc_now_iso()
+    row["last_login_at"] = now
+    row["updated_at"] = now
+    row["login_count"] = int(row.get("login_count") or 0) + 1
+    with _auth_lock:
+        _accounts[em] = row
+        _persist_accounts_locked()
+
+
+def _create_session_for_email(em: str) -> str:
+    now = time.time()
+    tok = secrets.token_urlsafe(32)
+    with _auth_lock:
+        _sessions[tok] = {"email": em, "exp": now + _SESSION_TTL_SEC}
+        _persist_sessions_locked()
+    return tok
+
+
+def _otp_purpose(row: dict | None) -> str:
+    if not isinstance(row, dict):
+        return "signin"
+    return str(row.get("purpose") or "signin")
+
+
+def _issue_otp(em: str, purpose: str) -> tuple[bool, str | None, dict | None]:
+    now = time.time()
+    with _auth_lock:
+        last = float(_otp_last_send.get(em) or 0)
+        if now - last < _OTP_RESEND_COOLDOWN_SEC:
+            return (
+                False,
+                "rate_limit",
+                {"retry_after_sec": int(_OTP_RESEND_COOLDOWN_SEC - (now - last)) + 1},
+            )
+        code = f"{random.randint(0, 999999):06d}"
+        _otp_pending[em] = {
+            "code": code,
+            "exp": now + _OTP_TTL_SEC,
+            "fails": 0,
+            "purpose": purpose,
+        }
+        _otp_last_send[em] = now
+    ok, err = _send_otp_email(em, code, purpose=purpose)
+    if not ok:
+        with _auth_lock:
+            _otp_pending.pop(em, None)
+        return False, "send_failed", {"detail": err[:500]}
+    return True, None, None
+
+
+def _verify_otp_entry(em: str, code_in: str, expected_purpose: str) -> tuple[bool, str]:
+    now = time.time()
+    with _auth_lock:
+        row = _otp_pending.get(em)
+        if not row or float(row.get("exp") or 0) < now:
+            _otp_pending.pop(em, None)
+            return False, "code_expired"
+        purpose = _otp_purpose(row)
+        if expected_purpose == "signup":
+            allowed = {"signup"}
+        elif expected_purpose == "signin":
+            allowed = {"signin", "signin_legacy"}
+        else:
+            allowed = {expected_purpose}
+        if purpose not in allowed:
+            return False, "bad_code"
+        if int(row.get("fails") or 0) >= _OTP_MAX_VERIFY_FAILS:
+            _otp_pending.pop(em, None)
+            return False, "too_many_attempts"
+        if code_in != str(row.get("code") or ""):
+            row["fails"] = int(row.get("fails") or 0) + 1
+            return False, "bad_code"
+        _otp_pending.pop(em, None)
+    return True, ""
+
+
+def _validate_password_input(password: str) -> str | None:
+    pw = str(password or "")
+    if len(pw) < _PASSWORD_MIN_LEN:
+        return "password_too_short"
+    if len(pw) > 200:
+        return "password_too_long"
+    return None
+
     """True when any merged JSONL has at least one ticket-capable row (not login-only audit lines)."""
     for path in _deliveries_jsonl_read_paths():
         try:
@@ -3848,14 +4091,36 @@ def _prune_auth_state() -> None:
         for k, v in list(_otp_pending.items()):
             if float(v.get("exp") or 0) < now:
                 del _otp_pending[k]
+        for k, v in list(_signup_pending.items()):
+            if float(v.get("exp") or 0) < now:
+                del _signup_pending[k]
         if sess_pruned:
             _persist_sessions_locked()
 
 
-def _send_otp_email(to_email: str, code: str) -> tuple[bool, str]:
+def _send_otp_email(to_email: str, code: str, *, purpose: str = "signin") -> tuple[bool, str]:
     em_norm = _normalize_email(to_email)
     code_s = escape(str(code).strip(), quote=False)
     to_s = escape(em_norm, quote=False)
+    purpose_key = (purpose or "signin").strip().lower()
+    if purpose_key == "signup":
+        headline = "Verify your email"
+        lead = "Enter this code to finish creating your SecureTixx account. It expires in <strong style=\"color:#121212;\">10 minutes</strong>."
+        footer_note = "Sent to verify your new SecureTixx account."
+        subject = f"Verify your SecureTixx account: {code}"
+        banner = "Verify"
+    elif purpose_key == "reset":
+        headline = "Reset your password"
+        lead = "Enter this code on the password reset page. It expires in <strong style=\"color:#121212;\">10 minutes</strong>."
+        footer_note = "Sent for a SecureTixx password reset request."
+        subject = f"SecureTixx password reset code: {code}"
+        banner = "Reset"
+    else:
+        headline = "Your one-time code"
+        lead = "Enter this code on the sign-in page to access your passes. It expires in <strong style=\"color:#121212;\">10 minutes</strong>."
+        footer_note = "Sent for SecureTixx account sign-in."
+        subject = f"Your SecureTixx sign-in code: {code}"
+        banner = "Sign in"
     # Inline styles for Gmail/Outlook; TM blue #026cdf.
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -3873,7 +4138,7 @@ def _send_otp_email(to_email: str, code: str) -> tuple[bool, str]:
                 ticketmaster
                 </td>
                 <td align="right" style="font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:0.14em;text-transform:uppercase;">
-                Sign in
+                {escape(banner, quote=False)}
                 </td>
             </tr>
             </table>
@@ -3882,10 +4147,10 @@ def _send_otp_email(to_email: str, code: str) -> tuple[bool, str]:
         <tr>
         <td style="padding:32px 28px 8px;font-family:Arial,Helvetica,sans-serif;">
             <h1 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#121212;letter-spacing:-0.02em;line-height:1.25;">
-            Your one-time code
+            {escape(headline, quote=False)}
             </h1>
             <p style="margin:0 0 26px;font-size:15px;line-height:1.55;color:#4a5560;">
-            Enter this code on the sign-in page to access your passes. It expires in <strong style="color:#121212;">10 minutes</strong>.
+            {lead}
             </p>
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f6f7f8;border:1px solid #e2e8f0;border-radius:10px;">
             <tr>
@@ -3906,7 +4171,7 @@ def _send_otp_email(to_email: str, code: str) -> tuple[bool, str]:
         </tr>
         <tr>
         <td style="padding:18px 28px 22px;background-color:#fafbfc;border-top:1px solid #edf0f3;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.55;color:#8896a6;">
-            <p style="margin:0;">Sent to <span style="color:#475569;font-weight:600;">{to_s}</span> for Ticketmaster account sign-in.</p>
+            <p style="margin:0;">Sent to <span style="color:#475569;font-weight:600;">{to_s}</span> {footer_note}</p>
             <p style="margin:12px 0 0;">This is an automated message &mdash; please don&rsquo;t reply.</p>
             <p style="margin:14px 0 0;font-size:10px;color:#94a3b8;">&copy; Ticketmaster. All rights reserved.</p>
         </td>
@@ -3918,7 +4183,7 @@ def _send_otp_email(to_email: str, code: str) -> tuple[bool, str]:
 </body>
 </html>"""
     return _send_viewer_html_email(
-        em_norm, f"Your Ticketmaster sign-in code: {code}", html
+        em_norm, subject, html
     )
 
 
@@ -5416,6 +5681,123 @@ class _TmViewerApiHandler(BaseHTTPRequestHandler):
         if path == "/api/shop/sync":
             self._handle_shop_sync()
             return
+        if path == "/api/tm-viewer/auth/register":
+            body = self._read_json_body()
+            raw_em = (body.get("email") or "").strip()
+            password = str(body.get("password") or "")
+            em = _normalize_email(raw_em)
+            if not em or "@" not in em or "." not in em.rsplit("@", 1)[-1]:
+                self._write_json(400, {"ok": False, "error": "invalid_email"})
+                return
+            pw_err = _validate_password_input(password)
+            if pw_err:
+                self._write_json(400, {"ok": False, "error": pw_err})
+                return
+            if _get_account(em):
+                self._write_json(409, {"ok": False, "error": "account_exists"})
+                return
+            salt_b64, hash_b64 = _hash_password(password)
+            now = time.time()
+            with _auth_lock:
+                _signup_pending[em] = {
+                    "password_salt": salt_b64,
+                    "password_hash": hash_b64,
+                    "exp": now + _OTP_TTL_SEC,
+                }
+            ok, err, extra = _issue_otp(em, "signup")
+            if not ok:
+                with _auth_lock:
+                    _signup_pending.pop(em, None)
+                status = 429 if err == "rate_limit" else 502
+                payload = {"ok": False, "error": err or "send_failed"}
+                if isinstance(extra, dict):
+                    payload.update(extra)
+                self._write_json(status, payload)
+                return
+            self._write_json(200, {"ok": True, "step": "verify_code"})
+            return
+        if path == "/api/tm-viewer/auth/signin":
+            body = self._read_json_body()
+            raw_em = (body.get("email") or "").strip()
+            password = str(body.get("password") or "")
+            em = _normalize_email(raw_em)
+            if not em or "@" not in em or "." not in em.rsplit("@", 1)[-1]:
+                self._write_json(400, {"ok": False, "error": "invalid_email"})
+                return
+            if not password:
+                self._write_json(400, {"ok": False, "error": "password_required"})
+                return
+            acct = _get_account(em)
+            if not acct:
+                self._write_json(401, {"ok": False, "error": "invalid_credentials"})
+                return
+            if not acct.get("email_verified"):
+                self._write_json(403, {"ok": False, "error": "email_not_verified"})
+                return
+            if not _account_password_ok(acct, password):
+                self._write_json(401, {"ok": False, "error": "invalid_credentials"})
+                return
+            ok, err, extra = _issue_otp(em, "signin")
+            if not ok:
+                status = 429 if err == "rate_limit" else 502
+                payload = {"ok": False, "error": err or "send_failed"}
+                if isinstance(extra, dict):
+                    payload.update(extra)
+                self._write_json(status, payload)
+                return
+            self._write_json(200, {"ok": True, "step": "verify_code"})
+            return
+        if path == "/api/tm-viewer/auth/forgot-password":
+            body = self._read_json_body()
+            raw_em = (body.get("email") or "").strip()
+            em = _normalize_email(raw_em)
+            if not em or "@" not in em or "." not in em.rsplit("@", 1)[-1]:
+                self._write_json(400, {"ok": False, "error": "invalid_email"})
+                return
+            acct = _get_account(em)
+            if not acct:
+                self._write_json(404, {"ok": False, "error": "account_not_found"})
+                return
+            ok, err, extra = _issue_otp(em, "reset")
+            if not ok:
+                status = 429 if err == "rate_limit" else 502
+                payload = {"ok": False, "error": err or "send_failed"}
+                if isinstance(extra, dict):
+                    payload.update(extra)
+                self._write_json(status, payload)
+                return
+            self._write_json(200, {"ok": True, "step": "reset_password"})
+            return
+        if path == "/api/tm-viewer/auth/reset-password":
+            body = self._read_json_body()
+            raw_em = (body.get("email") or "").strip()
+            code_in = str(body.get("code") or "").strip().replace(" ", "")
+            password = str(body.get("new_password") or body.get("password") or "")
+            em = _normalize_email(raw_em)
+            if not em or not code_in.isdigit() or len(code_in) < 4 or len(code_in) > 10:
+                self._write_json(400, {"ok": False, "error": "invalid_input"})
+                return
+            pw_err = _validate_password_input(password)
+            if pw_err:
+                self._write_json(400, {"ok": False, "error": pw_err})
+                return
+            acct = _get_account(em)
+            if not acct:
+                self._write_json(404, {"ok": False, "error": "account_not_found"})
+                return
+            ok_code, err_code = _verify_otp_entry(em, code_in, "reset")
+            if not ok_code:
+                status = 429 if err_code == "too_many_attempts" else 401
+                self._write_json(status, {"ok": False, "error": err_code})
+                return
+            _set_account_password(acct, password, reason="reset")
+            with _auth_lock:
+                _accounts[em] = acct
+                _persist_accounts_locked()
+            tok = _create_session_for_email(em)
+            _touch_account_login(em)
+            self._write_json(200, {"ok": True, "token": tok, "email": em})
+            return
         if path == "/api/tm-viewer/auth/send-otp":
             body = self._read_json_body()
             raw_em = (body.get("email") or "").strip()
@@ -5423,23 +5805,13 @@ class _TmViewerApiHandler(BaseHTTPRequestHandler):
             if not em or "@" not in em or "." not in em.rsplit("@", 1)[-1]:
                 self._write_json(400, {"ok": False, "error": "invalid_email"})
                 return
-            now = time.time()
-            with _auth_lock:
-                last = float(_otp_last_send.get(em) or 0)
-                if now - last < _OTP_RESEND_COOLDOWN_SEC:
-                    self._write_json(
-                        429,
-                        {"ok": False, "error": "rate_limit", "retry_after_sec": int(_OTP_RESEND_COOLDOWN_SEC - (now - last)) + 1},
-                    )
-                    return
-                code = f"{random.randint(0, 999999):06d}"
-                _otp_pending[em] = {"code": code, "exp": now + _OTP_TTL_SEC, "fails": 0}
-                _otp_last_send[em] = now
-            ok, err = _send_otp_email(em, code)
+            ok, err, extra = _issue_otp(em, "signin_legacy")
             if not ok:
-                with _auth_lock:
-                    _otp_pending.pop(em, None)
-                self._write_json(502, {"ok": False, "error": "send_failed", "detail": err[:500]})
+                status = 429 if err == "rate_limit" else 502
+                payload = {"ok": False, "error": err or "send_failed"}
+                if isinstance(extra, dict):
+                    payload.update(extra)
+                self._write_json(status, payload)
                 return
             self._write_json(200, {"ok": True})
             return
@@ -5531,29 +5903,51 @@ class _TmViewerApiHandler(BaseHTTPRequestHandler):
             body = self._read_json_body()
             raw_em = (body.get("email") or "").strip()
             code_in = str(body.get("code") or "").strip().replace(" ", "")
+            purpose_in = str(body.get("purpose") or "signin").strip().lower()
             em = _normalize_email(raw_em)
             if not em or not code_in.isdigit() or len(code_in) < 4 or len(code_in) > 10:
                 self._write_json(400, {"ok": False, "error": "invalid_input"})
                 return
-            now = time.time()
-            with _auth_lock:
-                row = _otp_pending.get(em)
-                if not row or float(row.get("exp") or 0) < now:
-                    _otp_pending.pop(em, None)
-                    self._write_json(401, {"ok": False, "error": "code_expired"})
+            expected = purpose_in if purpose_in in ("signup", "signin", "reset") else "signin"
+            ok_code, err_code = _verify_otp_entry(em, code_in, expected)
+            if not ok_code:
+                status = 429 if err_code == "too_many_attempts" else 401
+                self._write_json(status, {"ok": False, "error": err_code})
+                return
+            if expected == "signup":
+                pending = None
+                with _auth_lock:
+                    pending = _signup_pending.pop(em, None)
+                if not pending or float(pending.get("exp") or 0) < time.time():
+                    self._write_json(410, {"ok": False, "error": "signup_expired"})
                     return
-                if int(row.get("fails") or 0) >= _OTP_MAX_VERIFY_FAILS:
-                    _otp_pending.pop(em, None)
-                    self._write_json(429, {"ok": False, "error": "too_many_attempts"})
+                if _get_account(em):
+                    self._write_json(409, {"ok": False, "error": "account_exists"})
                     return
-                if code_in != str(row.get("code") or ""):
-                    row["fails"] = int(row.get("fails") or 0) + 1
-                    self._write_json(401, {"ok": False, "error": "bad_code"})
-                    return
-                _otp_pending.pop(em, None)
-                tok = secrets.token_urlsafe(32)
-                _sessions[tok] = {"email": em, "exp": now + _SESSION_TTL_SEC}
-                _persist_sessions_locked()
+                row = {
+                    "email": em,
+                    "password": {
+                        "salt": pending.get("password_salt"),
+                        "hash": pending.get("password_hash"),
+                        "updated_at": _utc_now_iso(),
+                    },
+                    "password_history": [],
+                    "email_verified": True,
+                    "email_verified_at": _utc_now_iso(),
+                    "created_at": _utc_now_iso(),
+                    "updated_at": _utc_now_iso(),
+                    "last_login_at": None,
+                    "login_count": 0,
+                }
+                with _auth_lock:
+                    _accounts[em] = row
+                    _persist_accounts_locked()
+                tok = _create_session_for_email(em)
+                _touch_account_login(em)
+                self._write_json(200, {"ok": True, "token": tok, "email": em, "created": True})
+                return
+            tok = _create_session_for_email(em)
+            _touch_account_login(em)
             try:
                 from datetime import datetime, timezone
 
@@ -6106,6 +6500,7 @@ def _bootstrap_watch_and_sessions() -> None:
             _signin_log(f"[ticketmaster-watch] bad TM_VIEWER_WATCH_DIR: {e}")
     _maybe_infer_passes_static_dir()
     _load_sessions_from_disk()
+    _load_accounts_from_disk()
     _start_watch_thread_if_needed()
 
 

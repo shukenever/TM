@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/public/securetixx-theme.css"/>
   <link rel="stylesheet" href="/public/securetixx-shop-v2.css?v=7"/>
-  <link rel="stylesheet" href="/public/securetixx-login.css?v=1"/>
+  <link rel="stylesheet" href="/public/securetixx-login.css?v=2"/>
 </head>
 <body class="stx-app stx-shop-v2 stx-login-page">
 <header class="stx-header stx-header--mock" role="banner"><div class="stx-header-inner"><a class="stx-brand-lockup" href="/" aria-label="SecureTixx home"><span class="stx-brand-mark" aria-hidden="true"><svg viewBox="0 0 120 140" fill="none"><defs><linearGradient id="stxBrandShieldGrad" x1="24" y1="16" x2="96" y2="124" gradientUnits="userSpaceOnUse"><stop stop-color="#efffb8"/><stop offset="0.42" stop-color="#c6ff00"/><stop offset="1" stop-color="#3f6212"/></linearGradient></defs><path d="M60 10 104 28.5V72.5C104 101.5 86.5 122 60 132 33.5 122 16 101.5 16 72.5V28.5L60 10Z" fill="url(#stxBrandShieldGrad)" stroke="#d4ff4d" stroke-width="2.5"/><text x="60" y="88" text-anchor="middle" fill="#052e16" font-size="52" font-weight="800" font-family="Outfit,sans-serif">S</text></svg></span><span class="stx-brand-name">SecureTixx</span></a><nav class="stx-nav stx-nav--center" aria-label="Primary"><a href="/">Home</a><a href="/shop.html">Events</a><a href="/help.html">Help</a></nav><div class="stx-header-actions"></div></div></header>
@@ -48,39 +48,92 @@
       </div>
 
       <form id="stx-auth-form" novalidate>
-        <div class="stx-login-field">
-          <label for="tm-viewer-email">Email address</label>
-          <div class="stx-login-input-wrap">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/></svg>
-            <input type="email" id="tm-viewer-email" name="email" autocomplete="email" placeholder="Enter your email" required/>
+        <div class="stx-auth-step" id="stx-step-credentials" data-step="credentials">
+          <div class="stx-login-field">
+            <label for="tm-viewer-email">Email address</label>
+            <div class="stx-login-input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/></svg>
+              <input type="email" id="tm-viewer-email" name="email" autocomplete="email" placeholder="Enter your email" required/>
+            </div>
+          </div>
+
+          <div class="stx-login-field">
+            <label for="stx-login-password">Password</label>
+            <div class="stx-login-input-wrap stx-login-input-wrap--pass">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg>
+              <input type="password" id="stx-login-password" name="password" autocomplete="current-password" placeholder="Enter your password"/>
+              <button type="button" class="stx-login-toggle-pass" id="stx-toggle-pass" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg></button>
+            </div>
+          </div>
+
+          <div class="stx-login-row-actions">
+            <span></span>
+            <button type="button" class="stx-login-forgot" id="stx-forgot-open">Forgot password?</button>
+          </div>
+
+          <div class="stx-login-actions">
+            <button type="button" class="stx-login-btn stx-login-btn--primary" id="stx-auth-continue">Continue</button>
           </div>
         </div>
 
-        <div class="stx-login-field">
-          <label for="stx-login-password">Password</label>
-          <div class="stx-login-input-wrap stx-login-input-wrap--pass">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg>
-            <input type="password" id="stx-login-password" name="password" autocomplete="current-password" placeholder="Enter your password"/>
-            <button type="button" class="stx-login-toggle-pass" id="stx-toggle-pass" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg></button>
+        <div class="stx-auth-step" id="stx-step-code" data-step="code" hidden>
+          <p class="stx-login-step-hint" id="stx-code-hint">We sent a 6-digit code to your email. Enter it below to finish signing in.</p>
+          <div class="stx-login-field">
+            <label for="tm-viewer-otp">Sign-in code</label>
+            <div class="stx-login-input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 4 7v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V7l-8-4Z" stroke="currentColor" stroke-width="2"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <input type="text" id="tm-viewer-otp" name="code" inputmode="numeric" pattern="[0-9]*" maxlength="12" autocomplete="one-time-code" placeholder="Enter 6-digit code"/>
+            </div>
+          </div>
+          <div class="stx-login-actions">
+            <button type="button" class="stx-login-btn stx-login-btn--primary" id="tm-viewer-verify-otp">Verify &amp; continue</button>
+            <button type="button" class="stx-login-btn stx-login-btn--ghost" id="stx-resend-code">Resend code</button>
+            <button type="button" class="stx-login-btn stx-login-btn--ghost stx-login-btn--text" id="stx-back-credentials">Back</button>
           </div>
         </div>
 
-        <div class="stx-login-field">
-          <label for="tm-viewer-otp">Sign-in code</label>
-          <div class="stx-login-input-wrap">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 4 7v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V7l-8-4Z" stroke="currentColor" stroke-width="2"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            <input type="text" id="tm-viewer-otp" name="code" inputmode="numeric" pattern="[0-9]*" maxlength="12" autocomplete="one-time-code" placeholder="Enter 6-digit code from email"/>
+        <div class="stx-auth-step" id="stx-step-forgot" data-step="forgot" hidden>
+          <p class="stx-login-step-hint">Enter your account email and we&apos;ll send a reset code.</p>
+          <div class="stx-login-field">
+            <label for="stx-forgot-email">Email address</label>
+            <div class="stx-login-input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/></svg>
+              <input type="email" id="stx-forgot-email" autocomplete="email" placeholder="Enter your email"/>
+            </div>
+          </div>
+          <div class="stx-login-actions">
+            <button type="button" class="stx-login-btn stx-login-btn--primary" id="stx-forgot-send">Send reset code</button>
+            <button type="button" class="stx-login-btn stx-login-btn--ghost stx-login-btn--text" id="stx-back-from-forgot">Back to sign in</button>
           </div>
         </div>
 
-        <div class="stx-login-row-actions">
-          <span></span>
-          <a class="stx-login-forgot" href="mailto:support@securetixx.com?subject=Password%20help">Forgot password?</a>
-        </div>
-
-        <div class="stx-login-actions">
-          <button type="button" class="stx-login-btn stx-login-btn--primary" id="tm-viewer-verify-otp">Sign in</button>
-          <button type="button" class="stx-login-btn stx-login-btn--ghost" id="tm-viewer-send-otp">Send sign-in code</button>
+        <div class="stx-auth-step" id="stx-step-reset" data-step="reset" hidden>
+          <p class="stx-login-step-hint">Enter the reset code from your email and choose a new password.</p>
+          <div class="stx-login-field">
+            <label for="stx-reset-code">Reset code</label>
+            <div class="stx-login-input-wrap">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 4 7v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V7l-8-4Z" stroke="currentColor" stroke-width="2"/></svg>
+              <input type="text" id="stx-reset-code" inputmode="numeric" maxlength="12" autocomplete="one-time-code" placeholder="Enter 6-digit code"/>
+            </div>
+          </div>
+          <div class="stx-login-field">
+            <label for="stx-reset-password">New password</label>
+            <div class="stx-login-input-wrap stx-login-input-wrap--pass">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg>
+              <input type="password" id="stx-reset-password" autocomplete="new-password" placeholder="Choose a new password"/>
+            </div>
+          </div>
+          <div class="stx-login-field">
+            <label for="stx-reset-password2">Confirm password</label>
+            <div class="stx-login-input-wrap stx-login-input-wrap--pass">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg>
+              <input type="password" id="stx-reset-password2" autocomplete="new-password" placeholder="Confirm new password"/>
+            </div>
+          </div>
+          <div class="stx-login-actions">
+            <button type="button" class="stx-login-btn stx-login-btn--primary" id="stx-reset-submit">Update password</button>
+            <button type="button" class="stx-login-btn stx-login-btn--ghost stx-login-btn--text" id="stx-back-from-reset">Back</button>
+          </div>
         </div>
       </form>
 
@@ -110,9 +163,6 @@
   var TOKEN_KEY = 'tm_viewer_session_token';
   var EMAIL_KEY = 'tm_viewer_session_email';
   var SAVE_EMAIL_KEY = 'stx_login_email';
-  var SAVE_PASS_KEY = 'stx_login_password';
-  var SAVE_CODE_KEY = 'stx_login_code';
-  var ACCOUNTS_KEY = 'stx_accounts';
 
   function authStore() {
     try {
@@ -146,45 +196,37 @@
   } catch (eRedir) {}
 
   var mode = 'signin';
+  var otpPurpose = 'signin';
+  var resetEmail = '';
+
   var emailIn = document.getElementById('tm-viewer-email');
   var passIn = document.getElementById('stx-login-password');
   var codeIn = document.getElementById('tm-viewer-otp');
-  var btnSend = document.getElementById('tm-viewer-send-otp');
+  var btnContinue = document.getElementById('stx-auth-continue');
   var btnVerify = document.getElementById('tm-viewer-verify-otp');
+  var btnResend = document.getElementById('stx-resend-code');
+  var btnBackCred = document.getElementById('stx-back-credentials');
+  var btnForgotOpen = document.getElementById('stx-forgot-open');
+  var btnForgotSend = document.getElementById('stx-forgot-send');
+  var btnBackForgot = document.getElementById('stx-back-from-forgot');
+  var btnResetSubmit = document.getElementById('stx-reset-submit');
+  var btnBackReset = document.getElementById('stx-back-from-reset');
+  var forgotEmailIn = document.getElementById('stx-forgot-email');
+  var resetCodeIn = document.getElementById('stx-reset-code');
+  var resetPassIn = document.getElementById('stx-reset-password');
+  var resetPass2In = document.getElementById('stx-reset-password2');
   var statusEl = document.getElementById('tm-viewer-auth-status');
   var titleEl = document.getElementById('stx-auth-title');
   var subEl = document.getElementById('stx-auth-sub');
   var switchLabel = document.getElementById('stx-auth-switch-label');
   var modeToggle = document.getElementById('stx-auth-mode-toggle');
   var togglePass = document.getElementById('stx-toggle-pass');
-
-  function loadAccounts() {
-    try {
-      var raw = authGet(ACCOUNTS_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      return {};
-    }
-  }
-
-  function saveAccounts(map) {
-    try { authSet(ACCOUNTS_KEY, JSON.stringify(map || {})); } catch (e) {}
-  }
-
-  function persistFields() {
-    authSet(SAVE_EMAIL_KEY, ((emailIn && emailIn.value) || '').trim().toLowerCase());
-    authSet(SAVE_PASS_KEY, (passIn && passIn.value) || '');
-    authSet(SAVE_CODE_KEY, ((codeIn && codeIn.value) || '').trim());
-  }
-
-  function restoreFields() {
-    var em = authGet(SAVE_EMAIL_KEY);
-    var pw = authGet(SAVE_PASS_KEY);
-    var cd = authGet(SAVE_CODE_KEY);
-    if (emailIn && em) emailIn.value = em;
-    if (passIn && pw) passIn.value = pw;
-    if (codeIn && cd) codeIn.value = cd;
-  }
+  var codeHint = document.getElementById('stx-code-hint');
+  var stepCred = document.getElementById('stx-step-credentials');
+  var stepCode = document.getElementById('stx-step-code');
+  var stepForgot = document.getElementById('stx-step-forgot');
+  var stepReset = document.getElementById('stx-step-reset');
+  var switchRow = document.querySelector('.stx-login-switch');
 
   function setStatus(msg, isErr) {
     if (!statusEl) return;
@@ -206,8 +248,15 @@
   function mapErr(data) {
     if (!data || typeof data !== 'object') return 'Something went wrong.';
     var e = data.error;
-    if (e === 'no_tickets') return 'No tickets found for this email.';
     if (e === 'invalid_email') return 'Enter a valid email address.';
+    if (e === 'invalid_credentials') return 'Incorrect email or password.';
+    if (e === 'password_required') return 'Enter your password.';
+    if (e === 'password_too_short') return 'Password must be at least 6 characters.';
+    if (e === 'password_too_long') return 'Password is too long.';
+    if (e === 'account_exists') return 'An account with this email already exists. Sign in instead.';
+    if (e === 'account_not_found') return 'No account found for that email.';
+    if (e === 'email_not_verified') return 'Verify your email before signing in.';
+    if (e === 'signup_expired') return 'Sign-up expired. Start again with email and password.';
     if (e === 'rate_limit') return 'Please wait before requesting another code.';
     if (e === 'send_failed') return 'Could not send email. Try again later.';
     if (e === 'code_expired') return 'Code expired. Request a new one.';
@@ -229,38 +278,128 @@
     return ((codeIn && codeIn.value) || '').trim().replace(/\s/g, '');
   }
 
-  function validatePasswordForSignIn(email, password) {
-    var accounts = loadAccounts();
-    if (!accounts[email]) return true;
-    return accounts[email] === password;
+  function persistEmail() {
+    authSet(SAVE_EMAIL_KEY, getEmail());
   }
 
-  function saveAccount(email, password) {
-    var accounts = loadAccounts();
-    accounts[email] = password;
-    saveAccounts(accounts);
+  function restoreEmail() {
+    var em = authGet(SAVE_EMAIL_KEY);
+    if (emailIn && em) emailIn.value = em;
+  }
+
+  function showStep(name) {
+    [stepCred, stepCode, stepForgot, stepReset].forEach(function (el) {
+      if (!el) return;
+      el.hidden = el.getAttribute('data-step') !== name;
+    });
+    if (switchRow) switchRow.hidden = name === 'forgot' || name === 'reset';
+    setStatus('');
   }
 
   function applyMode() {
     var isSignUp = mode === 'signup';
     if (titleEl) titleEl.textContent = isSignUp ? 'Create your account' : 'Welcome back';
     if (subEl) subEl.textContent = isSignUp
-      ? 'Sign up with your email, password, and one-time code'
-      : 'Sign in to your SecureTixx account';
-    if (btnVerify) btnVerify.textContent = isSignUp ? 'Create account' : 'Sign in';
+      ? 'Sign up with email and password — we\'ll verify your email with a code'
+      : 'Sign in with email and password — then enter your sign-in code';
+    if (btnContinue) btnContinue.textContent = isSignUp ? 'Create account' : 'Continue';
     if (switchLabel) switchLabel.textContent = isSignUp ? 'Already have an account?' : "Don't have an account?";
     if (modeToggle) modeToggle.textContent = isSignUp ? 'Sign in' : 'Create one';
     if (passIn) passIn.autocomplete = isSignUp ? 'new-password' : 'current-password';
   }
 
-  restoreFields();
-  applyMode();
+  function postJson(path, payload) {
+    var base = apiBase();
+    if (!base) return Promise.reject(new Error('no_base'));
+    return fetch(base + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload || {})
+    }).then(function (r) {
+      return r.json().then(function (j) { return { ok: r.ok, status: r.status, j: j }; });
+    });
+  }
 
-  [emailIn, passIn, codeIn].forEach(function (el) {
-    if (!el) return;
-    el.addEventListener('input', persistFields);
-    el.addEventListener('change', persistFields);
-  });
+  function finishLogin(token, email) {
+    authSet(TOKEN_KEY, token);
+    authSet(EMAIL_KEY, (email || getEmail()).trim().toLowerCase());
+    persistEmail();
+    window.location.href = '/my-tickets';
+  }
+
+  function startAuthFlow() {
+    persistEmail();
+    var email = getEmail();
+    var password = getPassword();
+    if (!email || email.indexOf('@') < 0) {
+      setStatus('Enter a valid email address.', true);
+      return;
+    }
+    if (password.length < 6) {
+      setStatus('Password must be at least 6 characters.', true);
+      return;
+    }
+    var path = mode === 'signup' ? '/api/tm-viewer/auth/register' : '/api/tm-viewer/auth/signin';
+    otpPurpose = mode === 'signup' ? 'signup' : 'signin';
+    btnContinue.disabled = true;
+    postJson(path, { email: email, password: password })
+      .then(function (x) {
+        btnContinue.disabled = false;
+        if (!(x.j && x.j.ok)) {
+          if (x.status === 429 && x.j && x.j.retry_after_sec)
+            setStatus('Wait ' + x.j.retry_after_sec + 's before another code.', true);
+          else setStatus(mapErr(x.j), true);
+          return;
+        }
+        if (codeHint) {
+          codeHint.textContent = mode === 'signup'
+            ? 'We sent a verification code to ' + email + '. Enter it below to activate your account.'
+            : 'We sent a sign-in code to ' + email + '. Enter it below to continue.';
+        }
+        if (codeIn) codeIn.value = '';
+        showStep('code');
+        if (codeIn) codeIn.focus();
+        setStatus('Check your email for the code.');
+      })
+      .catch(function () {
+        btnContinue.disabled = false;
+        setStatus('Connection problem. Check your internet and try again.', true);
+      });
+  }
+
+  function verifyCode() {
+    var email = getEmail();
+    var code = getCode();
+    if (!code) {
+      setStatus('Enter the code from your email.', true);
+      return;
+    }
+    btnVerify.disabled = true;
+    postJson('/api/tm-viewer/auth/verify-otp', {
+      email: email,
+      code: code,
+      purpose: otpPurpose
+    })
+      .then(function (x) {
+        btnVerify.disabled = false;
+        if (!(x.j && x.j.ok && x.j.token)) {
+          setStatus(mapErr(x.j), true);
+          return;
+        }
+        setStatus(mode === 'signup' ? 'Account created. Redirecting…' : 'Signed in. Redirecting…');
+        finishLogin(x.j.token, x.j.email || email);
+      })
+      .catch(function () {
+        btnVerify.disabled = false;
+        setStatus('Network error.', true);
+      });
+  }
+
+  restoreEmail();
+  applyMode();
+  showStep('credentials');
+
+  if (emailIn) emailIn.addEventListener('input', persistEmail);
 
   if (togglePass && passIn) {
     togglePass.addEventListener('click', function () {
@@ -274,105 +413,96 @@
     modeToggle.addEventListener('click', function () {
       mode = mode === 'signin' ? 'signup' : 'signin';
       applyMode();
-      setStatus('');
+      showStep('credentials');
     });
   }
 
-  if (btnSend) {
-    btnSend.addEventListener('click', function () {
-      setStatus('');
-      persistFields();
-      var base = apiBase();
-      if (!base) {
-        setStatus('Open this page from your live site (HTTPS), not as a local file.', true);
-        return;
-      }
-      var email = getEmail();
+  if (btnContinue) btnContinue.addEventListener('click', startAuthFlow);
+  if (btnVerify) btnVerify.addEventListener('click', verifyCode);
+  if (btnResend) btnResend.addEventListener('click', startAuthFlow);
+  if (btnBackCred) btnBackCred.addEventListener('click', function () { showStep('credentials'); });
+
+  if (btnForgotOpen) {
+    btnForgotOpen.addEventListener('click', function () {
+      if (forgotEmailIn) forgotEmailIn.value = getEmail();
+      showStep('forgot');
+    });
+  }
+  if (btnBackForgot) {
+    btnBackForgot.addEventListener('click', function () { showStep('credentials'); });
+  }
+  if (btnForgotSend) {
+    btnForgotSend.addEventListener('click', function () {
+      var email = ((forgotEmailIn && forgotEmailIn.value) || '').trim().toLowerCase();
       if (!email || email.indexOf('@') < 0) {
         setStatus('Enter a valid email address.', true);
         return;
       }
-      var password = getPassword();
-      if (mode === 'signup' && password.length < 6) {
-        setStatus('Choose a password with at least 6 characters.', true);
-        return;
-      }
-      if (mode === 'signin' && !validatePasswordForSignIn(email, password)) {
-        setStatus('Incorrect password for this account.', true);
-        return;
-      }
-      btnSend.disabled = true;
-      fetch(base + '/api/tm-viewer/auth/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email })
-      })
-        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, j: j }; }); })
+      resetEmail = email;
+      btnForgotSend.disabled = true;
+      postJson('/api/tm-viewer/auth/forgot-password', { email: email })
         .then(function (x) {
-          btnSend.disabled = false;
-          if (x.j && x.j.ok) {
-            setStatus('Check your email for the sign-in code.');
-            if (codeIn) codeIn.focus();
+          btnForgotSend.disabled = false;
+          if (!(x.j && x.j.ok)) {
+            if (x.status === 429 && x.j && x.j.retry_after_sec)
+              setStatus('Wait ' + x.j.retry_after_sec + 's before another code.', true);
+            else setStatus(mapErr(x.j), true);
             return;
           }
-          if (x.status === 429 && x.j && x.j.retry_after_sec)
-            setStatus('Wait ' + x.j.retry_after_sec + 's before another code.', true);
-          else setStatus(mapErr(x.j), true);
+          if (resetCodeIn) resetCodeIn.value = '';
+          if (resetPassIn) resetPassIn.value = '';
+          if (resetPass2In) resetPass2In.value = '';
+          showStep('reset');
+          setStatus('Reset code sent. Check your email.');
         })
         .catch(function () {
-          btnSend.disabled = false;
-          setStatus('Connection problem. Check your internet and try again.', true);
+          btnForgotSend.disabled = false;
+          setStatus('Network error.', true);
         });
     });
   }
-
-  if (btnVerify) {
-    btnVerify.addEventListener('click', function () {
-      setStatus('');
-      persistFields();
-      var base = apiBase();
-      if (!base) return;
-      var email = getEmail();
-      var password = getPassword();
-      var code = getCode();
-      if (!email || email.indexOf('@') < 0) {
-        setStatus('Enter a valid email address.', true);
-        return;
-      }
-      if (mode === 'signup' && password.length < 6) {
-        setStatus('Choose a password with at least 6 characters.', true);
-        return;
-      }
-      if (mode === 'signin' && !validatePasswordForSignIn(email, password)) {
-        setStatus('Incorrect password for this account.', true);
+  if (btnBackReset) {
+    btnBackReset.addEventListener('click', function () { showStep('forgot'); });
+  }
+  if (btnResetSubmit) {
+    btnResetSubmit.addEventListener('click', function () {
+      var email = resetEmail || ((forgotEmailIn && forgotEmailIn.value) || '').trim().toLowerCase();
+      var code = ((resetCodeIn && resetCodeIn.value) || '').trim().replace(/\s/g, '');
+      var pw = (resetPassIn && resetPassIn.value) || '';
+      var pw2 = (resetPass2In && resetPass2In.value) || '';
+      if (!email) {
+        setStatus('Enter your email on the previous step.', true);
         return;
       }
       if (!code) {
-        setStatus('Enter the sign-in code from your email, or send a new code.', true);
+        setStatus('Enter the reset code from your email.', true);
         return;
       }
-      btnVerify.disabled = true;
-      fetch(base + '/api/tm-viewer/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, code: code })
+      if (pw.length < 6) {
+        setStatus('Password must be at least 6 characters.', true);
+        return;
+      }
+      if (pw !== pw2) {
+        setStatus('Passwords do not match.', true);
+        return;
+      }
+      btnResetSubmit.disabled = true;
+      postJson('/api/tm-viewer/auth/reset-password', {
+        email: email,
+        code: code,
+        new_password: pw
       })
-        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
         .then(function (x) {
-          btnVerify.disabled = false;
+          btnResetSubmit.disabled = false;
           if (!(x.j && x.j.ok && x.j.token)) {
             setStatus(mapErr(x.j), true);
             return;
           }
-          if (password) saveAccount(email, password);
-          authSet(TOKEN_KEY, x.j.token);
-          authSet(EMAIL_KEY, ((x.j && x.j.email) || email).trim().toLowerCase());
-          persistFields();
-          setStatus(mode === 'signup' ? 'Account created. Redirecting…' : 'Signed in. Redirecting…');
-          window.location.href = '/my-tickets';
+          setStatus('Password updated. Redirecting…');
+          finishLogin(x.j.token, x.j.email || email);
         })
         .catch(function () {
-          btnVerify.disabled = false;
+          btnResetSubmit.disabled = false;
           setStatus('Network error.', true);
         });
     });
