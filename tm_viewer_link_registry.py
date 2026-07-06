@@ -95,7 +95,7 @@ STUBBY_BASE_DIR / TM_VIEWER_STUBBY_BASE_DIR — folder containing ``tm_viewer_de
 TM_VIEWER_DELIVERIES_PRIMARY — ``1``/``0``/unset; unset = auto (use deliveries if file has data)
 TM_RESEND_FROM — optional Resend From (default SecureTixx <noreply@securetixx.com>).
 TM_RESEND_API_KEY — Resend API key (default baked in; override in production via env).
-**Email routing (default resend):** all OTP/viewer mail via **Resend** on securetixx.com. Override: ``TM_VIEWER_EMAIL_PROVIDER=split`` (gmail/yahoo→Mailgun) or ``mailgun``.
+**Email routing (default split):** gmail/yahoo → **Mailgun** (``SMTP/mailgun_sender.py``: key + ``securetixx.com`` domain, From ``SecureTixx <noreply@securetixx.com>``). Other domains → **Resend**. Override: ``TM_VIEWER_EMAIL_PROVIDER=resend`` or ``mailgun``.
 **Debug:** ``TM_VIEWER_API_DEBUG=1`` logs every POST path to stdout (see why Vercel proxy path does not match).
 **Stubby:** ``STUBBY_START_TM_VIEWER_API=1`` starts this HTTP API in a background thread when stubby launches (default host ``0.0.0.0``, port ``TM_VIEWER_API_PORT`` or ``3919``).
     Then point Vercel ``TM_VIEWER_BACKEND_URL`` at ``http://74.0.48.168:3919`` (no ``/api`` suffix; same host as registry).
@@ -2940,11 +2940,34 @@ def _load_smtp_mailgun_config() -> tuple[str, str, str] | None:
     k = str(getattr(mod, "MAILGUN_API_KEY", "") or "").strip()
     dom = str(getattr(mod, "MAILGUN_DOMAIN", "") or "").strip()
     fr = str(getattr(mod, "DEFAULT_FROM_EMAIL", "") or "").strip()
+    if not fr:
+        fn = getattr(mod, "mailgun_from_email", None)
+        if callable(fn):
+            try:
+                fr = str(fn() or "").strip()
+            except Exception:
+                fr = ""
     if k and dom:
-        if not fr:
-            fr = _mailgun_from_line()
+        fr = _mailgun_from_for_domain(dom, fr)
         return k, dom, fr
     return None
+
+
+def _mailgun_from_for_domain(domain: str, preferred: str = "") -> str:
+    """Ensure Mailgun From uses the verified sending domain (avoids 403 Forbidden)."""
+    dom = (domain or "").strip().lower()
+    raw = (preferred or "").strip()
+    if raw:
+        m = re.search(r"<([^<>]+)>", raw)
+        addr = m.group(1).strip() if m else raw
+        if "@" in addr and dom and addr.rsplit("@", 1)[-1].lower() == dom:
+            if "<" in raw and ">" in raw:
+                return raw
+            name = raw.split("<", 1)[0].strip() or "SecureTixx"
+            return f"{name} <{addr}>"
+    if dom:
+        return f"SecureTixx <noreply@{dom}>"
+    return _mailgun_from_line()
 
 
 def _transfer_email_template_path() -> Path | None:
@@ -3872,8 +3895,8 @@ def _build_buyer_transfer_email_html(
 
 
 def _viewer_email_provider_mode() -> str:
-    """split, mailgun, or resend (default resend for SecureTixx)."""
-    return (os.environ.get("TM_VIEWER_EMAIL_PROVIDER") or "resend").strip().lower()
+    """split (default), mailgun, or resend."""
+    return (os.environ.get("TM_VIEWER_EMAIL_PROVIDER") or "split").strip().lower()
 
 
 def _recipient_domain_uses_mailgun(to_email: str) -> bool:
@@ -3902,7 +3925,8 @@ def _mailgun_from_line() -> str:
     raw = (os.environ.get("MAILGUN_FROM") or os.environ.get("TM_MAILGUN_FROM") or "").strip()
     if raw:
         return raw
-    return "Ticketmaster <customer_support@email.ticketmaster.com>"
+    dom = (os.environ.get("MAILGUN_DOMAIN") or "securetixx.com").strip()
+    return _mailgun_from_for_domain(dom, "")
 
 
 def _html_to_plain_email(subject: str, html_body: str) -> str:
@@ -3923,9 +3947,10 @@ def _send_mailgun_html_email(to_email: str, subject: str, html_body: str) -> tup
     if cfg:
         key, domain, from_line = cfg
     else:
-        key = (os.environ.get("MAILGUN_API_KEY") or "").strip()
-        domain = (os.environ.get("MAILGUN_DOMAIN") or "").strip()
-        from_line = _mailgun_from_line()
+        # Same defaults as SMTP/mailgun_sender.py when module not on disk (VPS layout).
+        key = (os.environ.get("MAILGUN_API_KEY") or "9ef52fcd1b05ede6643d5723c5b7b7b1-3330bd33-73fc8d4f").strip()
+        domain = (os.environ.get("MAILGUN_DOMAIN") or "securetixx.com").strip()
+        from_line = _mailgun_from_for_domain(domain, _mailgun_from_line())
     if not key or not domain:
         return False, "Mailgun: add smtp/mailgun_sender.py (stubby layout) or set MAILGUN_API_KEY + MAILGUN_DOMAIN"
     url = f"https://api.mailgun.net/v3/{domain}/messages"
