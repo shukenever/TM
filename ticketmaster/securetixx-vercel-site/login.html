@@ -298,7 +298,12 @@
     if (e === 'email_not_verified') return 'Verify your email before signing in.';
     if (e === 'signup_expired') return 'Sign-up expired. Start again with email and password.';
     if (e === 'rate_limit') return 'Please wait before requesting another code.';
-    if (e === 'send_failed') return 'Could not send email. Try again later.';
+    if (e === 'send_failed') {
+      var detail = (data && data.detail) ? String(data.detail) : '';
+      if (/forbidden/i.test(detail)) return 'Email could not be sent (Mailgun rejected). Retrying via backup — restart the VPS registry if this persists.';
+      if (detail) return 'Could not send email: ' + detail.slice(0, 120);
+      return 'Could not send email. Try again later.';
+    }
     if (e === 'code_expired') return 'Code expired. Request a new one.';
     if (e === 'bad_code') return 'Incorrect code. Try again.';
     if (e === 'too_many_attempts') return 'Too many attempts. Request a new code.';

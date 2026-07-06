@@ -3975,7 +3975,16 @@ def _send_mailgun_html_email(to_email: str, subject: str, html_body: str) -> tup
 def _send_viewer_html_email(to_email: str, subject: str, html_body: str) -> tuple[bool, str]:
     """OTP + buyer transfer: split default — gmail/yahoo→Mailgun, other domains→Resend."""
     if _viewer_outbound_uses_mailgun_for(to_email):
-        return _send_mailgun_html_email(to_email, subject, html_body)
+        ok, err = _send_mailgun_html_email(to_email, subject, html_body)
+        if ok:
+            return True, ""
+        err_l = (err or "").lower()
+        if "forbidden" in err_l or "401" in err_l or "403" in err_l:
+            ok2, err2 = _send_resend_html_email(to_email, subject, html_body)
+            if ok2:
+                return True, ""
+            return False, err2 or err
+        return False, err
     return _send_resend_html_email(to_email, subject, html_body)
 
 
