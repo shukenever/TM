@@ -36,6 +36,7 @@ const siteSrc = path.join(root, "ticketmaster", siteFolder);
 const NAMES = [
   "index.html",
   "login.html",
+  "help.html",
   "my-tickets.html",
   "shop.html",
   "tickets",

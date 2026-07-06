@@ -32,7 +32,8 @@
     { "source": "/index.html", "destination": "/", "permanent": true },
     { "source": "/login.html", "destination": "/login", "permanent": true },
     { "source": "/my-tickets.html", "destination": "/my-tickets", "permanent": true },
-    { "source": "/shop.html", "destination": "/shop", "permanent": true }
+    { "source": "/shop.html", "destination": "/shop", "permanent": true },
+    { "source": "/help.html", "destination": "/help", "permanent": true }
   ],
   "rewrites": [
     {
