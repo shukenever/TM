@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/public/securetixx-theme.css"/>
+  <link rel="stylesheet" href="/public/securetixx-shop-v2.css"/>
   <style>
     :root {
       --tm-blue: #059669;
@@ -1027,176 +1028,128 @@
     }
   </style>
 </head>
-<body class="stx-app stx-shop">
-<header class="stx-shop-bar" role="banner"><div class="stx-shop-bar-inner"><a class="stx-logo" href="/"><img src="/public/securetixx-logo-header.svg" alt="SecureTixx" height="32"/></a><nav class="stx-nav"><a href="/shop.html">Marketplace</a><a href="/">Home</a><a href="/my-tickets">Wallet</a></nav></div></header>
-  <header class="topbar">
-    <div class="tm-simple-bar">
-      <a class="tixx-brand" href="/" aria-label="SecureTixx home">
-        <img class="tixx-logo tixx-logo--on-dark"
-             src="/public/tixx-logo-header-sm.png"
-             srcset="/public/tixx-logo-header-sm.png 1x, /public/tixx-logo-header.png 2x"
-             alt="SecureTixx" width="100" height="32"/>
-      </a>
-      <nav class="tm-nav-links">
-        <a href="/">Home</a>
-        <a href="/shop.html" class="active">Shop</a>
-        <a href="/my-tickets">My tickets</a>
-        <button type="button" class="tixx-settings-btn-nav" data-tixx-settings title="Settings" aria-label="Settings">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        </button>
-        <a class="tm-login-btn" href="/login">Log in</a>
-      </nav>
-    </div>
-  </header>
+<body class="stx-app stx-shop stx-shop-v2">
+<header class="stx-header" role="banner"><div class="stx-header-inner"><a class="stx-logo" href="/" aria-label="SecureTixx home"><img src="/public/securetixx-logo-header.svg" alt="SecureTixx" width="168" height="34"/></a><nav class="stx-nav" aria-label="Primary"><a href="/">Home</a><a href="/shop.html" class="is-active">Events</a><a href="/my-tickets">My Tickets</a></nav><div class="stx-header-actions"><button type="button" class="tixx-settings-btn-nav" data-tixx-settings title="Settings" aria-label="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><div id="tm-topbar-guest" class="tm-topbar-account-slot"><button type="button" class="tm-topbar-login-btn" id="tm-topbar-login">Sign In</button></div><div id="tm-topbar-signed" class="tm-topbar-account-slot" hidden><div class="tm-account-wrap"><button type="button" class="tm-topbar-account-trigger" id="tm-topbar-account-btn" aria-expanded="false" aria-haspopup="true"><svg class="tm-account-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2"/></svg><span id="tm-topbar-account-label" class="tm-topbar-account-label">Account</span></button></div></div></div></div></header>
 
-  <section class="shop-discover" aria-label="Search tickets">
-    <div class="discover-inner">
-      <div class="discover-top">
-        <button type="button" class="loc-chip" id="loc-chip" title="Change location">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="currentColor" stroke-width="2"/><path d="M12 21s7-4.35 7-10a7 7 0 1 0-14 0c0 5.65 7 10 7 10Z" stroke="currentColor" stroke-width="2"/></svg>
-          <span id="loc-label">Detecting location…</span>
-        </button>
-        <nav class="discover-cats" aria-label="Categories">
-          <a href="#" data-disc-cat="all" class="active">All</a>
-          <a href="#" data-disc-cat="concerts">Concerts</a>
-          <a href="#" data-disc-cat="sports">Sports</a>
-          <a href="#" data-disc-cat="events">Theater &amp; shows</a>
-          <a href="#" data-disc-cat="parking">Parking</a>
-        </nav>
+<main class="stx-shop-main">
+  <section class="stx-hero-v2" aria-label="SecureTixx marketplace">
+    <div class="stx-hero-v2-inner">
+      <div class="stx-hero-v2-copy">
+        <p class="stx-hero-v2-badge">100% Verified · 100% Secure</p>
+        <h1>Verified tickets. <em>Delivered</em> in seconds.</h1>
+        <p class="stx-hero-v2-sub">Mobile passes with rotating barcodes · Instant email delivery · Priced below face value on concerts, sports, and shows.</p>
+        <div class="stx-hero-v2-actions">
+          <a class="stx-btn-primary" href="#shop-events">Find Events</a>
+          <a class="stx-btn-ghost" href="#shop-search">How it works</a>
+        </div>
+        <ul class="stx-hero-v2-stats" aria-label="Highlights">
+          <li><strong>100% Verified</strong><span>SafeTix barcodes</span></li>
+          <li><strong>Secure Delivery</strong><span>Instant email passes</span></li>
+          <li><strong>Fan First</strong><span>Below face value</span></li>
+        </ul>
       </div>
-      <div class="discover-search-hero">
-        <h1 id="discover-title">Search events, artists, and venues</h1>
-        <form class="search-strip search-strip--hero" id="search-form" role="search">
-          <div class="search-seg search-seg--grow">
-            <label for="f-q">Search</label>
-            <input id="f-q" type="search" placeholder="Artist, event, or venue" autocomplete="off"/>
+      <div class="stx-hero-v2-art" aria-hidden="true">
+        <div class="stx-hero-v2-shield-wrap">
+          <svg class="stx-hero-v2-shield" viewBox="0 0 64 64" fill="none"><path d="M32 4 54 14v16c0 14.5-10 26.5-22 30C20 46.5 10 34.5 10 30V14L32 4Z" stroke="currentColor" stroke-width="3"/><path d="M24 32l6 6 12-14" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="stx-hero-v2-metrics">
+            <div><strong>250K+</strong><span>Tickets sold</span></div>
+            <div><strong>98.7%</strong><span>Successful delivery</span></div>
+            <div><strong>24/7</strong><span>Customer support</span></div>
           </div>
-          <button type="submit" class="search-go" aria-label="Search">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          </button>
-        </form>
+        </div>
       </div>
-      <form id="search-advanced" hidden>
-        <input id="f-location" type="hidden"/>
-      </form>
     </div>
   </section>
 
-  <div class="trust-row" aria-label="Trust badges">
-    <span class="trust-pill"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 9.5-8 10-4.5-.5-8-5-8-10V6l8-4Z" stroke="currentColor" stroke-width="2"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Verified TM passes</span>
-    <span class="trust-pill"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Instant email delivery</span>
-    <span class="trust-pill"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>50% off face value</span>
+  <div class="stx-shop-body">
+    <div class="stx-shell">
+      <aside class="stx-sidebar" aria-label="Browse">
+        <div class="stx-sidebar-card">
+          <h2>Browse categories</h2>
+          <ul class="stx-cat-list" id="stx-sidebar-cats">
+            <li><a href="#" class="stx-sidebar-cat is-active" data-cat="all"><span class="stx-cat-ico stx-cat-ico--all">🎫</span>All listings</a></li>
+            <li><a href="#" class="stx-sidebar-cat" data-cat="concerts"><span class="stx-cat-ico stx-cat-ico--concerts">🎵</span>Concerts</a></li>
+            <li><a href="#" class="stx-sidebar-cat" data-cat="sports"><span class="stx-cat-ico stx-cat-ico--sports">🏟</span>Sports</a></li>
+            <li><a href="#" class="stx-sidebar-cat" data-cat="events"><span class="stx-cat-ico stx-cat-ico--shows">🎭</span>Theater &amp; drama</a></li>
+            <li><a href="#" class="stx-sidebar-cat" data-cat="parking"><span class="stx-cat-ico stx-cat-ico--all">🅿</span>Parking</a></li>
+          </ul>
+        </div>
+        <div class="stx-sidebar-card stx-sidebar-cta">
+          <p>Have extra tickets? List them securely on SecureTixx and reach buyers instantly.</p>
+          <a href="mailto:ezy.dev.bot@gmail.com">Sell tickets →</a>
+        </div>
+      </aside>
+      <div class="stx-main-col">
+        <div class="stx-search-float" id="shop-search">
+          <div class="stx-search-float-card">
+            <div class="stx-search-float-lead">
+              <span class="stx-search-float-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M16 16l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+              <div><strong>Find your next event</strong><span>Search by artist, team, or venue</span></div>
+            </div>
+            <form class="stx-search-float-grid" id="search-form" role="search">
+              <input id="f-q" type="search" placeholder="Search events, artists or teams" autocomplete="off" aria-label="Search"/>
+              <select id="f-date" aria-label="Date"><option value="all">Any date</option><option value="week">Next 7 days</option><option value="month">Next 30 days</option><option value="future">Upcoming only</option></select>
+              <input id="f-location" type="search" placeholder="All locations" autocomplete="off" aria-label="Location"/>
+              <button type="submit">Search Events</button>
+            </form>
+          </div>
+        </div>
+
+        <section class="stx-events-panel" id="shop-events">
+          <div class="stx-events-head">
+            <div>
+              <h2 id="all-events-heading">Popular Events</h2>
+              <p id="results-meta">Loading…</p>
+            </div>
+            <div class="stx-events-tools">
+              <select id="f-sort" aria-label="Sort"><option value="date">Sort: Date</option><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option><option value="name">Name A–Z</option></select>
+            </div>
+          </div>
+
+          <div id="discover-sections" class="discover-sections stx-legacy-hidden" hidden aria-hidden="true">
+            <section class="carousel-section" id="sec-near" hidden><div class="carousel-track" id="carousel-near"></div></section>
+            <section class="carousel-section" id="sec-popular"><div class="carousel-track" id="carousel-popular"></div></section>
+            <section class="carousel-section" id="sec-concerts"><div class="carousel-track" id="carousel-concerts"></div></section>
+            <section class="carousel-section" id="sec-sports"><div class="carousel-track" id="carousel-sports"></div></section>
+            <section class="carousel-section" id="sec-shows"><div class="carousel-track" id="carousel-shows"></div></section>
+          </div>
+          <div id="filters-sticky" class="stx-legacy-hidden" hidden aria-hidden="true">
+            <div class="cat-row" id="cat-row">
+              <button type="button" class="cat-pill active" data-cat="all">All</button>
+              <button type="button" class="cat-pill" data-cat="concerts">Concerts</button>
+              <button type="button" class="cat-pill" data-cat="sports">Sports</button>
+              <button type="button" class="cat-pill" data-cat="parking">Parking</button>
+              <button type="button" class="cat-pill" data-cat="events">More events</button>
+            </div>
+            <div class="view-toggle"><button type="button" class="active" data-view="events">Events</button><button type="button" data-view="listings">All seats</button></div>
+          </div>
+
+          <div id="load">
+            <div class="skeleton-grid" aria-hidden="true">
+              <div class="skeleton-card"><div class="skeleton-block skeleton-thumb"></div><div><div class="skeleton-block skeleton-line med"></div><div class="skeleton-block skeleton-line short"></div></div><div class="skeleton-block skeleton-price"></div></div>
+              <div class="skeleton-card"><div class="skeleton-block skeleton-thumb"></div><div><div class="skeleton-block skeleton-line med"></div><div class="skeleton-block skeleton-line short"></div></div><div class="skeleton-block skeleton-price"></div></div>
+            </div>
+            <p style="margin-top:1rem;font-size:.875rem;padding:0 1.25rem">Loading marketplace…</p>
+          </div>
+          <div id="event-grid" class="stx-event-list" hidden></div>
+          <div id="listing-grid" class="listing-grid" hidden></div>
+          <div id="empty" class="empty" hidden>No tickets match your search.</div>
+        </section>
+      </div>
+    </div>
   </div>
+</main>
 
-  <main class="shop-main">
-    <div id="banner" class="banner" hidden></div>
+<footer class="stx-trust-footer" role="contentinfo">
+  <div class="stx-trust-footer-grid">
+    <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-.5-8-5-8-10V6l8-4Z" stroke="currentColor" stroke-width="2"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><div><strong>Buyer Guarantee</strong><span>Every pass verified before delivery</span></div></div>
+    <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18" stroke="currentColor" stroke-width="2"/></svg><div><strong>Secure Payments</strong><span>Encrypted checkout &amp; delivery</span></div></div>
+    <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><div><strong>Instant Transfer</strong><span>Mobile passes in seconds</span></div></div>
+    <div class="stx-trust-footer-item"><svg viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><div><strong>24/7 Support</strong><span>Help whenever you need it</span></div></div>
+  </div>
+</footer>
 
-    <div id="discover-sections" class="discover-sections">
-      <section class="carousel-section" id="sec-near" hidden>
-        <div class="carousel-head">
-          <h2>Events near you</h2>
-          <a href="#" class="carousel-see" data-see="near">See all</a>
-        </div>
-        <div class="carousel-wrap"><div class="carousel-track" id="carousel-near"></div></div>
-      </section>
-      <section class="carousel-section" id="sec-popular">
-        <div class="carousel-head">
-          <h2>Popular events</h2>
-          <a href="#" class="carousel-see" data-see="popular">See all</a>
-        </div>
-        <div class="carousel-wrap"><div class="carousel-track" id="carousel-popular"><p class="carousel-empty">Loading inventory…</p></div></div>
-      </section>
-      <section class="carousel-section" id="sec-concerts">
-        <div class="carousel-head">
-          <h2>Concerts</h2>
-          <a href="#" class="carousel-see" data-see="concerts">See all</a>
-        </div>
-        <div class="carousel-wrap"><div class="carousel-track" id="carousel-concerts"></div></div>
-      </section>
-      <section class="carousel-section" id="sec-sports">
-        <div class="carousel-head">
-          <h2>Sports</h2>
-          <a href="#" class="carousel-see" data-see="sports">See all</a>
-        </div>
-        <div class="carousel-wrap"><div class="carousel-track" id="carousel-sports"></div></div>
-      </section>
-      <section class="carousel-section" id="sec-shows">
-        <div class="carousel-head">
-          <h2>Shows &amp; theater</h2>
-          <a href="#" class="carousel-see" data-see="shows">See all</a>
-        </div>
-        <div class="carousel-wrap"><div class="carousel-track" id="carousel-shows"></div></div>
-      </section>
-    </div>
-
-    <div class="filters-sticky" id="filters-sticky">
-    <h2 class="all-events-heading" id="all-events-heading">All events</h2>
-    <div class="cat-row" id="cat-row">
-      <button type="button" class="cat-pill active" data-cat="all">All</button>
-      <button type="button" class="cat-pill" data-cat="concerts">Concerts</button>
-      <button type="button" class="cat-pill" data-cat="sports">Sports</button>
-      <button type="button" class="cat-pill" data-cat="parking">Parking</button>
-      <button type="button" class="cat-pill" data-cat="events">More events</button>
-    </div>
-
-    <div class="toolbar">
-      <p class="results-meta" id="results-meta">Loading…</p>
-      <div class="toolbar-right">
-        <select id="f-date" aria-label="Date">
-          <option value="all">All dates</option>
-          <option value="week">Next 7 days</option>
-          <option value="month">Next 30 days</option>
-          <option value="future">Upcoming only</option>
-        </select>
-        <select id="f-sort" aria-label="Sort">
-          <option value="date">Sort: Date</option>
-          <option value="price_asc">Price: low to high</option>
-          <option value="price_desc">Price: high to low</option>
-          <option value="name">Name A–Z</option>
-        </select>
-        <div class="view-toggle">
-          <button type="button" class="active" data-view="events">Events</button>
-          <button type="button" data-view="listings">All seats</button>
-        </div>
-      </div>
-    </div>
-    </div>
-
-    <div id="load">
-      <div class="skeleton-grid" aria-hidden="true">
-        <div class="skeleton-card"><div class="skeleton-block skeleton-thumb"></div><div><div class="skeleton-block skeleton-line med"></div><div class="skeleton-block skeleton-line short"></div></div><div class="skeleton-block skeleton-price"></div></div>
-        <div class="skeleton-card"><div class="skeleton-block skeleton-thumb"></div><div><div class="skeleton-block skeleton-line med"></div><div class="skeleton-block skeleton-line short"></div></div><div class="skeleton-block skeleton-price"></div></div>
-        <div class="skeleton-card"><div class="skeleton-block skeleton-thumb"></div><div><div class="skeleton-block skeleton-line med"></div><div class="skeleton-block skeleton-line short"></div></div><div class="skeleton-block skeleton-price"></div></div>
-      </div>
-      <p style="margin-top:1rem;font-size:.875rem">Loading marketplace…</p>
-    </div>
-    <div id="event-grid" class="event-grid" hidden></div>
-    <div id="listing-grid" class="listing-grid" hidden></div>
-    <div id="empty" class="empty" hidden>
-      No tickets match your search.
-      <br/><br/>
-      <a href="mailto:ezy.dev.bot@gmail.com">ezy.dev.bot@gmail.com</a>
-    </div>
-  </main>
-
-  <footer>
-    <div class="footer-inner">
-      <div class="footer-brand">
-        <img class="tixx-logo" src="/public/securetixx-logo.svg" alt="SecureTixx" width="87" height="28"/>
-        <span>Verified ticket marketplace</span>
-      </div>
-      <div class="footer-links">
-        <a class="footer-social" href="https://securetixx.com" target="_blank" rel="noopener noreferrer" aria-label="SecureTixx website">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
-          securetixx.com
-        </a>
-        <span>
-          <a href="mailto:ezy.dev.bot@gmail.com">Support</a>
-          · <a href="/">Home</a>
-        </span>
-      </div>
-    </div>
-  </footer>
+<div id="banner" class="banner" hidden></div>
 
   <div id="modal" class="modal" hidden>
     <div class="panel buy-panel" role="dialog" aria-labelledby="buy-title">
@@ -1227,7 +1180,17 @@
   <script src="/public/tixx-public.js"></script>
   <script src="/public/tixx-stock.js"></script>
   <script src="/public/tixx-settings.js"></script>
+  <script src="tm_viewer_login_url.js"></script>
   <script>
+  (function () {
+    var loginBtn = document.getElementById('tm-topbar-login');
+    if (loginBtn) {
+      loginBtn.addEventListener('click', function () {
+        location.href = (window.TM_VIEWER_LOGIN_URL || '/login');
+      });
+    }
+  })();
+  </script>
   (function () {
     var base = String(location.origin || '').replace(/\/+$/, '');
     if (!base) return;
@@ -1267,19 +1230,60 @@
   function isFiltered() {
     return !!(state.q.trim() || state.location.trim() || state.date !== 'all' || state.cat !== 'all');
   }
+  function eventRowHtml(ev) {
+    var seats = ev.seatsPending
+      ? '<p class="seat-pending" style="padding:.75rem 0;color:#64748b;font-size:.9rem">Loading available seats…</p>'
+      : (ev.seatsError
+        ? '<p class="seat-pending" style="padding:.75rem 0;color:#b91c1c;font-size:.9rem">' + esc(ev.seatsError) + '</p>'
+        : (!ev.listings.length
+          ? '<p class="seat-pending" style="padding:.75rem 0;color:#64748b;font-size:.9rem">No seats listed for this event.</p>'
+          : ev.listings.map(function (l) {
+      var face = l.face_value_usd ? '<span class="seat-face">' + esc(money(l.face_value_usd)) + '</span>' : '';
+      var buyBtn = l.purchasable === false
+        ? '<button type="button" class="btn-buy btn-unavail" disabled title="No viewer link yet">Unavailable</button>'
+        : '<button type="button" class="btn-buy" data-id="' + esc(l.listing_id) + '">Buy · ' + esc(money(l.price_usd)) + '</button>';
+      return '<div class="seat-row">' +
+        '<span class="seat-info">Sec ' + esc(l.section) + ' · Row ' + esc(l.row) + ' · Seat ' + esc(l.seat) + '</span>' +
+        '<div class="seat-price-wrap">' + face + buyBtn + '</div></div>';
+    }).join('')));
+    var openCls = openEventKeys[ev.key] ? ' is-open' : '';
+    var stock = esc(window.TixxStock ? window.TixxStock.formatStockShort(ev.count) : (ev.count + ' left'));
+    return '<article class="stx-event-row' + openCls + '" data-event="' + esc(ev.key) + '">' +
+      '<button type="button" class="stx-event-row-main">' +
+      thumbBlock(ev) +
+      '<div class="stx-event-row-body">' +
+      '<h3>' + esc(ev.event_name) + '</h3>' +
+      '<p class="stx-event-row-meta">' + esc(ev.event_date_display) + '</p>' +
+      '<p class="stx-event-row-venue">' + esc(ev.venue) + '</p>' +
+      '</div>' +
+      '<div class="stx-event-row-price">' +
+      '<span class="stx-event-row-from">From ' + esc(money(ev.min_price)) + '</span>' +
+      '<span class="stx-event-row-stock">' + stock + '</span>' +
+      '</div>' +
+      '<span class="stx-event-row-fav" aria-hidden="true">♡</span>' +
+      '</button>' +
+      '<div class="stx-event-row-seats">' + seats + '</div>' +
+      '</article>';
+  }
+
+  function syncSidebarCats() {
+    document.querySelectorAll('.stx-sidebar-cat').forEach(function (a) {
+      a.classList.toggle('is-active', (a.getAttribute('data-cat') || 'all') === state.cat);
+    });
+  }
+
   function applyLocLabel() {
-    var el = document.getElementById('loc-label');
-    var title = document.getElementById('discover-title');
-    if (!el) return;
+    var locIn = document.getElementById('f-location');
+    if (!locIn) return;
     if (state.location.trim()) {
-      el.textContent = state.location.trim();
-      if (title) title.textContent = 'Tickets in ' + state.location.trim();
+      locIn.value = state.location.trim();
+      locIn.placeholder = state.location.trim();
     } else if (userCity) {
-      el.textContent = userCity + (userRegion ? ', ' + userRegion : '');
-      if (title) title.textContent = 'Events near ' + userCity;
+      locIn.value = '';
+      locIn.placeholder = userCity + (userRegion ? ', ' + userRegion : '');
     } else {
-      el.textContent = 'Set location';
-      if (title) title.textContent = 'Search events, artists, and venues';
+      locIn.value = '';
+      locIn.placeholder = 'All locations';
     }
   }
   function saveLocation(city, region) {
@@ -1403,16 +1407,17 @@
     }
     render();
     setTimeout(function () {
-      var cards = document.querySelectorAll('.event-card');
-      var card = null;
-      for (var i = 0; i < cards.length; i++) {
-        if (cards[i].getAttribute('data-event') === ev.key) { card = cards[i]; break; }
+      var rows = document.querySelectorAll('.stx-event-row');
+      var row = null;
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i].getAttribute('data-event') === ev.key) { row = rows[i]; break; }
       }
-      if (card) {
-        card.classList.add('open');
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (row) {
+        row.classList.add('is-open');
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } else {
-        document.getElementById('all-events-heading').scrollIntoView({ behavior: 'smooth' });
+        var heading = document.getElementById('shop-events');
+        if (heading) heading.scrollIntoView({ behavior: 'smooth' });
       }
     }, 80);
   }
@@ -1790,7 +1795,11 @@
       var evN = events.length;
       var extra = isFiltered() ? ' (filtered)' : '';
       var loading = anySeatsLoading ? ' · loading seats…' : '';
-      meta.innerHTML = '<strong>' + ticketTotal + '</strong> tickets · <strong>' + evN + '</strong> events shown' + extra + loading;
+      meta.textContent = evN + ' events · ' + ticketTotal + ' tickets' + extra + loading;
+    }
+    var heading = document.getElementById('all-events-heading');
+    if (heading) {
+      heading.textContent = isFiltered() ? 'Search results' : 'Popular Events';
     }
 
     if (!events.length && !list.length) {
@@ -1843,43 +1852,16 @@
     if (lg) lg.hidden = true;
     if (eg) {
       eg.hidden = false;
-      eg.innerHTML = events.map(function (ev) {
-        var seats = ev.seatsPending
-          ? '<p class="seat-pending" style="padding:.75rem 1rem;color:#64748b;font-size:.9rem">Loading available seats…</p>'
-          : (ev.seatsError
-            ? '<p class="seat-pending" style="padding:.75rem 1rem;color:#b91c1c;font-size:.9rem">' + esc(ev.seatsError) + '</p>'
-            : (!ev.listings.length
-              ? '<p class="seat-pending" style="padding:.75rem 1rem;color:#64748b;font-size:.9rem">No seats listed for this event.</p>'
-              : ev.listings.map(function (l) {
-          var face = l.face_value_usd ? '<span class="seat-face">' + esc(money(l.face_value_usd)) + '</span>' : '';
-          var buyBtn = l.purchasable === false
-            ? '<button type="button" class="btn-buy btn-unavail" disabled title="No viewer link yet">Unavailable</button>'
-            : '<button type="button" class="btn-buy" data-id="' + esc(l.listing_id) + '">Buy · ' + esc(money(l.price_usd)) + '</button>';
-          return '<div class="seat-row">' +
-            '<span class="seat-info">Sec ' + esc(l.section) + ' · Row ' + esc(l.row) + ' · Seat ' + esc(l.seat) + '</span>' +
-            '<div class="seat-price-wrap">' + face + buyBtn + '</div></div>';
-        }).join('')));
-        var openCls = openEventKeys[ev.key] ? ' open' : '';
-        return '<article class="event-card' + openCls + '" data-event="' + esc(ev.key) + '">' +
-          '<div class="event-card-head">' +
-          thumbBlock(ev) +
-          '<div><h2 class="event-title">' + esc(ev.event_name) + '</h2>' +
-          '<div class="event-meta">' + esc(ev.event_date_display) + '<br/><span class="venue">' + esc(ev.venue) + '</span>' +
-          '<span class="event-badge cat-' + esc(ev.category) + '">' + esc(catLabel(ev.category)) + '</span></div></div>' +
-          '<div class="event-card-price"><div class="from-label">From</div><div class="from-price">' + esc(money(ev.min_price)) + '</div>' +
-          '<div class="ticket-count">' + esc(window.TixxStock ? window.TixxStock.formatStock(ev.count) : (ev.count + ' ticket' + (ev.count > 1 ? 's' : ''))) +
-          ' <span class="event-chevron" aria-hidden="true">▼</span></div></div></div>' +
-          '<div class="seat-list">' + seats + '</div></article>';
-      }).join('');
+      eg.innerHTML = events.map(eventRowHtml).join('');
 
-      eg.querySelectorAll('.event-card-head').forEach(function (head) {
-        head.addEventListener('click', function (e) {
+      eg.querySelectorAll('.stx-event-row-main').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
           if (e.target.closest('.btn-buy')) return;
-          var card = head.parentElement;
-          var eventKey = card.getAttribute('data-event');
-          var wasOpen = card.classList.contains('open');
-          card.classList.toggle('open');
-          if (card.classList.contains('open')) {
+          var row = btn.closest('.stx-event-row');
+          var eventKey = row.getAttribute('data-event');
+          var wasOpen = row.classList.contains('is-open');
+          row.classList.toggle('is-open');
+          if (row.classList.contains('is-open')) {
             openEventKeys[eventKey] = true;
             if (!wasOpen) loadEventListings(eventKey);
           } else {
@@ -1893,8 +1875,8 @@
           openBuy(btn.getAttribute('data-id'));
         });
       });
-      staggerCards(eg, '.event-card');
     }
+    syncSidebarCats();
     renderDiscover();
   }
 
@@ -2048,6 +2030,30 @@
     flashFilter();
     scheduleRender();
   });
+  var locIn = document.getElementById('f-location');
+  if (locIn) {
+    locIn.addEventListener('change', function () {
+      state.location = this.value.trim();
+      if (state.location) saveLocation(state.location, userRegion);
+      else applyLocLabel();
+      flashFilter();
+      render();
+    });
+  }
+  document.querySelectorAll('.stx-sidebar-cat').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var cat = a.getAttribute('data-cat') || 'all';
+      document.querySelectorAll('.cat-pill').forEach(function (b) {
+        b.classList.toggle('active', b.getAttribute('data-cat') === cat);
+      });
+      state.cat = cat;
+      syncSidebarCats();
+      flashFilter();
+      render();
+      document.getElementById('shop-events').scrollIntoView({ behavior: 'smooth' });
+    });
+  });
   var locChip = document.getElementById('loc-chip');
   if (locChip) {
     locChip.addEventListener('click', function () {
@@ -2073,9 +2079,10 @@
         b.classList.toggle('active', b.getAttribute('data-cat') === cat);
       });
       state.cat = cat;
+      syncSidebarCats();
       flashFilter();
       render();
-      document.getElementById('all-events-heading').scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('shop-events').scrollIntoView({ behavior: 'smooth' });
     });
   });
   document.querySelectorAll('.carousel-see').forEach(function (a) {
@@ -2093,11 +2100,12 @@
       document.querySelectorAll('.discover-cats a').forEach(function (x) {
         x.classList.toggle('active', x.getAttribute('data-disc-cat') === state.cat);
       });
-      var locIn = document.getElementById('f-location');
-      if (locIn) locIn.value = state.location;
+      syncSidebarCats();
+      var locIn2 = document.getElementById('f-location');
+      if (locIn2) locIn2.value = state.location;
       flashFilter();
       render();
-      document.getElementById('all-events-heading').scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('shop-events').scrollIntoView({ behavior: 'smooth' });
     });
   });
   document.getElementById('f-date').addEventListener('change', function () {
@@ -2115,6 +2123,7 @@
       document.querySelectorAll('.cat-pill').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
       state.cat = btn.getAttribute('data-cat');
+      syncSidebarCats();
       flashFilter();
       render();
     });
@@ -2308,6 +2317,7 @@
         document.querySelectorAll('.discover-cats a').forEach(function (a) {
           a.classList.toggle('active', a.getAttribute('data-disc-cat') === state.cat);
         });
+        syncSidebarCats();
       }
       var data = await fetchShopEventsFast();
       if (!data.ok) {
@@ -2323,13 +2333,6 @@
       window.__shopCatalogCount = data.catalog_count || data.count || 0;
       window.__shopEventCount = data.event_count || shopEvents.length || 0;
       if (loadEl) loadEl.hidden = true;
-      if (data.parse_stats && data.parse_stats.lines_read && !state.q.trim()) {
-        var title = document.getElementById('discover-title');
-        if (title) {
-          title.textContent = (window.__shopEventCount || shopEvents.length) + ' events · ' +
-            (window.__shopCatalogCount || data.count || 0) + ' tickets available';
-        }
-      }
       renderDiscover();
       render();
       resolveMissingImages();
