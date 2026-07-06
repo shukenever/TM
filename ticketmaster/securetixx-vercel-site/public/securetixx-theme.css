@@ -628,3 +628,16 @@
   border-radius: var(--stx-radius) !important;
   border: 1px solid var(--stx-line) !important;
 }
+
+/* SecureTixx shop v2 — sidebar mockup overrides theme card defaults */
+.stx-shop-v2 .stx-sidebar-card--categories h2 {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+  text-transform: none !important;
+  color: #111827 !important;
+}
+
+.stx-shop-v2 .stx-sidebar-card + .stx-sidebar-card {
+  display: none !important;
+}
