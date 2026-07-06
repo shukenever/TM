@@ -47,8 +47,9 @@
   function updateSectionHead(sectionId, events, catalogTotals, opts) {
     var sec = document.getElementById(sectionId);
     if (!sec) return;
-    var head = sec.querySelector('.home-section-head, .carousel-head');
+    var head = sec.querySelector('.home-section-head, .carousel-head, .stx-events-head');
     if (!head) return;
+    if (head.classList.contains('stx-events-head')) return;
     var h2 = head.querySelector('h2');
     if (!h2) return;
     var base = h2.getAttribute('data-title-base') || h2.textContent.replace(/\s*·.*$/, '').trim();

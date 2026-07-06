@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/public/securetixx-theme.css"/>
-  <link rel="stylesheet" href="/public/securetixx-shop-v2.css?v=9"/>
+  <link rel="stylesheet" href="/public/securetixx-shop-v2.css?v=10"/>
   <style>
     :root {
       --tm-blue: #059669;
@@ -1255,6 +1255,19 @@
   function isFiltered() {
     return !!(state.q.trim() || state.location.trim() || state.date !== 'all' || state.cat !== 'all');
   }
+  function eventRowMetaHtml(ev) {
+    var date = esc(ev.event_date_display || '');
+    var venue = esc(ev.venue || '');
+    var sep = date && venue ? '<span class="stx-event-row-dot" aria-hidden="true">•</span>' : '';
+    return '<p class="stx-event-row-meta">' +
+      '<svg class="stx-event-row-meta-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' +
+      date + sep + venue + '</p>';
+  }
+  function eventRowPriceHtml(price) {
+    return '<div class="stx-event-row-price">' +
+      '<span class="stx-event-row-from-label">From</span>' +
+      '<span class="stx-event-row-amount">' + esc(money(price)) + '</span></div>';
+  }
   function eventRowHtml(ev) {
     var seats = ev.seatsPending
       ? '<p class="seat-pending" style="padding:.75rem 0;color:#64748b;font-size:.9rem">Loading available seats…</p>'
@@ -1272,20 +1285,15 @@
         '<div class="seat-price-wrap">' + face + buyBtn + '</div></div>';
     }).join('')));
     var openCls = openEventKeys[ev.key] ? ' is-open' : '';
-    var stock = esc(window.TixxStock ? window.TixxStock.formatStockShort(ev.count) : (ev.count + ' left'));
     return '<article class="stx-event-row' + openCls + '" data-event="' + esc(ev.key) + '">' +
       '<button type="button" class="stx-event-row-main">' +
       thumbBlock(ev) +
       '<div class="stx-event-row-body">' +
-      '<h3>' + esc(ev.event_name) + '</h3>' +
+      '<h3 class="stx-event-row-title">' + esc(ev.event_name) + '</h3>' +
       '<p class="stx-event-row-kind">' + esc(eventRowSubtitle(ev)) + '</p>' +
-      '<p class="stx-event-row-meta">' + esc(ev.event_date_display) + '</p>' +
-      '<p class="stx-event-row-venue">' + esc(ev.venue) + '</p>' +
+      eventRowMetaHtml(ev) +
       '</div>' +
-      '<div class="stx-event-row-price">' +
-      '<span class="stx-event-row-from">From ' + esc(money(ev.min_price)) + '</span>' +
-      '<span class="stx-event-row-stock">' + stock + '</span>' +
-      '</div>' +
+      eventRowPriceHtml(ev.min_price) +
       '<span class="stx-event-row-fav" aria-hidden="true">♡</span>' +
       '</button>' +
       '<div class="stx-event-row-seats">' + seats + '</div>' +
@@ -1830,8 +1838,11 @@
       var evN = events.length;
       var extra = isFiltered() ? ' (filtered)' : '';
       var loading = anySeatsLoading ? ' · loading seats…' : '';
+      meta.hidden = !isFiltered();
       meta.textContent = evN + ' events · ' + ticketTotal + ' tickets' + extra + loading;
     }
+    var headingWrap = document.querySelector('#shop-events .stx-events-head');
+    if (headingWrap) headingWrap.classList.toggle('is-filtered', isFiltered());
     var heading = document.getElementById('all-events-heading');
     if (heading) {
       heading.textContent = isFiltered() ? 'Search results' : 'Popular Events';
