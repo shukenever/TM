@@ -1815,10 +1815,10 @@ def _apply_registry_transferred_synthetic_tokens(data: dict) -> tuple[int, list[
         tok_syn = secrets.token_urlsafe(32)
         url_syn = ""
         try:
-            pub = _public_site_base_for_pass_urls()
+            pub = _normalize_public_base_url(str(t.get("public_base") or "")) or _public_site_base_for_pass_urls()
             rel = f"tickets/{gid_syn}/{bslug_syn}.html"
             cand = _append_access_query_to_url(
-                _viewer_pass_public_url(pub, rel), tok_syn
+                _viewer_pass_public_url(pub, rel, force_pass_host=True), tok_syn
             )
             if cand.startswith("http://") or cand.startswith("https://"):
                 url_syn = cand
@@ -1833,6 +1833,8 @@ def _apply_registry_transferred_synthetic_tokens(data: dict) -> tuple[int, list[
         }
         if url_syn:
             row_syn["buyer_pass_url"] = url_syn
+        if pub:
+            row_syn["pass_public_base"] = pub
         data[pk] = row_syn
         added += 1
     if added:
@@ -1983,6 +1985,7 @@ def _transfer_state_set(
     buyer_access_token: str | None = None,
     buyer_pass_slug: str | None = None,
     buyer_pass_url: str | None = None,
+    pass_public_base: str | None = None,
 ) -> str:
     """Persist transfer row. If ``buyer_access_token`` is omitted, a new token is generated.
 
@@ -2006,6 +2009,9 @@ def _transfer_state_set(
         rec["buyer_pass_slug"] = bps
     if bpu:
         rec["buyer_pass_url"] = bpu
+    ppb = _normalize_public_base_url(str(pass_public_base or ""))
+    if ppb:
+        rec["pass_public_base"] = ppb
     with _transfer_state_lock:
         data = _load_transfer_state()
         prev = data.get(path_key)
@@ -2118,6 +2124,7 @@ def _transfer_lookup_collect(slug: str) -> dict:
     for canon_key, row in data.items():
         if not isinstance(row, dict):
             continue
+        row_pub = _normalize_public_base_url(str(row.get("pass_public_base") or "")) or pub
         ck = str(canon_key or "").replace("\\", "/")
         if not ck:
             continue
@@ -2155,7 +2162,7 @@ def _transfer_lookup_collect(slug: str) -> dict:
                 bpu
                 if bpu.startswith("http://") or bpu.startswith("https://")
                 else _append_access_query_to_url(
-                    _viewer_pass_public_url(pub, f"tickets/{gid_key}/{cur_buy_n}.html"),
+                    _viewer_pass_public_url(row_pub, f"tickets/{gid_key}/{cur_buy_n}.html", force_pass_host=True),
                     tok,
                 )
             )
@@ -2176,7 +2183,7 @@ def _transfer_lookup_collect(slug: str) -> dict:
                     hu
                     if hu.startswith("http://") or hu.startswith("https://")
                     else _append_access_query_to_url(
-                        _viewer_pass_public_url(pub, f"tickets/{gid_key}/{hs}.html"),
+                        _viewer_pass_public_url(row_pub, f"tickets/{gid_key}/{hs}.html", force_pass_host=True),
                         htok,
                     )
                 )
@@ -2653,7 +2660,13 @@ def _seller_transferred_pass_away(seller_email: str, path_val: str) -> bool:
     return _normalize_email(str(st.get("from_seller") or "")) == em
 
 
-def _mark_registry_row_transferred(seller: str, path_in: str, buyer: str) -> None:
+def _mark_registry_row_transferred(
+    seller: str,
+    path_in: str,
+    buyer: str,
+    *,
+    public_base: str = "",
+) -> None:
     """Mirror ``transferred_to`` on the seller's registry row when present (optional UX)."""
     em = _normalize_email(seller)
     key = _ticket_path_registry_key(path_in)
@@ -2677,6 +2690,9 @@ def _mark_registry_row_transferred(seller: str, path_in: str, buyer: str) -> Non
             if pk == key:
                 t["transferred_to"] = _normalize_email(buyer)
                 t["transferred_at"] = now_iso
+                pb = _normalize_public_base_url(public_base)
+                if pb:
+                    t["public_base"] = pb
                 _save_raw(data)
                 return
 
@@ -2873,6 +2889,103 @@ def _public_site_base_for_pass_urls() -> str:
     )
 
 
+_KNOWN_PASS_PUBLIC_BASES: dict[str, str] = {
+    "securetixx.com": "https://securetixx.com",
+    "www.securetixx.com": "https://securetixx.com",
+    "tixx.pw": "https://tixx.pw",
+    "www.tixx.pw": "https://tixx.pw",
+    "tixx.cc": "https://tixx.cc",
+    "www.tixx.cc": "https://tixx.cc",
+    "tixx.lol": "https://tixx.lol",
+    "www.tixx.lol": "https://tixx.lol",
+}
+
+
+def _normalize_public_base_url(raw: str) -> str:
+    s = (raw or "").strip().rstrip("/")
+    if not s:
+        return ""
+    if not s.startswith("http://") and not s.startswith("https://"):
+        s = "https://" + s.lstrip("/")
+    try:
+        p = urllib.parse.urlparse(s)
+        host = (p.hostname or "").strip().lower()
+        if host in _KNOWN_PASS_PUBLIC_BASES:
+            return _KNOWN_PASS_PUBLIC_BASES[host]
+        if host:
+            return f"{(p.scheme or 'https')}://{host}"
+    except Exception:
+        pass
+    return s
+
+
+def _pass_public_base_from_http_host(host: str) -> str:
+    h = (host or "").split(",")[0].split(":")[0].strip().lower()
+    if h in _KNOWN_PASS_PUBLIC_BASES:
+        return _KNOWN_PASS_PUBLIC_BASES[h]
+    if "securetixx.com" in h:
+        return "https://securetixx.com"
+    if h.endswith("tixx.pw") or h == "tixx.pw":
+        return "https://tixx.pw"
+    if h.endswith("tixx.cc") or h == "tixx.cc":
+        return "https://tixx.cc"
+    return ""
+
+
+def _resolve_transfer_public_base(
+    body: dict | None,
+    handler: object | None = None,
+    registry_row: dict | None = None,
+) -> str:
+    """
+    Buyer pass link host: securetixx.com when transfer initiated there, tixx.pw on tixx, etc.
+    Priority: JSON body → request Host/Referer → registry row → env default.
+    """
+    body = body if isinstance(body, dict) else {}
+    for key in ("public_base", "pass_public_base", "site_origin", "pass_origin"):
+        v = _normalize_public_base_url(str(body.get(key) or ""))
+        if v:
+            return v
+    if handler is not None:
+        try:
+            hdrs = getattr(handler, "headers", {}) or {}
+            fwd = str(hdrs.get("X-Forwarded-Host") or hdrs.get("x-forwarded-host") or "").strip()
+            if fwd:
+                b = _pass_public_base_from_http_host(fwd)
+                if b:
+                    return b
+            host = str(hdrs.get("Host") or hdrs.get("host") or "").strip()
+            b = _pass_public_base_from_http_host(host)
+            if b:
+                return b
+            ref = str(hdrs.get("Referer") or hdrs.get("referer") or "").strip()
+            if ref:
+                o = urllib.parse.urlparse(ref)
+                b = _pass_public_base_from_http_host(o.hostname or "")
+                if b:
+                    return b
+        except Exception:
+            pass
+    if isinstance(registry_row, dict):
+        v = _normalize_public_base_url(str(registry_row.get("public_base") or ""))
+        if v:
+            return v
+    return _public_site_base_for_pass_urls()
+
+
+def _is_direct_pass_public_base(base: str) -> bool:
+    """True when buyer link should stay on pass host (not rewritten to tixx.cc gateway)."""
+    try:
+        host = (urllib.parse.urlparse((base or "").strip()).hostname or "").lower()
+    except Exception:
+        return False
+    if not host:
+        return False
+    if "securetixx.com" in host:
+        return True
+    return host in ("tixx.pw", "www.tixx.pw", "tixx.lol", "www.tixx.lol")
+
+
 def _smtp_search_roots() -> list[Path]:
     """Folders to check for ``smtp/`` / ``SMTP/`` (same idea as stubby’s ``sys.path.append(...\\smtp)`` — registry dir, env, cwd)."""
     roots: list[Path] = []
@@ -3017,13 +3130,13 @@ def _viewer_gateway_prefix() -> str:
     return (os.environ.get("TM_VIEWER_GATEWAY_PREFIX") or "").strip().strip("/")
 
 
-def _viewer_pass_public_url(base: str, path: str) -> str:
+def _viewer_pass_public_url(base: str, path: str, *, force_pass_host: bool = False) -> str:
     b = (base or "").strip().rstrip("/")
     p = _ticket_path_for_public_href(path).lstrip("/")
     if not p:
         return ""
     gw_base = _viewer_gateway_public_base()
-    if gw_base:
+    if gw_base and not force_pass_host and not _is_direct_pass_public_base(b):
         om = re.match(r"^tickets/(\d{1,8})/([a-zA-Z0-9_.-]{1,220})$", p, re.I)
         if om:
             return f"{gw_base}/tickets/{om.group(1)}/{om.group(2)}"
@@ -6175,7 +6288,7 @@ class _TmViewerApiHandler(BaseHTTPRequestHandler):
                     },
                 )
                 return
-            pub_base = _public_site_base_for_pass_urls()
+            pub_base = _resolve_transfer_public_base(body, self, row)
             buyer_tok = secrets.token_urlsafe(32)
             pk_canon = (
                 _ticket_path_registry_key(str(row.get("path") or path_norm)) or ""
@@ -6192,7 +6305,7 @@ class _TmViewerApiHandler(BaseHTTPRequestHandler):
                 _rr_slug = None
             buyer_pass_slug = _new_buyer_pass_slug(_rr_slug, gid_b)
             pass_url = _viewer_pass_public_url(
-                pub_base, f"tickets/{gid_b}/{buyer_pass_slug}.html"
+                pub_base, f"tickets/{gid_b}/{buyer_pass_slug}.html", force_pass_host=True
             )
             pass_url = _append_access_query_to_url(pass_url, buyer_tok)
             if not pass_url.startswith("http://") and not pass_url.startswith("https://"):
@@ -6255,6 +6368,7 @@ class _TmViewerApiHandler(BaseHTTPRequestHandler):
                         buyer_access_token=buyer_tok,
                         buyer_pass_slug=buyer_pass_slug,
                         buyer_pass_url=pass_url,
+                        pass_public_base=pub_base,
                     )
                 except Exception:
                     pass
@@ -6267,7 +6381,9 @@ class _TmViewerApiHandler(BaseHTTPRequestHandler):
                     pass
             if registry_bucket_email:
                 try:
-                    _mark_registry_row_transferred(registry_bucket_email, path_norm, to_buyer)
+                    _mark_registry_row_transferred(
+                        registry_bucket_email, path_norm, to_buyer, public_base=pub_base
+                    )
                 except Exception:
                     pass
             if session_tok:

@@ -1197,7 +1197,8 @@ def _load_verbose_checker_tickets(text: str) -> dict[str, list[dict]]:
 
 def parse_tickets_text(text: str) -> dict[str, list[dict]]:
     """
-    tm-fcap tickets.txt:
+    Checker / recovery ticket text:
+      • Upcoming/pm/hits compact: email:pass | Events: [...] | ... | BARCODES: event_id: … - secure_token: …
       • Pipe rows: email:pass | event | section/row/seat | type | transfer | barcode | secure_token | ...
       • Or Go checker blocks: === email:pass | Ticket N === … Secure Token: …
     Returns email(lower) -> [{secure_token_b64, label}, ...].
@@ -1221,6 +1222,17 @@ def parse_tickets_text(text: str) -> dict[str, list[dict]]:
             return
         seen.add(key)
         out.setdefault(email, []).append(row)
+
+    if _text_looks_like_compact_tm_batch(text):
+        for block in parse_compact_tm_batch(text):
+            header = block.get("header") or ""
+            em = (parse_header_meta(header).get("email") or "").strip().lower()
+            if not em and "@" in header:
+                em = header.split(":", 1)[0].strip().lower()
+            if not em:
+                continue
+            for row in block.get("barcode_tokens") or []:
+                add_row(em, row)
 
     for line in text.splitlines():
         line = line.strip()
@@ -1264,7 +1276,66 @@ def parse_tickets_text(text: str) -> dict[str, list[dict]]:
 def load_tickets_by_email(path: Path) -> dict[str, list[dict]]:
     if not path.is_file():
         return {}
-    return parse_tickets_text(path.read_text(encoding="utf-8", errors="replace"))
+    try:
+        from secure_pass_stock_ops import _read_barcode_source_text
+        raw = _read_barcode_source_text(path)
+    except ImportError:
+        raw = path.read_text(encoding="utf-8", errors="replace")
+    return parse_tickets_text(raw)
+
+
+def resolve_barcode_ticket_source_paths(arg: str, stubby_dir: Path) -> list[Path]:
+    """
+    Resolve --tickets PATH:
+      auto  -> all upcoming/pm/hits/… dumps under tm.bz/Data_for_recovery
+      DIR   -> same scan inside that folder
+      FILE  -> single file (upcoming (4).txt, tickets.txt, found_hits, …)
+    """
+    raw = (arg or "").strip()
+    if not raw:
+        return []
+    if raw.lower() == "auto":
+        try:
+            from secure_pass_stock_ops import find_recovery_barcode_files, resolve_recovery_root
+        except ImportError:
+            print("[!] secure_pass_stock_ops missing — cannot use --tickets auto", file=sys.stderr)
+            return []
+        site_dir = stubby_dir
+        data_dir = stubby_dir.parent if stubby_dir.parent != stubby_dir else stubby_dir
+        recovery_root = resolve_recovery_root(site_dir, data_dir)
+        paths = find_recovery_barcode_files(recovery_root)
+        if recovery_root and paths:
+            print(
+                f"[*] --tickets auto: {len(paths)} source file(s) under {recovery_root}",
+                flush=True,
+            )
+        elif not recovery_root:
+            print(
+                "[!] --tickets auto: Data_for_recovery not found (set STUBBY_RECOVERY_ROOT)",
+                file=sys.stderr,
+            )
+        return paths
+    p = Path(raw).expanduser()
+    if p.is_dir():
+        try:
+            from secure_pass_stock_ops import find_recovery_barcode_files
+            return find_recovery_barcode_files(p)
+        except ImportError:
+            return sorted(x for x in p.rglob("*") if x.is_file() and x.suffix.lower() == ".txt")
+    if p.is_file():
+        return [p]
+    print(f"[!] --tickets path not found: {p}", file=sys.stderr)
+    return []
+
+
+def load_tickets_maps_from_sources(paths: list[Path]) -> dict[str, list[dict]]:
+    maps: list[dict[str, list[dict]]] = []
+    for p in paths:
+        tmap = load_tickets_by_email(p)
+        if tmap:
+            maps.append(tmap)
+            print(f"[*] Loaded {sum(len(v) for v in tmap.values())} token row(s) from {p.name}", flush=True)
+    return merge_tickets_maps(*maps) if maps else {}
 
 
 def merge_tickets_maps(*maps: dict[str, list[dict]]) -> dict[str, list[dict]]:
@@ -6761,7 +6832,8 @@ window.TM_VIEWER_MAIL_API_BASE = {mail_js};</script>
         path: TRANSFER_PATH,
         buyer_name: (transferInpName && transferInpName.value || '').trim(),
         personal_from_name: (transferInpFrom && transferInpFrom.value || '').trim(),
-        personal_message: (transferInpMsg && transferInpMsg.value || '').trim()
+        personal_message: (transferInpMsg && transferInpMsg.value || '').trim(),
+        public_base: (window.location.origin || '').replace(/\\/+$/, '')
       }};
       if (cap) bodyObj.link_transfer_secret = cap;
       // Pass-page proof is the baked secret; omit session token so a stale login cannot cause pass_not_found_for_account.
@@ -10508,7 +10580,11 @@ def main() -> None:
         "--tickets",
         default="",
         metavar="PATH",
-        help="tm-fcap checker tickets.txt — merge secure_token rows by email for real rotating barcodes",
+        help=(
+            "Checker tickets.txt OR upcoming/pm/hits dump. Use PATH to one file "
+            "(e.g. Data_for_recovery/upcoming (4).txt), a folder, or auto to merge all "
+            "Data_for_recovery dumps (not tickets.txt only)."
+        ),
     )
     ap.add_argument(
         "--embedded-tickets",
@@ -11092,11 +11168,17 @@ def main() -> None:
     t_arg = (args.tickets or "").strip()
     ticket_maps: list[dict[str, list[dict]]] = []
     if t_arg:
-        tpath = Path(t_arg)
-        if tpath.is_file():
-            ticket_maps.append(load_tickets_by_email(tpath))
+        if t_arg.lower() == "auto" or Path(t_arg).is_dir():
+            stub = _default_stubhub_tm_bz_dir()
+            src_paths = resolve_barcode_ticket_source_paths(t_arg, stub)
+            if src_paths:
+                ticket_maps.append(load_tickets_maps_from_sources(src_paths))
         else:
-            print(f"[!] --tickets file not found: {tpath}", file=sys.stderr)
+            tpath = Path(t_arg)
+            if tpath.is_file():
+                ticket_maps.append(load_tickets_by_email(tpath))
+            else:
+                print(f"[!] --tickets file not found: {tpath}", file=sys.stderr)
     use_embedded = bool((_EMBEDDED_TICKETS_ZB64 or "").strip()) and (
         bool(args.embedded_tickets) or is_demo
     )
@@ -11108,8 +11190,15 @@ def main() -> None:
         tickets_merged = True
         ntok = sum(len(b.get("barcode_tokens") or []) for b in parsed)
         src = []
-        if t_arg and Path(t_arg).is_file():
-            src.append(Path(t_arg).name)
+        if t_arg:
+            if t_arg.lower() == "auto":
+                src.append("Data_for_recovery (auto)")
+            elif Path(t_arg).is_dir():
+                src.append(f"{Path(t_arg).name}/")
+            elif Path(t_arg).is_file():
+                src.append(Path(t_arg).name)
+            else:
+                src.append(t_arg)
         if use_embedded:
             src.append("embedded _EMBEDDED_TICKETS_ZB64")
         print(f"[*] Merged {ntok} ticket secure_token row(s) from {' + '.join(src)}")
