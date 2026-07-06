@@ -9,8 +9,8 @@
   --stx-mint: #a8d5ba;
   --stx-mint-dim: #6b9b7a;
   --stx-white: #fff;
-  --stx-max: min(calc(100vw - 12px), 552px);
-  --stx-card: min(calc(100vw - 16px), 520px);
+  --stx-max: min(calc(100vw - 8px), 560px);
+  --stx-card: min(calc(100vw - 12px), 528px);
   --stx-gap: 12px;
   --stx-line: rgba(168, 213, 186, 0.14);
   --stx-radius: 16px;
@@ -207,8 +207,37 @@ body.stx-pass-app.tm-shell-ticket-minimal::before {
   max-width: none;
   min-height: 0;
   overflow-y: visible;
-  padding: 18px 12px max(20px, env(safe-area-inset-bottom, 0px));
+  padding:
+    max(10px, env(safe-area-inset-top, 0px))
+    6px
+    max(20px, env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
+}
+
+.stx-pass-stack {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, var(--stx-max));
+  max-width: var(--stx-max);
+  margin: 0 auto;
+  box-sizing: border-box;
+  border-radius: var(--stx-radius);
+  overflow: hidden;
+  box-shadow: var(--stx-shadow-soft), var(--stx-shadow-inset);
+}
+
+.stx-pass-stack .stx-app-bar {
+  box-shadow: none;
+}
+
+.stx-pass-stack .stx-pass-float {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border-top: 1px solid rgba(168, 213, 186, 0.1);
 }
 
 .stx-pass-float {
@@ -258,8 +287,8 @@ body.stx-pass-app.tm-shell-ticket-minimal::before {
 }
 
 .stx-app-bar__inner {
-  max-width: var(--stx-max);
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   width: 100%;
   display: flex;
   align-items: center;
@@ -267,9 +296,9 @@ body.stx-pass-app.tm-shell-ticket-minimal::before {
   gap: 10px;
   padding:
     max(10px, env(safe-area-inset-top, 0px))
-    max(14px, env(safe-area-inset-right, 0px))
     12px
-    max(14px, env(safe-area-inset-left, 0px));
+    12px
+    12px;
   box-sizing: border-box;
 }
 
