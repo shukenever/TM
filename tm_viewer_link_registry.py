@@ -1508,6 +1508,8 @@ def _validate_password_input(password: str) -> str | None:
         return "password_too_long"
     return None
 
+
+def _deliveries_file_has_json_line() -> bool:
     """True when any merged JSONL has at least one ticket-capable row (not login-only audit lines)."""
     for path in _deliveries_jsonl_read_paths():
         try:
