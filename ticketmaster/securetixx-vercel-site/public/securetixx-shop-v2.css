@@ -125,6 +125,113 @@
   user-select: none;
 }
 
+.stx-shop-v2 .stx-help-wrap {
+  position: relative;
+}
+
+.stx-shop-v2 .stx-nav-help-btn {
+  list-style: none;
+  padding: 0.45rem 0.85rem;
+  color: rgba(236, 253, 245, 0.72);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.stx-shop-v2 .stx-nav-help-btn::-webkit-details-marker {
+  display: none;
+}
+
+.stx-shop-v2 .stx-help-wrap:hover .stx-nav-help-btn,
+.stx-shop-v2 .stx-help-wrap[open] .stx-nav-help-btn {
+  color: #ecfdf5;
+}
+
+.stx-shop-v2 .stx-help-wrap[open] .stx-nav-help-btn::after {
+  content: "";
+  position: absolute;
+  left: 0.65rem;
+  right: 0.65rem;
+  bottom: -0.55rem;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--stx-mock-lime);
+}
+
+.stx-shop-v2 .stx-nav-help-btn {
+  position: relative;
+}
+
+.stx-shop-v2 .stx-help-panel {
+  position: absolute;
+  top: calc(100% + 0.85rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 80;
+  width: min(300px, calc(100vw - 2rem));
+  padding: 1rem 1.1rem;
+  border-radius: 16px;
+  background: rgba(8, 20, 12, 0.98);
+  border: 1px solid rgba(198, 255, 0, 0.14);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+}
+
+.stx-shop-v2 .stx-help-panel::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translateX(-50%) rotate(45deg);
+  background: rgba(8, 20, 12, 0.98);
+  border-left: 1px solid rgba(198, 255, 0, 0.14);
+  border-top: 1px solid rgba(198, 255, 0, 0.14);
+}
+
+.stx-shop-v2 .stx-help-panel-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.stx-shop-v2 .stx-help-panel-copy {
+  margin: 0 0 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: rgba(236, 253, 245, 0.68);
+}
+
+.stx-shop-v2 .stx-help-panel-email {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  background: rgba(198, 255, 0, 0.1);
+  border: 1px solid rgba(198, 255, 0, 0.22);
+  color: var(--stx-mock-lime);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.stx-shop-v2 .stx-help-panel-email:hover {
+  background: rgba(198, 255, 0, 0.16);
+}
+
+.stx-shop-v2 .stx-help-panel-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  color: rgba(236, 253, 245, 0.48);
+  text-align: center;
+}
+
 .stx-shop-v2 .stx-header-actions {
   justify-self: end;
   margin-left: 0;
