@@ -3971,6 +3971,8 @@ def _send_mailgun_html_email(to_email: str, subject: str, html_body: str) -> tup
             reply_to = m.group(1).strip()
     if reply_to:
         payload["h:Reply-To"] = reply_to
+    for hk, hv in _viewer_email_delivery_headers().items():
+        payload[hk] = hv
     data = urllib.parse.urlencode(payload).encode("utf-8")
     auth = base64.b64encode(f"api:{key}".encode("utf-8")).decode("ascii")
     req = urllib.request.Request(
@@ -4017,15 +4019,16 @@ def _send_resend_html_email(to_email: str, subject: str, html_body: str) -> tupl
     em_norm = _normalize_email(to_email)
     if not em_norm or "@" not in em_norm:
         return False, "invalid recipient"
-    payload = json.dumps(
-        {
-            "from": _resend_from(),
-            "to": [em_norm],
-            "subject": subject,
-            "html": html_body,
-        },
-        ensure_ascii=False,
-    ).encode("utf-8")
+    resend_payload: dict = {
+        "from": _resend_from(),
+        "to": [em_norm],
+        "subject": subject,
+        "html": html_body,
+    }
+    hdrs = _viewer_email_delivery_headers()
+    if hdrs:
+        resend_payload["headers"] = {k.replace("h:", ""): v for k, v in hdrs.items()}
+    payload = json.dumps(resend_payload, ensure_ascii=False).encode("utf-8")
     req = urllib.request.Request(
         "https://api.resend.com/emails",
         data=payload,
@@ -4137,6 +4140,30 @@ def _prune_auth_state() -> None:
             _persist_sessions_locked()
 
 
+def _stx_email_site_origin() -> str:
+    return (
+        (os.environ.get("SECURETIXX_PUBLIC_ORIGIN") or os.environ.get("TICKETS_PUBLIC_ORIGIN") or "https://www.securetixx.com")
+        .strip()
+        .rstrip("/")
+    )
+
+
+def _stx_email_logo_url() -> str:
+    custom = (os.environ.get("STX_EMAIL_LOGO_URL") or os.environ.get("TM_SENDER_AVATAR_URL") or "").strip()
+    if custom.startswith("http"):
+        return custom
+    return f"{_stx_email_site_origin()}/public/apple-touch-icon.png"
+
+
+def _viewer_email_delivery_headers() -> dict[str, str]:
+    """Gmail sender avatar hint (List-Image) + organization name."""
+    out: dict[str, str] = {"h:Organization": "SecureTixx"}
+    logo = _stx_email_logo_url()
+    if logo.startswith("http"):
+        out["h:List-Image"] = logo
+    return out
+
+
 def _send_otp_email(to_email: str, code: str, *, purpose: str = "signin") -> tuple[bool, str]:
     em_norm = _normalize_email(to_email)
     code_s = escape(str(code).strip(), quote=False)
@@ -4144,7 +4171,7 @@ def _send_otp_email(to_email: str, code: str, *, purpose: str = "signin") -> tup
     purpose_key = (purpose or "signin").strip().lower()
     if purpose_key == "signup":
         headline = "Verify your email"
-        lead = "Enter this code to finish creating your SecureTixx account. It expires in <strong style=\"color:#121212;\">10 minutes</strong>."
+        lead = "Enter this code to finish creating your SecureTixx account. It expires in <strong style=\"color:#047857;\">10 minutes</strong>."
         footer_note = "Sent to verify your new SecureTixx account."
         subject = f"Verify your SecureTixx account: {code}"
         banner = "Verify"
@@ -4160,59 +4187,63 @@ def _send_otp_email(to_email: str, code: str, *, purpose: str = "signin") -> tup
         footer_note = "Sent for SecureTixx account sign-in."
         subject = f"Your SecureTixx sign-in code: {code}"
         banner = "Sign in"
-    # Inline styles for Gmail/Outlook; TM blue #026cdf.
+    logo_url = escape(_stx_email_logo_url(), quote=True)
+    code_display = escape(" ".join(list(str(code).strip())), quote=False)
+    banner_s = escape(banner, quote=False)
+    # SecureTixx brand — dark green header, lime accent (matches site mockup).
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
-<body style="margin:0;padding:0;background-color:#eceff1;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#eceff1;padding:28px 14px;">
+<body style="margin:0;padding:0;background-color:#f4f1ea;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f1ea;padding:32px 16px;">
 <tr>
     <td align="center">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #dde1e6;box-shadow:0 4px 24px rgba(2,12,31,0.08);">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e2ddd3;box-shadow:0 18px 48px rgba(26,31,46,0.08);">
         <tr>
-        <td bgcolor="#026cdf" style="background-color:#026cdf;background:linear-gradient(180deg,#1a7fe0 0%,#026cdf 100%);padding:22px 26px;">
+        <td bgcolor="#021208" style="background-color:#021208;background:linear-gradient(180deg,#000a05 0%,#021208 62%,#04150c 100%);padding:24px 28px;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
-                <td style="font-family:Arial,Helvetica,sans-serif;font-size:24px;font-weight:800;color:#ffffff;letter-spacing:-0.03em;line-height:1.2;">
-                ticketmaster
+                <td style="vertical-align:middle;">
+                    <img src="{logo_url}" width="44" height="44" alt="SecureTixx" style="display:inline-block;vertical-align:middle;border:0;border-radius:10px;"/>
+                    <span style="display:inline-block;vertical-align:middle;margin-left:12px;font-family:Outfit,Arial,Helvetica,sans-serif;font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.03em;">SecureTixx</span>
                 </td>
-                <td align="right" style="font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:0.14em;text-transform:uppercase;">
-                {escape(banner, quote=False)}
+                <td align="right" style="vertical-align:middle;font-family:Outfit,Arial,Helvetica,sans-serif;font-size:10px;font-weight:800;color:#c6ff00;letter-spacing:0.16em;text-transform:uppercase;">
+                {banner_s}
                 </td>
             </tr>
             </table>
         </td>
         </tr>
         <tr>
-        <td style="padding:32px 28px 8px;font-family:Arial,Helvetica,sans-serif;">
-            <h1 style="margin:0 0 6px;font-size:22px;font-weight:800;color:#121212;letter-spacing:-0.02em;line-height:1.25;">
+        <td style="padding:32px 28px 8px;font-family:Outfit,Arial,Helvetica,sans-serif;">
+            <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#111827;letter-spacing:-0.03em;line-height:1.2;">
             {escape(headline, quote=False)}
             </h1>
-            <p style="margin:0 0 26px;font-size:15px;line-height:1.55;color:#4a5560;">
+            <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#5c6478;">
             {lead}
             </p>
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f6f7f8;border:1px solid #e2e8f0;border-radius:10px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0fdf4;border:1px solid rgba(5,150,105,0.18);border-radius:14px;">
             <tr>
-                <td align="center" style="padding:26px 16px;">
-                <p style="margin:0 0 10px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:800;color:#64748b;letter-spacing:0.12em;text-transform:uppercase;">
+                <td align="center" style="padding:28px 16px;">
+                <p style="margin:0 0 12px;font-family:Outfit,Arial,Helvetica,sans-serif;font-size:11px;font-weight:800;color:#059669;letter-spacing:0.14em;text-transform:uppercase;">
                     Verification code
                 </p>
-                <p style="margin:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:36px;font-weight:800;letter-spacing:0.42em;color:#026cdf;line-height:1.2;">
-                    {code_s}
+                <p style="margin:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:34px;font-weight:800;letter-spacing:0.28em;color:#047857;line-height:1.2;">
+                    {code_display}
                 </p>
                 </td>
             </tr>
             </table>
-            <p style="margin:24px 0 0;font-size:13px;line-height:1.5;color:#64748b;">
-            If you didn&rsquo;t try to sign in, you can ignore this email. Your account stays protected.
+            <p style="margin:22px 0 0;font-size:13px;line-height:1.55;color:#6b7280;">
+            If you didn&rsquo;t request this code, you can safely ignore this email.
             </p>
         </td>
         </tr>
         <tr>
-        <td style="padding:18px 28px 22px;background-color:#fafbfc;border-top:1px solid #edf0f3;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.55;color:#8896a6;">
-            <p style="margin:0;">Sent to <span style="color:#475569;font-weight:600;">{to_s}</span> {footer_note}</p>
-            <p style="margin:12px 0 0;">This is an automated message &mdash; please don&rsquo;t reply.</p>
-            <p style="margin:14px 0 0;font-size:10px;color:#94a3b8;">&copy; Ticketmaster. All rights reserved.</p>
+        <td style="padding:18px 28px 24px;background-color:#fafaf8;border-top:1px solid #e2ddd3;font-family:Outfit,Arial,Helvetica,sans-serif;font-size:11px;line-height:1.55;color:#9ca3af;">
+            <p style="margin:0;">Sent to <span style="color:#374151;font-weight:600;">{to_s}</span> &mdash; {escape(footer_note, quote=False)}</p>
+            <p style="margin:12px 0 0;">This is an automated message. Please do not reply.</p>
+            <p style="margin:14px 0 0;font-size:10px;color:#9ca3af;">&copy; SecureTixx. All rights reserved.</p>
         </td>
         </tr>
     </table>
