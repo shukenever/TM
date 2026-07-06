@@ -117,12 +117,13 @@
 }
 
 .stx-shop-v2 .stx-nav-soon {
-  padding: 0.45rem 0.85rem;
-  font-size: 0.875rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: rgba(236, 253, 245, 0.45);
   cursor: default;
   user-select: none;
+  white-space: nowrap;
 }
 
 .stx-shop-v2 .stx-help-wrap {
