@@ -1,0 +1,629 @@
+/* SecureTixx — My Tickets / wallet page */
+
+.stx-wallet-page {
+  background: var(--stx-mock-bg, #f4f1ea) !important;
+  min-height: 100vh;
+}
+
+.stx-wallet-page svg:not([width]):not(.stx-brand-mark svg) {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  display: block;
+}
+
+.stx-wallet-layout {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.35rem 1.25rem 3rem;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.stx-wallet-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.stx-wallet-nav-card,
+.stx-wallet-trust-card,
+.stx-wallet-help-card {
+  background: #fff;
+  border: 1px solid var(--stx-mock-line, #e5e7eb);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.05);
+}
+
+.stx-wallet-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0.45rem;
+}
+
+.stx-wallet-nav li + li {
+  margin-top: 0.15rem;
+}
+
+.stx-wallet-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.72rem 0.85rem;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.stx-wallet-nav a:hover {
+  background: rgba(5, 150, 105, 0.08);
+  color: #047857;
+}
+
+.stx-wallet-nav a.is-active {
+  background: rgba(5, 150, 105, 0.12);
+  color: #047857;
+}
+
+.stx-wallet-nav a.is-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.stx-wallet-trust-card {
+  padding: 1rem 1.05rem;
+}
+
+.stx-wallet-trust-card strong {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #047857;
+  margin-bottom: 0.35rem;
+}
+
+.stx-wallet-trust-card p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #6b7280;
+}
+
+.stx-wallet-help-card {
+  padding: 1rem 1.05rem;
+}
+
+.stx-wallet-help-card h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.stx-wallet-help-card p {
+  margin: 0 0 0.75rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #6b7280;
+}
+
+.stx-wallet-help-card a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #059669;
+  text-decoration: none;
+}
+
+.stx-wallet-help-card a:hover {
+  text-decoration: underline;
+}
+
+.stx-wallet-content-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1.25rem;
+  align-items: start;
+  min-width: 0;
+}
+
+.stx-wallet-main {
+  min-width: 0;
+}
+
+.stx-wallet-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.65rem;
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+.stx-wallet-breadcrumb a {
+  color: #059669;
+  text-decoration: none;
+}
+
+.stx-wallet-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.stx-wallet-page-title {
+  margin: 0 0 0.35rem;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: clamp(1.65rem, 3vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #111827;
+}
+
+.stx-wallet-page-lead {
+  margin: 0 0 1.25rem;
+  font-size: 0.9375rem;
+  color: #6b7280;
+  max-width: 42rem;
+}
+
+.stx-wallet-section {
+  background: #fff;
+  border: 1px solid var(--stx-mock-line, #e5e7eb);
+  border-radius: 16px;
+  padding: 1.15rem 1.2rem 1.25rem;
+  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.05);
+}
+
+.stx-wallet-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.stx-wallet-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.stx-wallet-toolbar .tm-section-heading {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.stx-ticket-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.65rem;
+  height: 1.65rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: rgba(5, 150, 105, 0.12);
+  color: #047857;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.stx-wallet-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.stx-wallet-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.stx-wallet-filter:hover {
+  border-color: #059669;
+  color: #047857;
+}
+
+.stx-login-gate {
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
+
+.stx-ticket-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.stx-ticket-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.stx-ticket-card--transferred {
+  opacity: 0.92;
+  background: #f8fafc;
+}
+
+.stx-ticket-share-pick {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.65rem 1rem 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.stx-ticket-card-inner {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.95rem 1rem;
+}
+
+.stx-ticket-thumb {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(145deg, #064e3b, #059669);
+  display: grid;
+  place-items: center;
+}
+
+.stx-ticket-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.stx-ticket-thumb-fallback {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #ecfdf5;
+  letter-spacing: 0.04em;
+}
+
+.stx-ticket-thumb-badge {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #059669;
+  color: #fff;
+  display: grid;
+  place-items: center;
+}
+
+.stx-ticket-thumb-badge svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.stx-ticket-event {
+  margin: 0 0 0.2rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.stx-ticket-meta {
+  margin: 0 0 0.45rem;
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+.stx-ticket-seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.stx-seat-pill {
+  display: inline-flex;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #374151;
+}
+
+.stx-ticket-xfer-note {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f766e;
+}
+
+.stx-ticket-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.45rem;
+}
+
+.stx-ticket-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #047857;
+}
+
+.stx-ticket-badge svg {
+  width: 0.95rem !important;
+  height: 0.95rem !important;
+}
+
+.stx-ticket-view {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: #059669;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.stx-ticket-view:hover {
+  text-decoration: underline;
+}
+
+.stx-share-panel {
+  position: sticky;
+  top: 5.5rem;
+  background: #fff;
+  border: 1px solid var(--stx-mock-line, #e5e7eb);
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(17, 24, 39, 0.08);
+  overflow: hidden;
+}
+
+.stx-share-panel[hidden] {
+  display: none !important;
+}
+
+.stx-share-panel-head {
+  padding: 1rem 1.1rem 0.65rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.stx-share-panel-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.stx-share-panel-body {
+  padding: 0.95rem 1.1rem 1.1rem;
+}
+
+.stx-share-panel-lead {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #6b7280;
+}
+
+.stx-share-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-height: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.stx-share-chip {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.28rem 0.55rem;
+  background: rgba(5, 150, 105, 0.1);
+  color: #047857;
+  border-radius: 999px;
+  border: 1px solid rgba(5, 150, 105, 0.2);
+}
+
+.stx-share-field-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 0.35rem;
+}
+
+.stx-share-email-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fafafa;
+  margin-bottom: 0.65rem;
+}
+
+.stx-share-email-row input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.stx-share-name-row label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #6b7280;
+  margin-bottom: 0.3rem;
+}
+
+.stx-share-name-row input {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  margin-bottom: 0.75rem;
+}
+
+.stx-share-cta {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.78rem 1rem;
+  border: none;
+  border-radius: 10px;
+  background: #059669;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.stx-share-cta:hover {
+  background: #047857;
+}
+
+.stx-share-cta:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.stx-share-status {
+  margin: 0.65rem 0 0;
+  font-size: 0.8125rem;
+  min-height: 1.2rem;
+}
+
+.stx-viewer-empty {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.9375rem;
+}
+
+@media (max-width: 1080px) {
+  .stx-wallet-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .stx-wallet-sidebar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .stx-wallet-content-row {
+    grid-template-columns: 1fr;
+  }
+
+  .stx-share-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .stx-wallet-layout {
+    padding: 1rem 0.85rem 2rem;
+  }
+
+  .stx-ticket-card-inner {
+    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-areas:
+      "thumb body"
+      "actions actions";
+  }
+
+  .stx-ticket-thumb {
+    width: 56px;
+    height: 56px;
+    grid-area: thumb;
+  }
+
+  .stx-ticket-body {
+    grid-area: body;
+  }
+
+  .stx-ticket-actions {
+    grid-area: actions;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.35rem;
+  }
+}
+
+html[data-stx-theme="dark"] .stx-wallet-page {
+  background: #070b09 !important;
+}
+
+html[data-stx-theme="dark"] .stx-wallet-nav-card,
+html[data-stx-theme="dark"] .stx-wallet-trust-card,
+html[data-stx-theme="dark"] .stx-wallet-help-card,
+html[data-stx-theme="dark"] .stx-wallet-section,
+html[data-stx-theme="dark"] .stx-share-panel,
+html[data-stx-theme="dark"] .stx-ticket-card {
+  background: #121a16;
+  border-color: #243028;
+}
+
+html[data-stx-theme="dark"] .stx-wallet-page-title,
+html[data-stx-theme="dark"] .stx-wallet-help-card h3,
+html[data-stx-theme="dark"] .stx-ticket-event,
+html[data-stx-theme="dark"] .stx-share-panel-title {
+  color: #eef2ef;
+}
+
+html[data-stx-theme="dark"] .stx-wallet-nav a {
+  color: #d1d5db;
+}
+
+html[data-stx-theme="dark"] .stx-wallet-filter {
+  background: #0a0f0d;
+  border-color: #243028;
+  color: #d1d5db;
+}
