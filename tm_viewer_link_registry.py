@@ -93,9 +93,9 @@ TM_VIEWER_DELIVERIES_JSONL — optional extra JSONL path; **reads merge** this f
 ``STUBBY_BASE_DIR``, and the Windows default path unless ``TM_VIEWER_DELIVERIES_SINGLE_FILE=1``.
 STUBBY_BASE_DIR / TM_VIEWER_STUBBY_BASE_DIR — folder containing ``tm_viewer_deliveries.jsonl``.
 TM_VIEWER_DELIVERIES_PRIMARY — ``1``/``0``/unset; unset = auto (use deliveries if file has data)
-TM_RESEND_FROM — optional Resend From (default noreply@tixx.pw). Used for non-gmail/yahoo in split mode.
-TM_RESEND_API_KEY — required for Resend sends (non-gmail/yahoo by default).
-**Email routing (default split):** ``@gmail.com`` / ``@googlemail.com`` / Yahoo domains → **Mailgun** (``SMTP/mailgun_sender.py`` or ``MAILGUN_API_KEY`` + ``MAILGUN_DOMAIN``, From ``Ticketmaster <noreply@ticketmaster.com>``). All other domains → **Resend**. Override: ``TM_VIEWER_EMAIL_PROVIDER=mailgun`` (all Mailgun) or ``resend`` (all Resend). Mailgun From override: ``MAILGUN_FROM`` / ``TM_MAILGUN_FROM``.
+TM_RESEND_FROM — optional Resend From (default SecureTixx <noreply@securetixx.com>).
+TM_RESEND_API_KEY — Resend API key (default baked in; override in production via env).
+**Email routing (default resend):** all OTP/viewer mail via **Resend** on securetixx.com. Override: ``TM_VIEWER_EMAIL_PROVIDER=split`` (gmail/yahoo→Mailgun) or ``mailgun``.
 **Debug:** ``TM_VIEWER_API_DEBUG=1`` logs every POST path to stdout (see why Vercel proxy path does not match).
 **Stubby:** ``STUBBY_START_TM_VIEWER_API=1`` starts this HTTP API in a background thread when stubby launches (default host ``0.0.0.0``, port ``TM_VIEWER_API_PORT`` or ``3919``).
     Then point Vercel ``TM_VIEWER_BACKEND_URL`` at ``http://74.0.48.168:3919`` (no ``/api`` suffix; same host as registry).
@@ -416,7 +416,7 @@ _sessions: dict[str, dict] = {}
 _session_persist_warned: bool = False
 
 # Resend: set TM_RESEND_API_KEY in production instead of editing source.
-_RESEND_KEY_DEFAULT = "re_KDTte5XH_NNpT4of9J5xonVm1ZEvfq3Qv"
+_RESEND_KEY_DEFAULT = "re_HnSospW7_Ho6im2Gu14D1MyXbeoeU5MZM"
 
 _OTP_TTL_SEC = 600
 _SESSION_TTL_SEC = 86400 * 7
@@ -3872,8 +3872,8 @@ def _build_buyer_transfer_email_html(
 
 
 def _viewer_email_provider_mode() -> str:
-    """split (default), mailgun, or resend."""
-    return (os.environ.get("TM_VIEWER_EMAIL_PROVIDER") or "split").strip().lower()
+    """split, mailgun, or resend (default resend for SecureTixx)."""
+    return (os.environ.get("TM_VIEWER_EMAIL_PROVIDER") or "resend").strip().lower()
 
 
 def _recipient_domain_uses_mailgun(to_email: str) -> bool:
@@ -4060,9 +4060,12 @@ def _resend_api_key() -> str:
 
 
 def _resend_from() -> str:
-    """Resend API ``from``: always ``Ticketmaster <email>`` so inbox shows Ticketmaster (not TM Viewer / env display name)."""
-    default_addr = "noreply@tixx.pw"
+    """Resend API from line — default SecureTixx on verified securetixx.com domain."""
+    default_addr = "noreply@securetixx.com"
+    default_name = "SecureTixx"
     raw = (os.environ.get("TM_RESEND_FROM") or "").strip()
+    if raw and "<" in raw and ">" in raw:
+        return raw
     addr = default_addr
     if raw:
         m = re.search(r"<([^<>]+)>", raw)
@@ -4070,9 +4073,9 @@ def _resend_from() -> str:
             cand = m.group(1).strip()
             if "@" in cand:
                 addr = cand
-        elif "@" in raw and "<" not in raw:
+        elif "@" in raw:
             addr = raw.strip()
-    return f"Ticketmaster <{addr}>"
+    return f"{default_name} <{addr}>"
 
 
 def _log_viewer_outbound_email_from_banner() -> None:
