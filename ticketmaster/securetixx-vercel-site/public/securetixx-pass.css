@@ -1816,7 +1816,9 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-viewport-f
   }
 
   .stx-pass-app .stx-event-venue {
-    display: none !important;
+    display: block !important;
+    max-width: 100% !important;
+    padding: 0 6px !important;
   }
 
   .stx-meta-grid {
@@ -1838,9 +1840,16 @@ html.stx-pass-html.tm-html-ticket-viewport body.stx-pass-app .tm-pass-viewport-f
   }
 
   .stx-meta-grid__cell:nth-child(2) .stx-meta-grid__main {
-    font-size: clamp(0.5rem, 2.35vw, 0.64rem) !important;
-    line-height: 1.15 !important;
-    padding: 0 !important;
+    font-size: clamp(0.52rem, 2.35vw, 0.66rem) !important;
+    line-height: 1.22 !important;
+    padding: 0 2px !important;
+    white-space: normal !important;
+    display: -webkit-box !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-line-clamp: 2 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    word-break: break-word !important;
   }
 
   .stx-meta-grid__main {
