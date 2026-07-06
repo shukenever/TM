@@ -116,6 +116,15 @@
   background: var(--stx-mock-lime);
 }
 
+.stx-shop-v2 .stx-nav-soon {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(236, 253, 245, 0.45);
+  cursor: default;
+  user-select: none;
+}
+
 .stx-shop-v2 .stx-header-actions {
   justify-self: end;
   margin-left: 0;
