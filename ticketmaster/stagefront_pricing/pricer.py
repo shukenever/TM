@@ -15,8 +15,10 @@ from datetime import datetime
 from pathlib import Path
 
 try:
+    from .auth import cookie_from_har
     from .client import StagefrontClient, StagefrontConfig
 except ImportError:
+    from auth import cookie_from_har
     from client import StagefrontClient, StagefrontConfig
 
 log = logging.getLogger("stagefront.pricer")
@@ -50,8 +52,19 @@ def thread_client(cfg: StagefrontConfig, cookie: str, rule_id: int | None) -> St
     return c
 
 
-def compute_price(lowest: float, pct: float, min_under: float) -> float:
-    under = max(lowest * (pct / 100.0), min_under)
+def compute_price(lowest: float, pct: float, cfg: StagefrontConfig) -> float:
+    """Portal-style: fixed $ under on normal tickets; % on cheap seats."""
+    min_under = cfg.min_under_usd
+    if cfg.price_strategy == "percent":
+        under = max(lowest * (pct / 100.0), min_under)
+    elif cfg.price_strategy == "portal":
+        if lowest >= cfg.cheap_ticket_pct_threshold:
+            under = min_under
+        else:
+            under = max(lowest * (pct / 100.0), min_under)
+    else:
+        under_pct = max(lowest * (pct / 100.0), min_under)
+        under = min(min_under, under_pct) if lowest >= cfg.cheap_ticket_pct_threshold else under_pct
     price = round(lowest - under, 2)
     return max(price, 0.01)
 
@@ -85,8 +98,8 @@ def price_one_listing(
 
     low = min(prices)
     pct = pick_pct(cfg)
-    new_price = compute_price(low, pct, cfg.min_under_usd)
-    old = listing.get("item_price") or 0
+    new_price = compute_price(low, pct, cfg)
+    old = float(listing.get("item_price") or 0)
 
     if dry_run:
         return {
@@ -100,7 +113,11 @@ def price_one_listing(
             "qty": listing["quantity"],
         }
 
-    client.update_listing_prices(lid, new_price)
+    if old > 0 and abs(old - new_price) < 0.02:
+        status = "unchanged"
+    else:
+        client.update_listing_prices(lid, new_price)
+        status = "ok"
     rid = client.sharing_rule_id(venue_id)
     if rid:
         share = client.share_out_settings(rid)
@@ -109,7 +126,7 @@ def price_one_listing(
 
     return {
         "listing_id": lid,
-        "status": "ok",
+        "status": status,
         "low": low,
         "price": new_price,
         "old": old,
@@ -179,14 +196,25 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="StageFront auto-pricing (US proxy required)")
     ap.add_argument("--from-date", default="", help="MM/DD/YYYY (default: today US)")
     ap.add_argument("--to-date", default="12/31/2029", help="MM/DD/YYYY event end filter")
-    ap.add_argument("--pct", type=float, default=3.0, help="Undercut %% vs lowest comp (default 3)")
+    ap.add_argument("--pct", type=float, default=2.5, help="Undercut %% on cheap tickets (default 2.5)")
+    ap.add_argument(
+        "--price-strategy",
+        choices=("portal", "percent", "blend"),
+        default="portal",
+        help="portal = $0.11 under when comp >= threshold (HAR autopricer)",
+    )
     ap.add_argument("--pct-aggressive", type=float, default=5.0, help="Aggressive undercut %%")
     ap.add_argument("--aggressive-fraction", type=float, default=0.15, help="Fraction of listings at aggressive pct")
     ap.add_argument("--min-under", type=float, default=0.11, help="Min $ under lowest (floor on undercut amount)")
     ap.add_argument("--company", default="", help="Company name (default: first from API)")
     ap.add_argument("--sharing-rule", default="shu", help="Saved sharing rule name")
-    ap.add_argument("--event-workers", type=int, default=8, help="Parallel events")
-    ap.add_argument("--listing-workers", type=int, default=6, help="Parallel listings per event")
+    ap.add_argument("--event-workers", type=int, default=5, help="Parallel events")
+    ap.add_argument("--listing-workers", type=int, default=4, help="Parallel listings per event")
+    ap.add_argument("--max-inflight", type=int, default=12, help="Max concurrent HTTP requests (all threads)")
+    ap.add_argument("--request-gap-ms", type=int, default=50, help="Min gap between requests per client")
+    ap.add_argument("--login", action="store_true", help="Password login + terminal OTP (uses STAGEFRONT_USER/PASSWORD)")
+    ap.add_argument("--cookie-from-har", default="", help="Load Cookie from portal HAR export path")
+    ap.add_argument("--event-id", type=int, default=0, help="Only price this event id (0 = all)")
     ap.add_argument("--dry-run", action="store_true", help="Do not POST price/share updates")
     ap.add_argument("--max-events", type=int, default=0, help="Limit events (0 = all)")
     ap.add_argument("-v", "--verbose", action="store_true")
@@ -221,19 +249,33 @@ def main(argv: list[str] | None = None) -> int:
         undercut_pct_aggressive=args.pct_aggressive,
         aggressive_fraction=args.aggressive_fraction,
         min_under_usd=args.min_under,
+        price_strategy=args.price_strategy,
+        max_concurrent_requests=args.max_inflight,
+        request_gap_sec=max(0, args.request_gap_ms) / 1000.0,
     )
     bootstrap = StagefrontClient(cfg)
     if rule_id:
         bootstrap.set_default_sharing_rule_id(rule_id)
 
+    if args.cookie_from_har:
+        cookie = cookie_from_har(args.cookie_from_har)
+        log.info("cookie from HAR %s (%d chars)", args.cookie_from_har, len(cookie))
     if cookie:
         bootstrap.set_cookie(cookie)
-        log.info("using STAGEFRONT_COOKIE (%d chars)", len(cookie))
+        log.info("using session cookie (%d chars)", len(cookie))
+        try:
+            bootstrap.ensure_api_session()
+        except Exception as exc:
+            log.error("cookie invalid or expired: %s", exc)
+            return 2
+    elif args.login and user and password:
+        log.info("logging in as %s via proxy (OTP in terminal if prompted)", user)
+        bootstrap.login_interactive(user, password)
     elif user and password:
-        log.info("logging in as %s via proxy", user)
-        bootstrap.login(user, password)
+        log.error("Password without 2FA is unlikely to work; use --login or STAGEFRONT_COOKIE")
+        return 2
     else:
-        log.error("Set STAGEFRONT_COOKIE or STAGEFRONT_USER + STAGEFRONT_PASSWORD")
+        log.error("Set STAGEFRONT_COOKIE, --cookie-from-har, or --login with STAGEFRONT_USER/PASSWORD")
         return 2
 
     cookie = bootstrap._cookie
@@ -241,6 +283,8 @@ def main(argv: list[str] | None = None) -> int:
     log.info("company=%r events %s → %s", company, from_date, args.to_date)
 
     events_all = bootstrap.query_events()
+    if args.event_id:
+        events_all = [e for e in events_all if int(e.get("Event_ID") or 0) == args.event_id]
     events = events_all[: args.max_events] if args.max_events > 0 else events_all
     log.info("QueryEvents returned %d events (processing %d)", len(events_all), len(events))
     if not events:
@@ -267,7 +311,7 @@ def main(argv: list[str] | None = None) -> int:
             except Exception:
                 log.exception("event worker failed")
 
-    ok = sum(1 for r in all_results if r.get("status") == "ok")
+    ok = sum(1 for r in all_results if r.get("status") in ("ok", "unchanged"))
     dry = sum(1 for r in all_results if r.get("status") == "dry_run")
     skip = sum(1 for r in all_results if r.get("status") == "no_comps")
     err = sum(1 for r in all_results if r.get("status") == "error")

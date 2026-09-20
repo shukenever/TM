@@ -6,11 +6,13 @@ import http.cookiejar
 import json
 import re
 import ssl
+import threading
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
 BASE = "https://portal.stagefront.com"
 
@@ -36,6 +38,10 @@ class StagefrontConfig:
     undercut_pct_aggressive: float = 5.0
     aggressive_fraction: float = 0.15
     min_under_usd: float = 0.11
+    price_strategy: str = "portal"  # portal | percent | blend
+    cheap_ticket_pct_threshold: float = 50.0
+    max_concurrent_requests: int = 12
+    request_gap_sec: float = 0.05
     skip_autopricer: bool = True
 
 
@@ -49,6 +55,10 @@ class StagefrontClient:
         self._default_sharing_rule_id: int | None = None
         self._sharing_cache: dict[int, list[dict[str, Any]]] = {}
         self._rule_id_by_name: dict[str, int] = {}
+        n = max(1, int(config.max_concurrent_requests))
+        self._req_sem = threading.Semaphore(n)
+        self._last_req = 0.0
+        self._req_gap_lock = threading.Lock()
 
     def _build_opener(self) -> urllib.request.OpenerDirector:
         handlers: list[Any] = [
@@ -110,35 +120,62 @@ class StagefrontClient:
             h["Cookie"] = self._cookie
         return h
 
-    def _open(self, req: urllib.request.Request, timeout: int = 120) -> tuple[int, str, dict[str, str]]:
-        try:
-            with self._opener.open(req, timeout=timeout) as resp:
-                body = resp.read().decode("utf-8", "replace")
-                self._sync_cookie_string()
-                loc = resp.headers.get("Location", "")
-                return resp.status, body, {"Location": loc}
-        except urllib.error.HTTPError as e:
-            self._sync_cookie_string()
-            loc = e.headers.get("Location", "") if e.headers else ""
-            return e.code, e.read().decode("utf-8", "replace"), {"Location": loc}
-        except Exception as e:
-            return -1, str(e), {}
+    def _throttle(self) -> None:
+        gap = self.config.request_gap_sec
+        if gap <= 0:
+            return
+        with self._req_gap_lock:
+            now = time.monotonic()
+            wait = gap - (now - self._last_req)
+            if wait > 0:
+                time.sleep(wait)
+            self._last_req = time.monotonic()
 
-    def login(self, username: str, password: str) -> None:
-        get_req = urllib.request.Request(f"{BASE}/Account/Login?ReturnUrl=%2F", headers=self._headers())
-        code, html, hdrs = self._open(get_req)
-        if code != 200:
-            raise RuntimeError(f"login page HTTP {code}")
-        m = re.search(
-            r'name="__RequestVerificationToken"[^>]*value="([^"]+)"',
-            html,
-            re.I,
-        )
+    def _open(self, req: urllib.request.Request, timeout: int = 120) -> tuple[int, str, dict[str, str]]:
+        with self._req_sem:
+            self._throttle()
+            try:
+                with self._opener.open(req, timeout=timeout) as resp:
+                    body = resp.read().decode("utf-8", "replace")
+                    self._sync_cookie_string()
+                    loc = resp.headers.get("Location", "")
+                    return resp.status, body, {"Location": loc}
+            except urllib.error.HTTPError as e:
+                self._sync_cookie_string()
+                loc = e.headers.get("Location", "") if e.headers else ""
+                return e.code, e.read().decode("utf-8", "replace"), {"Location": loc}
+            except Exception as e:
+                return -1, str(e), {}
+
+    @staticmethod
+    def _parse_form_token(html: str) -> str:
+        m = re.search(r'name="__RequestVerificationToken"[^>]*value="([^"]+)"', html, re.I)
         if not m:
             m = re.search(r'__RequestVerificationToken" type="hidden" value="([^"]+)"', html)
         if not m:
-            raise RuntimeError("anti-forgery token not found on login page")
-        token = m.group(1)
+            raise RuntimeError("anti-forgery token not found")
+        return m.group(1)
+
+    @staticmethod
+    def _parse_hidden(html: str, name: str) -> str:
+        m = re.search(rf'name="{re.escape(name)}"[^>]*value="([^"]*)"', html, re.I)
+        return m.group(1) if m else ""
+
+    def _get_html(self, path: str, referer: str | None = None) -> str:
+        url = path if path.startswith("http") else f"{BASE}{path}"
+        req = urllib.request.Request(url, headers=self._headers(referer or f"{BASE}/Account/Login"))
+        code, body, _ = self._open(req)
+        if code != 200:
+            raise RuntimeError(f"GET {path} HTTP {code}: {body[:300]}")
+        return body
+
+    def ensure_api_session(self) -> None:
+        self.get_json("/api/Pricing/ListCompanies")
+
+    def login(self, username: str, password: str) -> bool:
+        """Password step. Returns True if 2FA code entry is required."""
+        html = self._get_html("/Account/Login?ReturnUrl=%2F")
+        token = self._parse_form_token(html)
         form = urllib.parse.urlencode(
             {
                 "__RequestVerificationToken": token,
@@ -161,18 +198,65 @@ class StagefrontClient:
             loc = hdrs.get("Location") or "/"
             if not loc.startswith("http"):
                 loc = f"{BASE}{loc}"
-            follow = urllib.request.Request(loc, headers=self._headers(f"{BASE}/"))
-            self._open(follow)
-        elif code not in (200,) and "Pricing" not in body:
-            raise RuntimeError(f"login failed HTTP {code}: {body[:300]}")
+            body = self._get_html(loc, referer=f"{BASE}/Account/Login")
         self._sync_cookie_string()
         names = {c.name for c in self._jar}
-        if ".AspNet.ApplicationCookie" not in names:
-            if ".AspNet.TwoFactorCookie" in names:
-                raise RuntimeError(
-                    "account requires 2FA — export browser cookies to STAGEFRONT_COOKIE instead of password login"
-                )
-            raise RuntimeError("login did not receive session cookie; use STAGEFRONT_COOKIE from browser")
+        if ".AspNet.ApplicationCookie" in names:
+            self.ensure_api_session()
+            return False
+        if ".AspNet.TwoFactorCookie" in names or "/Account/VerifyCode" in body:
+            return True
+        raise RuntimeError(f"login failed HTTP {code}: {body[:300]}")
+
+    def verify_two_factor(self, code: str, remember_browser: bool = True) -> None:
+        html = self._get_html("/Account/VerifyCode?ReturnUrl=%2F")
+        token = self._parse_form_token(html)
+        provider = self._parse_hidden(html, "provider")
+        payload = {
+            "__RequestVerificationToken": token,
+            "provider": provider,
+            "Code": code.strip(),
+        }
+        if remember_browser:
+            payload["RememberBrowser"] = "true"
+        data = urllib.parse.urlencode(payload).encode("utf-8")
+        post_req = urllib.request.Request(
+            f"{BASE}/Account/VerifyCode?ReturnUrl=%2F",
+            data=data,
+            headers={
+                **self._headers(f"{BASE}/Account/VerifyCode?ReturnUrl=%2F"),
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            method="POST",
+        )
+        code_http, body, hdrs = self._open(post_req)
+        if code_http == 302:
+            loc = hdrs.get("Location") or "/"
+            if not loc.startswith("http"):
+                loc = f"{BASE}{loc}"
+            self._get_html(loc)
+        elif code_http != 200 or "VerifyCode" in body:
+            raise RuntimeError("invalid or expired security code")
+        self._sync_cookie_string()
+        if ".AspNet.ApplicationCookie" not in {c.name for c in self._jar}:
+            raise RuntimeError("2FA verify did not establish session")
+        self.ensure_api_session()
+
+    def login_interactive(
+        self,
+        username: str,
+        password: str,
+        *,
+        prompt: Callable[[str], str] | None = None,
+    ) -> None:
+        if prompt is None:
+            prompt = lambda msg: input(msg).strip()
+        needs_2fa = self.login(username, password)
+        if needs_2fa:
+            otp = prompt("StageFront security code from email: ")
+            if not otp:
+                raise RuntimeError("empty security code")
+            self.verify_two_factor(otp)
 
     def get_json(self, path: str, *, timeout: int = 120) -> Any:
         url = path if path.startswith("http") else f"{BASE}{path}"
