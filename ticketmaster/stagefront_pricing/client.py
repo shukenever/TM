@@ -434,6 +434,15 @@ class StagefrontClient:
     def update_listing_prices(self, listing_id: int, price: float) -> None:
         self.post_json("/api/Pricing/UpdateListingPrices", [{"listing_id": listing_id, "price": price}])
 
+    def get_section_min_prices(self, event_id: int) -> dict[str, float]:
+        data = self.get_json(f"/api/Marketplace/SeatGeek/GetSections?eventId={event_id}")
+        out: dict[str, float] = {}
+        for row in data or []:
+            name = str(row.get("SectionName") or "").strip()
+            if name and row.get("MinPrice") is not None:
+                out[name] = float(row["MinPrice"])
+        return out
+
     def sharing_rule_id(self, venue_id: int) -> int | None:
         if self._default_sharing_rule_id:
             return self._default_sharing_rule_id

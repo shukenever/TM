@@ -42,6 +42,13 @@ def _sg_price(row: dict[str, Any]) -> float | None:
 
 
 def _derive_floor_ceiling(row: dict[str, Any], ap: AutoPricerConfig) -> tuple[float, float]:
+    comp = row.get("_comp_low")
+    if comp is not None and float(comp) > 0:
+        low = float(comp)
+        floor_val = max(ap.min_floor, round(low * ap.floor_pct_of_sg, 2))
+        ceiling_val = max(round(low * ap.ceiling_mult, 2), floor_val + 1)
+        return floor_val, ceiling_val
+
     floor = row.get("Floor_Price")
     ceiling = row.get("Ceiling_Price")
     if floor is not None and ceiling is not None:
@@ -129,16 +136,56 @@ def apply_sharing(client: StagefrontClient, venue_id: int, listing_ids: list[int
     return True
 
 
-def price_from_sg_under(row: dict[str, Any], ap: AutoPricerConfig) -> float | None:
-    """HAR step before SetListingRules: UpdateListingPrices at SG − AmountUnder."""
-    sg = _sg_price(row)
-    if sg and sg > 0:
-        return max(round(sg - ap.amount_under, 2), 0.01)
-    if ap.force_reprice:
-        old = float(row.get("Item_Price") or 0)
-        if old > 0:
-            return max(round(old - ap.amount_under, 2), 0.01)
+def _listing_for_comps(row: dict[str, Any], company: str) -> dict[str, Any]:
+    return {
+        "listing_id": int(row["Listing_ID"]),
+        "section": str(row.get("Section") or ""),
+        "row": str(row.get("Row") or ""),
+        "quantity": int(row.get("Quantity") or 1),
+        "item_price": float(row.get("Item_Price") or 0),
+        "company_name": str(row.get("Company_Name") or company),
+    }
+
+
+def _section_floor_price(section: str, section_mins: dict[str, float]) -> float | None:
+    s = str(section or "").strip()
+    if not s or not section_mins:
+        return None
+    if s in section_mins:
+        return section_mins[s]
+    for key, val in section_mins.items():
+        if key.split()[0] == s or key.replace(" ", "") == s.replace(" ", ""):
+            return val
     return None
+
+
+def har_target_price(
+    client: StagefrontClient,
+    event_id: int,
+    row: dict[str, Any],
+    company: str,
+    ap: AutoPricerConfig,
+    section_mins: dict[str, float],
+) -> tuple[float | None, float | None]:
+    """Portal-style: min(row comps, section MinPrice grid) − AmountUnder."""
+    listing = _listing_for_comps(row, company)
+    candidates: list[float] = []
+    sec_low = _section_floor_price(listing["section"], section_mins)
+    if sec_low and sec_low > 0:
+        candidates.append(sec_low)
+    try:
+        comparables = client.get_lowest_comparables(event_id, listing)
+        for c in comparables:
+            if c.get("IsOwnInventory") or c.get("IsIgnored") or not c.get("Price"):
+                continue
+            candidates.append(float(c["Price"]))
+    except Exception as exc:
+        log.warning("comps failed listing %s: %s", listing["listing_id"], exc)
+    if not candidates:
+        return None, None
+    low = min(candidates)
+    price = max(round(low - ap.amount_under, 2), 0.01)
+    return price, low
 
 
 _thread_local = threading.local()
@@ -161,7 +208,10 @@ def process_listing(
     rule_id: int | None,
     row: dict[str, Any],
     venue_id: int,
+    company: str,
     ap: AutoPricerConfig,
+    section_mins: dict[str, float],
+    ap_eligible: bool,
     *,
     dry_run: bool,
 ) -> dict[str, Any]:
@@ -177,32 +227,44 @@ def process_listing(
         "old_price": float(row.get("Item_Price") or 0),
         "is_autopriced": bool(row.get("Is_AutoPriced")),
     }
-    try:
-        rules = client.get_json(f"/api/AutoPricer/GetListingRules?listingId={lid}") or {}
-        row["_listing_rules"] = rules
-    except Exception:
-        row["_listing_rules"] = {}
+    new_price, comp_low = har_target_price(client, event_id, row, company, ap, section_mins)
+    rec["comp_low"] = comp_low
+    row["_comp_low"] = comp_low
+    rec["target_price"] = new_price
+    rec["priced"] = False
+    if new_price is not None and not dry_run:
+        client.update_listing_prices(lid, new_price)
+        rec["priced"] = True
+    elif new_price is None:
+        rec["status"] = "no_comps"
+        if not dry_run:
+            rec["shared"] = apply_sharing(client, venue_id, [lid])
+            _append_result(rec)
+        return rec
 
     payload = build_set_rules_payload(row, venue_id, ap)
     rec["floor"] = payload["listingIdFloors"][0]["FloorPrice"]
     rec["ceiling"] = payload["listingIdFloors"][0]["CeilingPrice"]
 
-    new_price = price_from_sg_under(row, ap)
-    rec["target_price"] = new_price
-    rec["priced"] = False
-    if new_price is not None and not dry_run:
-        if ap.force_reprice or rec["old_price"] <= 0:
-            client.update_listing_prices(lid, new_price)
-            rec["priced"] = True
-
     if dry_run:
         rec["status"] = "dry_run"
         return rec
 
-    ok = client.post_json("/api/AutoPricer/SetListingRules", payload)
-    rec["autopricer_set"] = bool(ok)
+    rec["autopricer_set"] = False
+    if ap_eligible:
+        try:
+            ok = client.post_json("/api/AutoPricer/SetListingRules", payload)
+            rec["autopricer_set"] = bool(ok)
+        except Exception as exc:
+            rec["rules_error"] = str(exc)[:200]
+            log.warning("SetListingRules %s: %s", lid, exc)
     rec["shared"] = apply_sharing(client, venue_id, [lid])
-    rec["status"] = "ok" if rec.get("autopricer_set") else "rules_failed"
+    if rec.get("priced") and (rec.get("autopricer_set") or not ap_eligible):
+        rec["status"] = "ok"
+    elif rec.get("autopricer_set"):
+        rec["status"] = "ok"
+    else:
+        rec["status"] = "rules_failed" if ap_eligible else "priced_only"
     _append_result(rec)
     return rec
 
@@ -303,6 +365,12 @@ def process_event(
     if not rows:
         return [{"event_id": event_id, "status": "no_inventory", "event": name}]
 
+    ap_ids = {int(r["Listing_ID"]) for r in ap_rows}
+    try:
+        section_mins = client.get_section_min_prices(event_id)
+    except Exception:
+        section_mins = {}
+
     results: list[dict[str, Any]] = []
     with ThreadPoolExecutor(max_workers=max(1, listing_workers)) as pool:
         futs = [
@@ -313,7 +381,10 @@ def process_event(
                 rule_id,
                 row,
                 venue_id,
+                company,
                 ap,
+                section_mins,
+                int(row["Listing_ID"]) in ap_ids,
                 dry_run=dry_run,
             )
             for row in rows
