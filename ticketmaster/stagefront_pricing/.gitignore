@@ -1,0 +1,5 @@
+_test_cookie.txt
+last_run_summary.json
+.env
+__pycache__/
+*.pyc
