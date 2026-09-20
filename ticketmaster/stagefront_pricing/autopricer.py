@@ -13,8 +13,10 @@ from typing import Any
 
 try:
     from .client import StagefrontClient, StagefrontConfig
+    from .pricing_math import band_from_minimum, pct_under_min, price_in_band
 except ImportError:
     from client import StagefrontClient, StagefrontConfig
+    from pricing_math import band_from_minimum, pct_under_min, price_in_band
 
 log = logging.getLogger("stagefront.autopricer")
 
@@ -35,6 +37,7 @@ class AutoPricerConfig:
     force_reprice: bool = True
     undercut_pct_min: float = 3.0
     undercut_pct_max: float = 5.0
+    require_section_min: bool = True
 
 
 def _sg_price(row: dict[str, Any]) -> float | None:
@@ -128,6 +131,18 @@ def _append_result(record: dict[str, Any]) -> None:
             f.write(json.dumps(record, default=str) + "\n")
 
 
+def _fetch_listing_price(
+    client: StagefrontClient,
+    event_id: int,
+    company: str,
+    listing_id: int,
+) -> float | None:
+    for row in client.query_event_inventory(event_id, company):
+        if int(row.get("Listing_ID") or 0) == listing_id:
+            return float(row.get("Item_Price") or 0)
+    return None
+
+
 def apply_sharing(client: StagefrontClient, venue_id: int, listing_ids: list[int]) -> bool:
     rid = client.sharing_rule_id(venue_id)
     if not rid or not listing_ids:
@@ -177,11 +192,13 @@ def har_target_price(
     ap: AutoPricerConfig,
     section_mins: dict[str, float],
 ) -> tuple[float | None, float | None, float | None]:
-    """Portal section MinPrice (grid) then 3–5% under; row comps only if no section min."""
+    """Price = section GetSections MinPrice × (1 − 3–5%). Comps only if section min missing."""
     listing = _listing_for_comps(row, company)
     sec_low = _section_floor_price(listing["section"], section_mins)
+    source = "section_min"
     base: float | None = sec_low if sec_low and sec_low > 0 else None
-    if base is None:
+    if base is None and not ap.require_section_min:
+        source = "row_comps"
         try:
             comparables = client.get_lowest_comparables(event_id, listing)
             prices = [
@@ -194,10 +211,11 @@ def har_target_price(
         except Exception as exc:
             log.warning("comps failed listing %s: %s", listing["listing_id"], exc)
     if base is None or base <= 0:
-        return None, None, None
+        return None, None, None, None
     pct = _pick_undercut_pct(ap)
     price = max(round(base * (1.0 - pct / 100.0), 2), 0.01)
-    return price, base, pct
+    row["_price_source"] = source
+    return price, base, pct, source
 
 
 _thread_local = threading.local()
@@ -239,10 +257,17 @@ def process_listing(
         "old_price": float(row.get("Item_Price") or 0),
         "is_autopriced": bool(row.get("Is_AutoPriced")),
     }
-    new_price, market_low, pct = har_target_price(client, event_id, row, company, ap, section_mins)
+    new_price, market_low, pct, source = har_target_price(
+        client, event_id, row, company, ap, section_mins
+    )
     rec["market_low"] = market_low
     rec["section_min_used"] = market_low
+    rec["price_source"] = source
     rec["undercut_pct"] = pct
+    if market_low:
+        lo, hi = band_from_minimum(market_low, ap.undercut_pct_min, ap.undercut_pct_max)
+        rec["band_low"] = lo
+        rec["band_high"] = hi
     row["_comp_low"] = market_low
     row["_undercut_pct"] = pct
     rec["target_price"] = new_price
@@ -251,7 +276,7 @@ def process_listing(
         client.update_listing_prices(lid, new_price)
         rec["priced"] = True
     elif new_price is None:
-        rec["status"] = "no_comps"
+        rec["status"] = "no_section_min" if ap.require_section_min else "no_comps"
         if not dry_run:
             rec["shared"] = apply_sharing(client, venue_id, [lid])
             _append_result(rec)
@@ -274,6 +299,21 @@ def process_listing(
             rec["rules_error"] = str(exc)[:200]
             log.warning("SetListingRules %s: %s", lid, exc)
     rec["shared"] = apply_sharing(client, venue_id, [lid])
+
+    if rec.get("priced") and market_low and not dry_run:
+        actual = _fetch_listing_price(client, event_id, company, lid)
+        rec["portal_price_after"] = actual
+        if actual is not None and not price_in_band(
+            actual, market_low, ap.undercut_pct_min, ap.undercut_pct_max
+        ):
+            fix = new_price
+            if actual >= market_low or (fix and abs(actual - fix) > 0.05):
+                client.update_listing_prices(lid, fix)
+                rec["price_corrected"] = True
+                rec["portal_price_after"] = fix
+        if rec.get("portal_price_after") is not None and market_low:
+            rec["actual_pct_under_min"] = pct_under_min(rec["portal_price_after"], market_low)
+
     if rec.get("priced") and (rec.get("autopricer_set") or not ap_eligible):
         rec["status"] = "ok"
     elif rec.get("autopricer_set"):

@@ -182,6 +182,20 @@ def main(argv: list[str] | None = None) -> int:
 
     summary = Path(__file__).resolve().parent / "last_run_summary.json"
     summary.write_text(json.dumps(all_results, indent=2)[:800000], encoding="utf-8")
+
+    if not args.dry_run:
+        try:
+            from analyze_run import run_audit
+        except ImportError:
+            from .analyze_run import run_audit
+        audit = run_audit(args.pct_min, args.pct_max)
+        log.info(
+            "audit vs section min: %d ok in 3-5%% band, %d at/above min, %d out of band",
+            audit["ok_in_3_5_pct_band"],
+            audit["at_or_above_section_min"],
+            audit["out_of_band"],
+        )
+
     return 0 if err == 0 else 1
 
 
