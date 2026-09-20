@@ -81,7 +81,9 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="StageFront AutoPricer bulk run (US proxy required)")
     ap.add_argument("--from-date", default="", help="MM/DD/YYYY")
     ap.add_argument("--to-date", default="12/31/2029")
-    ap.add_argument("--amount-under", type=float, default=0.11, help="HAR AmountUnder ($)")
+    ap.add_argument("--amount-under", type=float, default=0.11, help="AutoPricer AmountUnder ($) on rules")
+    ap.add_argument("--pct-min", type=float, default=3.0, help="Undercut %% below section min (low)")
+    ap.add_argument("--pct-max", type=float, default=5.0, help="Undercut %% below section min (high)")
     ap.add_argument("--company", default="")
     ap.add_argument("--sharing-rule", default="shu")
     ap.add_argument("--event-workers", type=int, default=10)
@@ -130,6 +132,8 @@ def main(argv: list[str] | None = None) -> int:
     ap_cfg = AutoPricerConfig(
         amount_under=args.amount_under,
         force_reprice=not args.no_force_reprice,
+        undercut_pct_min=args.pct_min,
+        undercut_pct_max=args.pct_max,
     )
 
     events_all = bootstrap.query_events()

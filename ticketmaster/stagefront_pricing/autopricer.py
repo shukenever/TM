@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import random
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
@@ -24,7 +25,7 @@ RESULTS_PATH = Path(__file__).resolve().parent / "autopricer_results.jsonl"
 class AutoPricerConfig:
     amount_under: float = 0.11
     notes: str = "AutoPricer 2.0"
-    allow_price_increase: bool = True
+    allow_price_increase: bool = False
     use_default_splits: bool = True
     trait_exclusions: str = "1,102"
     floor_pct_of_sg: float = 0.88
@@ -32,6 +33,8 @@ class AutoPricerConfig:
     min_floor: float = 10.0
     default_ceiling: float = 5000.0
     force_reprice: bool = True
+    undercut_pct_min: float = 3.0
+    undercut_pct_max: float = 5.0
 
 
 def _sg_price(row: dict[str, Any]) -> float | None:
@@ -104,7 +107,7 @@ def build_set_rules_payload(
             "Exclude_Outliers": 0,
             "NoComparablesNotification": False,
             "Delivery_Exclusions": "",
-            "PctUnder": None,
+            "PctUnder": row.get("_undercut_pct"),
             "UseDefaultSplits": ap.use_default_splits,
             "IgnoredListings": [],
             "Ignored_Listings": [],
@@ -159,6 +162,13 @@ def _section_floor_price(section: str, section_mins: dict[str, float]) -> float 
     return None
 
 
+def _pick_undercut_pct(ap: AutoPricerConfig) -> float:
+    lo, hi = ap.undercut_pct_min, ap.undercut_pct_max
+    if hi < lo:
+        lo, hi = hi, lo
+    return random.uniform(lo, hi)
+
+
 def har_target_price(
     client: StagefrontClient,
     event_id: int,
@@ -166,26 +176,28 @@ def har_target_price(
     company: str,
     ap: AutoPricerConfig,
     section_mins: dict[str, float],
-) -> tuple[float | None, float | None]:
-    """Portal-style: min(row comps, section MinPrice grid) − AmountUnder."""
+) -> tuple[float | None, float | None, float | None]:
+    """Portal section MinPrice (grid) then 3–5% under; row comps only if no section min."""
     listing = _listing_for_comps(row, company)
-    candidates: list[float] = []
     sec_low = _section_floor_price(listing["section"], section_mins)
-    if sec_low and sec_low > 0:
-        candidates.append(sec_low)
-    try:
-        comparables = client.get_lowest_comparables(event_id, listing)
-        for c in comparables:
-            if c.get("IsOwnInventory") or c.get("IsIgnored") or not c.get("Price"):
-                continue
-            candidates.append(float(c["Price"]))
-    except Exception as exc:
-        log.warning("comps failed listing %s: %s", listing["listing_id"], exc)
-    if not candidates:
-        return None, None
-    low = min(candidates)
-    price = max(round(low - ap.amount_under, 2), 0.01)
-    return price, low
+    base: float | None = sec_low if sec_low and sec_low > 0 else None
+    if base is None:
+        try:
+            comparables = client.get_lowest_comparables(event_id, listing)
+            prices = [
+                float(c["Price"])
+                for c in comparables
+                if not c.get("IsOwnInventory") and not c.get("IsIgnored") and c.get("Price")
+            ]
+            if prices:
+                base = min(prices)
+        except Exception as exc:
+            log.warning("comps failed listing %s: %s", listing["listing_id"], exc)
+    if base is None or base <= 0:
+        return None, None, None
+    pct = _pick_undercut_pct(ap)
+    price = max(round(base * (1.0 - pct / 100.0), 2), 0.01)
+    return price, base, pct
 
 
 _thread_local = threading.local()
@@ -227,9 +239,12 @@ def process_listing(
         "old_price": float(row.get("Item_Price") or 0),
         "is_autopriced": bool(row.get("Is_AutoPriced")),
     }
-    new_price, comp_low = har_target_price(client, event_id, row, company, ap, section_mins)
-    rec["comp_low"] = comp_low
-    row["_comp_low"] = comp_low
+    new_price, market_low, pct = har_target_price(client, event_id, row, company, ap, section_mins)
+    rec["market_low"] = market_low
+    rec["section_min_used"] = market_low
+    rec["undercut_pct"] = pct
+    row["_comp_low"] = market_low
+    row["_undercut_pct"] = pct
     rec["target_price"] = new_price
     rec["priced"] = False
     if new_price is not None and not dry_run:
