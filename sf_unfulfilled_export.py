@@ -222,6 +222,17 @@ def _row_compatible(want: str, have: str) -> bool:
     return False
 
 
+def _dates_compatible(sale_date, stock_date) -> bool:
+    if sale_date is None or stock_date is None:
+        return True
+    if sale_date == stock_date:
+        return True
+    try:
+        return abs((sale_date - stock_date).days) <= 1
+    except TypeError:
+        return False
+
+
 def _sf_hit_ok(
     hit,
     *,
@@ -238,7 +249,7 @@ def _sf_hit_ok(
         hed = hit.get("_edate") if hasattr(hit, "get") else None
         if hed is None and hasattr(hit, "__getitem__"):
             hed = parse_event_date(str(hit.get("Event Date") or ""))
-        if hed != ed:
+        if not _dates_compatible(ed, hed):
             return False
     seat_s = str(seat).strip()
     if str(hit.get("_seat") or hit.get("Seat") or "").strip() != seat_s:
@@ -296,9 +307,14 @@ def _seat_match_sf(stock_df, section, row, seat, *, event_date, venue, event_nam
 
     mask = stock_df["_sec"].isin(variants) & (stock_df["_seat"] == seat_s)
     if ed is not None:
-        mask &= stock_df["_edate"] == ed
+        mask &= stock_df["_edate"].apply(lambda d: _dates_compatible(ed, d))
     hits = stock_df[mask]
     if len(hits):
+        if event_name and "Event Name" in hits.columns and len(hits) > 1:
+            named = hits[hits["Event Name"].apply(lambda v: _event_name_ok(event_name, v))]
+            if len(named) == 0:
+                return None
+            hits = named
         if row_u:
             relaxed = hits[hits["_row"].apply(lambda r: _row_compatible(row_u, r))]
             if len(relaxed):
@@ -378,8 +394,15 @@ def _match_sale(stock_df, row: dict) -> tuple[str, str, list[tuple[str, str]], l
             seen_bc.add(b)
             uniq_bc.append(b)
 
-    has_bc = any(b for _, b in seat_pairs)
-    note = "ok" if email and has_bc else ("partial" if email or has_bc else "no_db_match")
+    n_seats = len(seat_pairs)
+    n_bc = sum(1 for _, b in seat_pairs if b)
+    has_bc = n_bc > 0
+    if email and n_seats and n_bc == n_seats:
+        note = "ok"
+    elif email or has_bc:
+        note = "partial"
+    else:
+        note = "no_db_match"
     return email, password, seat_pairs, uniq_bc, note
 
 
@@ -409,6 +432,22 @@ def _apply_valids(records: list[dict], valids: dict[str, str]) -> None:
             rec["is_valid_account"] = False
 
 
+def _export_barcode_ok(rec: dict) -> bool:
+    """Human .txt: barcodes only for valids.txt + full invoice match."""
+    if not rec.get("is_valid_account") or not rec.get("valid_cred"):
+        return False
+    if rec.get("match") != "ok":
+        return False
+    pairs = rec.get("seat_pairs") or []
+    if not pairs:
+        return False
+    if not all(b for _, b in pairs):
+        return False
+    em = str(rec.get("email") or "").strip().lower()
+    cred_em = rec["valid_cred"].split(":", 1)[0].strip().lower()
+    return not em or em == cred_em
+
+
 def _js_export_records(records: list[dict]) -> list[dict]:
     """Valid accounts get creds; others barcodes + seat_pairs only."""
     out: list[dict] = []
@@ -431,12 +470,14 @@ def _js_export_records(records: list[dict]) -> list[dict]:
 def _format_export_blocks(records: list[dict]) -> list[str]:
     """Human export: invoice + account (valids.txt only), then SEAT | BARCODE lines."""
     lines: list[str] = []
+    show_bc = _export_barcode_ok
     for rec in records:
         inv = rec.get("invoice_id") or ""
         cred = rec.get("valid_cred") or ""
         lines.append(f"{inv} | {cred}")
+        allow_bc = show_bc(rec)
         for seat_label, bc in rec.get("seat_pairs") or []:
-            lines.append(f"{seat_label} | {bc or ''}")
+            lines.append(f"{seat_label} | {(bc if allow_bc else '') or ''}")
         lines.append("")
     return lines
 
@@ -707,6 +748,7 @@ def main() -> int:
         f"# Stagefront unfulfilled · {datetime.now().isoformat(timespec='seconds')}",
         f"# company={company!r} · unfulfilled={len(unfulfilled)} · valids={len(valids)}",
         "# PURCHASING_ACCOUNT on invoice line only when email is in valids.txt",
+        "# BARCODE on seat lines only when account is in valids.txt and every seat matched stock",
         "#",
         "# INVOICE_ID | PURCHASING_ACCOUNT",
         "# SEAT | BARCODE",
