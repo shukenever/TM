@@ -296,8 +296,19 @@ def _seat_match_sf(stock_df, section, row, seat, *, event_date, venue, event_nam
     return None
 
 
-def _match_sale(stock_df, row: dict) -> tuple[str, str, list[str], str]:
-    """Return email, password, barcodes[], match_note."""
+def _seat_display(section: str, row: str, seat: str) -> str:
+    sec = str(section or "").strip()
+    rw = str(row or "").strip()
+    st = str(seat or "").strip()
+    if sec and rw:
+        return f"Sec {sec} Row {rw} Seat {st}"
+    if sec:
+        return f"Sec {sec} Seat {st}"
+    return f"Seat {st}"
+
+
+def _match_sale(stock_df, row: dict) -> tuple[str, str, list[tuple[str, str]], list[str], str]:
+    """Return email, password, [(seat_label, barcode), ...], all_barcodes, match_note."""
     section = str(row.get("Section") or row.get("section") or "")
     rw = str(row.get("Row") or row.get("row") or "")
     ed = _sf_event_iso(str(row.get("Event_Date") or row.get("event_date") or ""))
@@ -306,9 +317,15 @@ def _match_sale(stock_df, row: dict) -> tuple[str, str, list[str], str]:
 
     emails: list[str] = []
     passwords: list[str] = []
-    barcodes: list[str] = []
+    seat_pairs: list[tuple[str, str]] = []
+    order_stub = {
+        "ProductionDateTime": str(row.get("Event_Date") or ""),
+        "VenueName": venue,
+    }
 
     for seat in _seats_for_sale(row):
+        seat_label = _seat_display(section, rw, seat)
+        bc = ""
         hits = _seat_match_sf(
             stock_df,
             section,
@@ -318,47 +335,59 @@ def _match_sale(stock_df, row: dict) -> tuple[str, str, list[str], str]:
             venue=venue,
             event_name=event,
         )
-        if hits is None:
-            continue
-        hit_rows = [hits] if not hasattr(hits, "iterrows") else [h for _, h in hits.iterrows()]
-        for h in hit_rows:
-            em = str(h.get("Email") or h.get("email") or "").strip()
-            pw = str(h.get("Password") or h.get("password") or "").strip()
-            bc = tm_bot._fulfill_clean_barcode(
-                str(h.get("_bc") or h.get("Barcodes") or h.get("barcode") or "").strip()
-            )
-            if em:
-                emails.append(em)
-            if pw:
-                passwords.append(pw)
-            if bc and bc.lower() not in ("nan", "none"):
-                barcodes.append(bc)
+        if hits is not None:
+            hit_rows = [hits] if not hasattr(hits, "iterrows") else [h for _, h in hits.iterrows()]
+            for h in hit_rows:
+                em = str(h.get("Email") or h.get("email") or "").strip()
+                pw = str(h.get("Password") or h.get("password") or "").strip()
+                hit_bc = tm_bot._fulfill_clean_barcode(
+                    str(h.get("_bc") or h.get("Barcodes") or h.get("barcode") or "").strip()
+                )
+                if em:
+                    emails.append(em)
+                if pw:
+                    passwords.append(pw)
+                if hit_bc and hit_bc.lower() not in ("nan", "none"):
+                    bc = hit_bc
+                    break
+        if not bc:
+            from fulfill_victory_live import find_barcode
+
+            found, _ = find_barcode(section, rw, seat, stock_df, order=order_stub)
+            bc = tm_bot._fulfill_clean_barcode(found or "")
+        seat_pairs.append((seat_label, bc))
 
     email = emails[0] if emails else ""
     password = passwords[0] if passwords else ""
-    seen_bc: set[str] = set()
     uniq_bc: list[str] = []
-    for b in barcodes:
-        if b in seen_bc:
-            continue
-        seen_bc.add(b)
-        uniq_bc.append(b)
+    seen_bc: set[str] = set()
+    for _, b in seat_pairs:
+        if b and b not in seen_bc:
+            seen_bc.add(b)
+            uniq_bc.append(b)
 
-    if not uniq_bc:
-        from fulfill_victory_live import find_barcode
+    has_bc = any(b for _, b in seat_pairs)
+    note = "ok" if email and has_bc else ("partial" if email or has_bc else "no_db_match")
+    return email, password, seat_pairs, uniq_bc, note
 
-        order_stub = {
-            "ProductionDateTime": str(row.get("Event_Date") or ""),
-            "VenueName": venue,
-        }
-        for seat in _seats_for_sale(row):
-            bc, _ = find_barcode(section, rw, seat, stock_df, order=order_stub)
-            bc = tm_bot._fulfill_clean_barcode(bc or "")
-            if bc:
-                uniq_bc.append(bc)
 
-    note = "ok" if email and uniq_bc else ("partial" if email or uniq_bc else "no_db_match")
-    return email, password, uniq_bc, note
+def _format_export_blocks(records: list[dict]) -> list[str]:
+    """Human export: invoice + account, then SEAT | BARCODE lines."""
+    lines: list[str] = []
+    for rec in records:
+        inv = rec.get("invoice_id") or ""
+        cred = rec.get("emailPassword") or rec.get("email") or ""
+        match = rec.get("match") or ""
+        tag = ""
+        if match == "partial":
+            tag = "  # partial (creds or barcode missing in DB)"
+        elif match == "no_db_match":
+            tag = "  # no_db_match"
+        lines.append(f"{inv} | {cred}{tag}")
+        for seat_label, bc in rec.get("seat_pairs") or []:
+            lines.append(f"{seat_label} | {bc or ''}")
+        lines.append("")
+    return lines
 
 
 def _sale_summary(row: dict) -> dict:
@@ -461,36 +490,26 @@ def main() -> int:
     print(f"Unfulfilled (no PDF/barcode / pending status): {len(unfulfilled)}")
 
     records: list[dict] = []
-    txt_lines: list[str] = [
-        f"# Stagefront unfulfilled · {datetime.now().isoformat(timespec='seconds')}",
-        f"# company={company} sales={len(sales)} unfulfilled={len(unfulfilled)} stock_rows={len(stock_df)}",
-        "# INVOICE | EVENT @ DATE | SEC ROW SEATS | email:password | barcodes | status | match",
-        "",
-    ]
-
     matched = 0
     partial = 0
+    no_match = 0
+
     for row in unfulfilled:
         meta = _sale_summary(row)
-        email, password, barcodes, note = _match_sale(stock_df, row)
+        email, password, seat_pairs, barcodes, note = _match_sale(stock_df, row)
         if note == "ok":
             matched += 1
         elif note == "partial":
             partial += 1
-        seats = _seats_for_sale(row)
-        seat_label = seats[0] if len(seats) == 1 else f"{seats[0]}-{seats[-1]}"
+        else:
+            no_match += 1
         cred = f"{email}:{password}" if email and password else (email or "")
-        bc_str = ",".join(barcodes)
-        loc = f"Sec {meta['section']} Row {meta['row']} Seat {seat_label}"
-        txt_lines.append(
-            f"INVOICE {meta['invoice_id']} | {meta['event']} @ {meta['event_date']} | {loc} | "
-            f"{cred} | {bc_str} | {meta['sale_status']} | {note}"
-        )
         records.append(
             {
                 "email": email,
                 "password": password,
                 "barcodes": barcodes,
+                "seat_pairs": seat_pairs,
                 "emailPassword": cred,
                 **meta,
                 "match": note,
@@ -503,11 +522,24 @@ def main() -> int:
     txt_path = out_dir / f"sf_unfulfilled_{stamp}.txt"
     js_path = out_dir / f"sf_unfulfilled_{stamp}.js"
 
-    txt_path.write_text("\n".join(txt_lines) + "\n", encoding="utf-8")
+    header = [
+        f"# MARK: Stagefront unfulfilled export · {datetime.now().isoformat(timespec='seconds')}",
+        f"# company={company!r} · sales={len(sales)} · unfulfilled={len(unfulfilled)} · stock_rows={len(stock_df)}",
+        f"# SUMMARY: ok={matched}/{len(unfulfilled)} · partial={partial}/{len(unfulfilled)} · no_db_match={no_match}/{len(unfulfilled)}",
+        "#",
+        "# ok = email + barcode · partial = creds only and/or barcode only · no_db_match = nothing in stock",
+        "# FORMAT:",
+        "#   INVOICE_ID | PURCHASING_ACCOUNT",
+        "#   SEAT | BARCODE",
+        "#   (blank line between invoices)",
+        "# ---",
+        "",
+    ]
+    txt_path.write_text("\n".join(header + _format_export_blocks(records)), encoding="utf-8")
 
     js_body = (
-        "// Stagefront unfulfilled sales — email, password, barcodes from VL/SF/neutral stock DBs\n"
-        f"// generated {datetime.now().isoformat(timespec='seconds')} · matched {matched}/{len(unfulfilled)}\n"
+        "// Stagefront unfulfilled — seat | barcode blocks in companion .txt\n"
+        f"// {matched}/{len(unfulfilled)} ok · {partial} partial · {no_match} no_db_match\n"
         "module.exports = "
         + json.dumps(records, indent=2, ensure_ascii=False)
         + ";\n"
@@ -519,7 +551,10 @@ def main() -> int:
     ep_path = out_dir / f"sf_unfulfilled_{stamp}_email_pw.txt"
     ep_path.write_text("\n".join(ep_lines) + ("\n" if ep_lines else ""), encoding="utf-8")
 
-    print(f"Matched email+barcode: {matched}/{len(unfulfilled)} · creds-only (no bc in DB): {partial}")
+    print(
+        f"ok={matched}/{len(unfulfilled)} · partial={partial} · no_db_match={no_match} "
+        f"(see MARK/SUMMARY in .txt)"
+    )
     print("Wrote:", txt_path)
     print("Wrote:", js_path)
     print("Wrote:", ep_path)
