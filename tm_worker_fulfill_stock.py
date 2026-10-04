@@ -72,14 +72,16 @@ def _fulfill_db_rows_with_creds() -> list[dict]:
         "-",
         "no barcode",
         "not found",
-        "securetoken",
-        "securetoken:",
     }
     out: list[dict] = []
     for row in raw:
         bc = tm_bot._fulfill_clean_barcode(row["barcode"] or "")
-        if not bc or bc.lower() in skip_bc:
-            continue
+        raw_bc = str(row["barcode"] or "").strip().lower()
+        if raw_bc in skip_bc or (not bc and raw_bc not in ("securetoken:", "securetoken")):
+            if not bc and raw_bc in ("securetoken:", "securetoken"):
+                bc = ""
+            elif not bc:
+                continue
         name = (row["event_name"] or "").strip()
         if not name:
             continue

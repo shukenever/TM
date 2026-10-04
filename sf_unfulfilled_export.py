@@ -11,9 +11,7 @@ Auth:
   Proxy: STAGEFRONT_PROXY or vl_auth FlashProxy (always used).
 
 Stock (seat → barcode + email:pw):
-  Default --stock tm-worker = Ticketmaster work checker /fulfill DB (pull via deploy/pull_tm_worker_collector.py).
-  --stock vl = VL inventory + fulfill_stock (deploy/vl_bot_pull.py for data/vl_inventory.db).
-  --stock both = merge both.
+  Default --stock both = TM work checker /fulfill DB + VL inventory (pull DBs first).
 """
 from __future__ import annotations
 
@@ -33,9 +31,12 @@ for SF_PKG in (ROOT / "stagefront_pricing", ROOT / "ticketmaster" / "stagefront_
 sys.path.insert(0, str(ROOT))
 
 import vl_auth  # noqa: E402
-from list_unfulfilled import prep_df, seat_match  # noqa: E402
+from list_unfulfilled import prep_df, seat_match, section_variants, parse_event_date  # noqa: E402
 from ticketmaster.vl_fulfill_service import load_vl_stock_df  # noqa: E402
 from tm_worker_fulfill_stock import load_tm_worker_fulfill_stock_df  # noqa: E402
+
+sys.path.insert(0, str(ROOT / "ticketmaster"))
+import bot as tm_bot  # noqa: E402
 from vl_stock import event_date_to_iso  # noqa: E402
 
 from auth import cookie_from_har  # type: ignore  # noqa: E402
@@ -195,6 +196,106 @@ def _seats_for_sale(row: dict) -> list[str]:
     return [str(i + 1) for i in range(max(1, qty))]
 
 
+def _event_name_ok(sale_name: str, stock_name: object) -> bool:
+    en = str(sale_name or "").strip().lower()
+    v = str(stock_name or "").strip().lower()
+    if not en or not v:
+        return False
+    if en[:14] in v or v[:14] in en:
+        return True
+    tokens = [t for t in re.split(r"[^a-z0-9]+", en) if len(t) >= 3][:4]
+    return bool(tokens) and sum(1 for t in tokens if t in v) >= max(1, len(tokens) - 1)
+
+
+def _row_compatible(want: str, have: str) -> bool:
+    w, h = str(want or "").strip().upper(), str(have or "").strip().upper()
+    if not w or not h:
+        return True
+    if w == h:
+        return True
+    if w in ("GA", "GEN", "GENADM", "G", "GA0") and (h.startswith("GA") or h.startswith("G")):
+        return True
+    if w.startswith("GA") and h.startswith("GA"):
+        return True
+    if len(w) >= 2 and (h.startswith(w) or w.startswith(h)):
+        return True
+    if w.isdigit() and h.isdigit():
+        return abs(int(w) - int(h)) <= 1
+    return False
+
+
+def _pick_stock_hit(hits, *, event_name: str, venue: str):
+    if hits is None or len(hits) == 0:
+        return None
+    if len(hits) == 1:
+        return hits.iloc[0]
+    if event_name and "Event Name" in hits.columns:
+        named = hits[hits["Event Name"].apply(lambda v: _event_name_ok(event_name, v))]
+        if len(named) == 1:
+            return named.iloc[0]
+        if len(named) > 1:
+            hits = named
+    if venue and "_venue" in hits.columns:
+        v = venue.lower()
+        for _, r in hits.iterrows():
+            sv = str(r.get("_venue") or "")
+            if v[:8] in sv or sv[:8] in v:
+                return r
+    return hits.iloc[0]
+
+
+def _seat_match_sf(stock_df, section, row, seat, *, event_date, venue, event_name):
+    ed = parse_event_date(str(event_date)[:10]) if event_date else None
+    hit = seat_match(
+        stock_df,
+        section,
+        row,
+        seat,
+        event_date=ed,
+        venue=venue or None,
+        event_name=event_name or None,
+    )
+    if hit is not None:
+        return hit
+
+    seat_s = str(seat).strip()
+    row_u = str(row).strip().upper()
+    variants = section_variants(section)
+
+    mask = stock_df["_sec"].isin(variants) & (stock_df["_seat"] == seat_s)
+    if ed is not None:
+        mask &= stock_df["_edate"] == ed
+    hits = stock_df[mask]
+    if len(hits):
+        if row_u:
+            relaxed = hits[hits["_row"].apply(lambda r: _row_compatible(row_u, r))]
+            if len(relaxed):
+                hits = relaxed
+        picked = _pick_stock_hit(hits, event_name=event_name or "", venue=venue or "")
+        if picked is not None:
+            return picked
+
+    # Same date + seat + event name, any section/row (Stagefront GA row labels drift)
+    if ed is not None and event_name:
+        broad = stock_df[(stock_df["_seat"] == seat_s) & (stock_df["_edate"] == ed)]
+        if len(broad):
+            named = broad[broad["Event Name"].apply(lambda v: _event_name_ok(event_name, v))]
+            if len(named) == 1:
+                return named.iloc[0]
+            if len(named) > 1 and row_u:
+                relaxed = named[named["_row"].apply(lambda r: _row_compatible(row_u, r))]
+                if len(relaxed) == 1:
+                    return relaxed.iloc[0]
+                if len(relaxed) > 1:
+                    named = relaxed
+            if len(named) >= 1:
+                picked = _pick_stock_hit(named, event_name=event_name, venue=venue or "")
+                if picked is not None:
+                    return picked
+
+    return None
+
+
 def _match_sale(stock_df, row: dict) -> tuple[str, str, list[str], str]:
     """Return email, password, barcodes[], match_note."""
     section = str(row.get("Section") or row.get("section") or "")
@@ -208,14 +309,14 @@ def _match_sale(stock_df, row: dict) -> tuple[str, str, list[str], str]:
     barcodes: list[str] = []
 
     for seat in _seats_for_sale(row):
-        hits = seat_match(
+        hits = _seat_match_sf(
             stock_df,
             section,
             rw,
             seat,
             event_date=ed or None,
-            venue=venue or None,
-            event_name=event or None,
+            venue=venue,
+            event_name=event,
         )
         if hits is None:
             continue
@@ -223,7 +324,9 @@ def _match_sale(stock_df, row: dict) -> tuple[str, str, list[str], str]:
         for h in hit_rows:
             em = str(h.get("Email") or h.get("email") or "").strip()
             pw = str(h.get("Password") or h.get("password") or "").strip()
-            bc = str(h.get("_bc") or h.get("Barcodes") or h.get("barcode") or "").strip()
+            bc = tm_bot._fulfill_clean_barcode(
+                str(h.get("_bc") or h.get("Barcodes") or h.get("barcode") or "").strip()
+            )
             if em:
                 emails.append(em)
             if pw:
@@ -233,7 +336,6 @@ def _match_sale(stock_df, row: dict) -> tuple[str, str, list[str], str]:
 
     email = emails[0] if emails else ""
     password = passwords[0] if passwords else ""
-    # de-dupe barcodes preserve order
     seen_bc: set[str] = set()
     uniq_bc: list[str] = []
     for b in barcodes:
@@ -241,6 +343,19 @@ def _match_sale(stock_df, row: dict) -> tuple[str, str, list[str], str]:
             continue
         seen_bc.add(b)
         uniq_bc.append(b)
+
+    if not uniq_bc:
+        from fulfill_victory_live import find_barcode
+
+        order_stub = {
+            "ProductionDateTime": str(row.get("Event_Date") or ""),
+            "VenueName": venue,
+        }
+        for seat in _seats_for_sale(row):
+            bc, _ = find_barcode(section, rw, seat, stock_df, order=order_stub)
+            bc = tm_bot._fulfill_clean_barcode(bc or "")
+            if bc:
+                uniq_bc.append(bc)
 
     note = "ok" if email and uniq_bc else ("partial" if email or uniq_bc else "no_db_match")
     return email, password, uniq_bc, note
@@ -269,7 +384,7 @@ def _sale_summary(row: dict) -> dict:
 def _load_stock_df(mode: str) -> pd.DataFrame:
     import pandas as pd
 
-    mode = (mode or "tm-worker").strip().lower()
+    mode = (mode or "both").strip().lower()
     if mode == "vl":
         return load_vl_stock_df()
     if mode == "both":
@@ -298,12 +413,37 @@ def main() -> int:
     ap.add_argument("--out-dir", default=str(ROOT / "exports"))
     ap.add_argument("--include-all-open", action="store_true", help="Also export sales with empty status if no PDF/bc")
     ap.add_argument(
+        "--pull-stock",
+        action="store_true",
+        help="Pull tm_worker_collector.db + vl_inventory.db from VPS before export",
+    )
+    ap.add_argument(
         "--stock",
-        default="tm-worker",
+        default="both",
         choices=("tm-worker", "vl", "both"),
-        help="Barcode/cred stock source (default: TM work checker /fulfill DB)",
+        help="Stock source (default: TM work checker + VL inventory)",
     )
     args = ap.parse_args()
+
+    if args.pull_stock:
+        import subprocess
+
+        deploy = ROOT / "deploy"
+        subprocess.run(
+            [sys.executable, str(deploy / "pull_tm_worker_collector.py"), "--skip-okaysec"],
+            check=False,
+            cwd=str(deploy),
+        )
+        subprocess.run(
+            [
+                sys.executable,
+                str(deploy / "vl_bot_pull.py"),
+                "data/vl_inventory.db",
+                str(ROOT / "data" / "vl_inventory.db"),
+            ],
+            check=False,
+            cwd=str(deploy),
+        )
 
     print(f"Loading stock (--stock {args.stock})…")
     stock_df = _load_stock_df(args.stock)
@@ -329,11 +469,14 @@ def main() -> int:
     ]
 
     matched = 0
+    partial = 0
     for row in unfulfilled:
         meta = _sale_summary(row)
         email, password, barcodes, note = _match_sale(stock_df, row)
-        if email and barcodes:
+        if note == "ok":
             matched += 1
+        elif note == "partial":
+            partial += 1
         seats = _seats_for_sale(row)
         seat_label = seats[0] if len(seats) == 1 else f"{seats[0]}-{seats[-1]}"
         cred = f"{email}:{password}" if email and password else (email or "")
@@ -376,7 +519,7 @@ def main() -> int:
     ep_path = out_dir / f"sf_unfulfilled_{stamp}_email_pw.txt"
     ep_path.write_text("\n".join(ep_lines) + ("\n" if ep_lines else ""), encoding="utf-8")
 
-    print(f"Matched email+barcode: {matched}/{len(unfulfilled)}")
+    print(f"Matched email+barcode: {matched}/{len(unfulfilled)} · creds-only (no bc in DB): {partial}")
     print("Wrote:", txt_path)
     print("Wrote:", js_path)
     print("Wrote:", ep_path)
