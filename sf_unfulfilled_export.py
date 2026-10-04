@@ -219,9 +219,41 @@ def _row_compatible(want: str, have: str) -> bool:
         return True
     if len(w) >= 2 and (h.startswith(w) or w.startswith(h)):
         return True
-    if w.isdigit() and h.isdigit():
-        return abs(int(w) - int(h)) <= 1
     return False
+
+
+def _sf_hit_ok(
+    hit,
+    *,
+    event_date: str | None,
+    section: str,
+    row: str,
+    seat: str,
+) -> bool:
+    """Stagefront: require exact event date + section/row/seat (no wrong-night stock)."""
+    if hit is None:
+        return False
+    ed = parse_event_date(str(event_date or "")[:10]) if event_date else None
+    if ed is not None:
+        hed = hit.get("_edate") if hasattr(hit, "get") else None
+        if hed is None and hasattr(hit, "__getitem__"):
+            hed = parse_event_date(str(hit.get("Event Date") or ""))
+        if hed != ed:
+            return False
+    seat_s = str(seat).strip()
+    if str(hit.get("_seat") or hit.get("Seat") or "").strip() != seat_s:
+        return False
+    row_u = str(row or "").strip().upper()
+    have_row = str(hit.get("_row") or hit.get("Row") or "").strip().upper()
+    if not _row_compatible(row_u, have_row):
+        return False
+    variants = section_variants(section)
+    sec = str(hit.get("_sec") or hit.get("Section") or "")
+    from fulfill_victory_live import clean_section
+
+    if clean_section(sec) not in variants and sec not in variants:
+        return False
+    return True
 
 
 def _pick_stock_hit(hits, *, event_name: str, venue: str):
@@ -255,7 +287,7 @@ def _seat_match_sf(stock_df, section, row, seat, *, event_date, venue, event_nam
         venue=venue or None,
         event_name=event_name or None,
     )
-    if hit is not None:
+    if hit is not None and _sf_hit_ok(hit, event_date=event_date, section=section, row=row, seat=seat):
         return hit
 
     seat_s = str(seat).strip()
@@ -272,26 +304,10 @@ def _seat_match_sf(stock_df, section, row, seat, *, event_date, venue, event_nam
             if len(relaxed):
                 hits = relaxed
         picked = _pick_stock_hit(hits, event_name=event_name or "", venue=venue or "")
-        if picked is not None:
+        if picked is not None and _sf_hit_ok(
+            picked, event_date=event_date, section=section, row=row, seat=seat
+        ):
             return picked
-
-    # Same date + seat + event name, any section/row (Stagefront GA row labels drift)
-    if ed is not None and event_name:
-        broad = stock_df[(stock_df["_seat"] == seat_s) & (stock_df["_edate"] == ed)]
-        if len(broad):
-            named = broad[broad["Event Name"].apply(lambda v: _event_name_ok(event_name, v))]
-            if len(named) == 1:
-                return named.iloc[0]
-            if len(named) > 1 and row_u:
-                relaxed = named[named["_row"].apply(lambda r: _row_compatible(row_u, r))]
-                if len(relaxed) == 1:
-                    return relaxed.iloc[0]
-                if len(relaxed) > 1:
-                    named = relaxed
-            if len(named) >= 1:
-                picked = _pick_stock_hit(named, event_name=event_name, venue=venue or "")
-                if picked is not None:
-                    return picked
 
     return None
 
@@ -318,14 +334,12 @@ def _match_sale(stock_df, row: dict) -> tuple[str, str, list[tuple[str, str]], l
     emails: list[str] = []
     passwords: list[str] = []
     seat_pairs: list[tuple[str, str]] = []
-    order_stub = {
-        "ProductionDateTime": str(row.get("Event_Date") or ""),
-        "VenueName": venue,
-    }
+    seat_emails: list[str] = []
 
     for seat in _seats_for_sale(row):
         seat_label = _seat_display(section, rw, seat)
         bc = ""
+        em_seat = ""
         hits = _seat_match_sf(
             stock_df,
             section,
@@ -336,26 +350,24 @@ def _match_sale(stock_df, row: dict) -> tuple[str, str, list[tuple[str, str]], l
             event_name=event,
         )
         if hits is not None:
-            hit_rows = [hits] if not hasattr(hits, "iterrows") else [h for _, h in hits.iterrows()]
-            for h in hit_rows:
-                em = str(h.get("Email") or h.get("email") or "").strip()
-                pw = str(h.get("Password") or h.get("password") or "").strip()
-                hit_bc = tm_bot._fulfill_clean_barcode(
-                    str(h.get("_bc") or h.get("Barcodes") or h.get("barcode") or "").strip()
-                )
-                if em:
-                    emails.append(em)
-                if pw:
-                    passwords.append(pw)
-                if hit_bc and hit_bc.lower() not in ("nan", "none"):
-                    bc = hit_bc
-                    break
-        if not bc:
-            from fulfill_victory_live import find_barcode
-
-            found, _ = find_barcode(section, rw, seat, stock_df, order=order_stub)
-            bc = tm_bot._fulfill_clean_barcode(found or "")
+            em_seat = str(hits.get("Email") or hits.get("email") or "").strip()
+            pw = str(hits.get("Password") or hits.get("password") or "").strip()
+            hit_bc = tm_bot._fulfill_clean_barcode(
+                str(hits.get("_bc") or hits.get("Barcodes") or hits.get("barcode") or "").strip()
+            )
+            if em_seat:
+                emails.append(em_seat)
+                seat_emails.append(em_seat)
+            if pw:
+                passwords.append(pw)
+            if hit_bc and hit_bc.lower() not in ("nan", "none"):
+                bc = hit_bc
         seat_pairs.append((seat_label, bc))
+
+    # One purchasing account per invoice — drop barcodes if seats disagree
+    if seat_emails and len(set(seat_emails)) > 1:
+        seat_pairs = [(lbl, "") for lbl, _ in seat_pairs]
+        emails = [seat_emails[0]]
 
     email = emails[0] if emails else ""
     password = passwords[0] if passwords else ""
@@ -494,7 +506,12 @@ def main() -> int:
     ap.add_argument(
         "--from-js",
         default="",
-        help="Rebuild .txt/.js/_accounts from a prior export .js (no Stagefront login)",
+        help="Rebuild export from prior .js (use with --rematch to re-apply strict stock match)",
+    )
+    ap.add_argument(
+        "--rematch",
+        action="store_true",
+        help="With --from-js: re-match seats/barcodes from stock (exact event date)",
     )
     ap.add_argument(
         "--valids",
@@ -523,17 +540,67 @@ def main() -> int:
         if i < 0:
             raise SystemExit("invalid --from-js file (no module.exports)")
         records = json.loads(text[i + len(marker) :].rstrip().rstrip(";").strip())
-        for rec in records:
-            if "seat_pairs" not in rec and rec.get("barcodes"):
-                rec["seat_pairs"] = []
-            if "match" not in rec:
-                rec["match"] = "ok" if rec.get("barcodes") else "partial"
+        if args.rematch:
+            print(f"Rematching {len(records)} sales (strict date/section)…", flush=True)
+            stock_df = _load_stock_df(args.stock)
+            matched = partial = no_match = 0
+            rematched: list[dict] = []
+            for rec in records:
+                row_d = {
+                    "Section": rec.get("section") or "",
+                    "Row": rec.get("row") or "",
+                    "Seat_From": int(rec.get("seat_from") or 0),
+                    "Seat_Thru": int(rec.get("seat_thru") or 0),
+                    "Quantity": int(rec.get("qty") or 1),
+                    "Event_Date": rec.get("event_date") or "",
+                    "Event_Name": rec.get("event") or "",
+                    "Venue_Name": rec.get("venue") or "",
+                }
+                email, password, seat_pairs, barcodes, note = _match_sale(stock_df, row_d)
+                if note == "ok":
+                    matched += 1
+                elif note == "partial":
+                    partial += 1
+                else:
+                    no_match += 1
+                cred = f"{email}:{password}" if email and password else (email or "")
+                rematched.append(
+                    {
+                        "email": email,
+                        "password": password,
+                        "barcodes": barcodes,
+                        "seat_pairs": seat_pairs,
+                        "emailPassword": cred,
+                        "invoice_id": rec.get("invoice_id"),
+                        "sale_date": rec.get("sale_date"),
+                        "sale_status": rec.get("sale_status"),
+                        "listing_id": rec.get("listing_id"),
+                        "event": rec.get("event"),
+                        "event_date": rec.get("event_date"),
+                        "venue": rec.get("venue"),
+                        "section": rec.get("section"),
+                        "row": rec.get("row"),
+                        "seat_from": rec.get("seat_from"),
+                        "seat_thru": rec.get("seat_thru"),
+                        "qty": rec.get("qty"),
+                        "exchange": rec.get("exchange"),
+                        "num_barcodes": rec.get("num_barcodes"),
+                        "match": note,
+                    }
+                )
+            records = rematched
+            print(f"Rematch: ok={matched} partial={partial} no_db_match={no_match}", flush=True)
+        else:
+            for rec in records:
+                if "seat_pairs" not in rec and rec.get("barcodes"):
+                    rec["seat_pairs"] = []
+                if "match" not in rec:
+                    rec["match"] = "ok" if rec.get("barcodes") else "partial"
+            matched = sum(1 for r in records if r.get("match") == "ok")
+            partial = sum(1 for r in records if r.get("match") == "partial")
+            no_match = sum(1 for r in records if r.get("match") == "no_db_match")
         _apply_valids(records, valids)
         company = "Cash Resale Tickets (Fouad Mahmoud)"
-        matched = sum(1 for r in records if r.get("match") == "ok")
-        partial = sum(1 for r in records if r.get("match") == "partial")
-        no_match = sum(1 for r in records if r.get("match") == "no_db_match")
-        unfulfilled = records
         out_dir = Path(args.out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -541,7 +608,7 @@ def main() -> int:
         js_path = out_dir / f"sf_unfulfilled_{stamp}.js"
         header = [
             f"# Stagefront unfulfilled · {datetime.now().isoformat(timespec='seconds')}",
-            f"# company={company!r} · unfulfilled={len(unfulfilled)} · valids={len(valids)}",
+            f"# company={company!r} · unfulfilled={len(records)} · valids={len(valids)}",
             "# PURCHASING_ACCOUNT on invoice line only when email is in valids.txt",
             "#",
             "# INVOICE_ID | PURCHASING_ACCOUNT",
