@@ -377,13 +377,7 @@ def _format_export_blocks(records: list[dict]) -> list[str]:
     for rec in records:
         inv = rec.get("invoice_id") or ""
         cred = rec.get("emailPassword") or rec.get("email") or ""
-        match = rec.get("match") or ""
-        tag = ""
-        if match == "partial":
-            tag = "  # partial (creds or barcode missing in DB)"
-        elif match == "no_db_match":
-            tag = "  # no_db_match"
-        lines.append(f"{inv} | {cred}{tag}")
+        lines.append(f"{inv} | {cred}")
         for seat_label, bc in rec.get("seat_pairs") or []:
             lines.append(f"{seat_label} | {bc or ''}")
         lines.append("")
@@ -523,15 +517,11 @@ def main() -> int:
     js_path = out_dir / f"sf_unfulfilled_{stamp}.js"
 
     header = [
-        f"# MARK: Stagefront unfulfilled export · {datetime.now().isoformat(timespec='seconds')}",
-        f"# company={company!r} · sales={len(sales)} · unfulfilled={len(unfulfilled)} · stock_rows={len(stock_df)}",
-        f"# SUMMARY: ok={matched}/{len(unfulfilled)} · partial={partial}/{len(unfulfilled)} · no_db_match={no_match}/{len(unfulfilled)}",
+        f"# Stagefront unfulfilled · {datetime.now().isoformat(timespec='seconds')}",
+        f"# company={company!r} · unfulfilled={len(unfulfilled)}",
         "#",
-        "# ok = email + barcode · partial = creds only and/or barcode only · no_db_match = nothing in stock",
-        "# FORMAT:",
-        "#   INVOICE_ID | PURCHASING_ACCOUNT",
-        "#   SEAT | BARCODE",
-        "#   (blank line between invoices)",
+        "# INVOICE_ID | PURCHASING_ACCOUNT",
+        "# SEAT | BARCODE",
         "# ---",
         "",
     ]
@@ -546,10 +536,16 @@ def main() -> int:
     )
     js_path.write_text(js_body, encoding="utf-8")
 
-    # Compact email:pw list for copy-paste
-    ep_lines = sorted({r["emailPassword"] for r in records if r.get("emailPassword") and ":" in r["emailPassword"]})
-    ep_path = out_dir / f"sf_unfulfilled_{stamp}_email_pw.txt"
-    ep_path.write_text("\n".join(ep_lines) + ("\n" if ep_lines else ""), encoding="utf-8")
+    # Simple email:password list (one combo per line, for support / login)
+    ep_lines = sorted(
+        {
+            r["emailPassword"]
+            for r in records
+            if r.get("emailPassword") and ":" in str(r["emailPassword"])
+        }
+    )
+    accounts_path = out_dir / f"sf_unfulfilled_{stamp}_accounts.txt"
+    accounts_path.write_text("\n".join(ep_lines) + ("\n" if ep_lines else ""), encoding="utf-8")
 
     print(
         f"ok={matched}/{len(unfulfilled)} · partial={partial} · no_db_match={no_match} "
@@ -557,7 +553,7 @@ def main() -> int:
     )
     print("Wrote:", txt_path)
     print("Wrote:", js_path)
-    print("Wrote:", ep_path)
+    print("Wrote:", accounts_path)
     return 0
 
 
