@@ -371,12 +371,57 @@ def _match_sale(stock_df, row: dict) -> tuple[str, str, list[tuple[str, str]], l
     return email, password, seat_pairs, uniq_bc, note
 
 
+def _load_valids(path: Path) -> dict[str, str]:
+    """email (lower) -> full email:password line from valids.txt."""
+    if not path.is_file():
+        return {}
+    out: dict[str, str] = {}
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or ":" not in line:
+            continue
+        em = line.split(":", 1)[0].strip().lower()
+        if em:
+            out[em] = line
+    return out
+
+
+def _apply_valids(records: list[dict], valids: dict[str, str]) -> None:
+    for rec in records:
+        em = str(rec.get("email") or "").strip().lower()
+        if em and em in valids:
+            rec["valid_cred"] = valids[em]
+            rec["is_valid_account"] = True
+        else:
+            rec["valid_cred"] = ""
+            rec["is_valid_account"] = False
+
+
+def _js_export_records(records: list[dict]) -> list[dict]:
+    """Valid accounts get creds; others barcodes + seat_pairs only."""
+    out: list[dict] = []
+    for rec in records:
+        row: dict = {
+            "invoice_id": rec.get("invoice_id"),
+            "event": rec.get("event"),
+            "event_date": rec.get("event_date"),
+            "section": rec.get("section"),
+            "row": rec.get("row"),
+            "barcodes": rec.get("barcodes") or [],
+            "seat_pairs": rec.get("seat_pairs") or [],
+        }
+        if rec.get("is_valid_account") and rec.get("valid_cred"):
+            row["emailPassword"] = rec["valid_cred"]
+        out.append(row)
+    return out
+
+
 def _format_export_blocks(records: list[dict]) -> list[str]:
-    """Human export: invoice + account, then SEAT | BARCODE lines."""
+    """Human export: invoice + account (valids.txt only), then SEAT | BARCODE lines."""
     lines: list[str] = []
     for rec in records:
         inv = rec.get("invoice_id") or ""
-        cred = rec.get("emailPassword") or rec.get("email") or ""
+        cred = rec.get("valid_cred") or ""
         lines.append(f"{inv} | {cred}")
         for seat_label, bc in rec.get("seat_pairs") or []:
             lines.append(f"{seat_label} | {bc or ''}")
@@ -446,7 +491,80 @@ def main() -> int:
         choices=("tm-worker", "vl", "both"),
         help="Stock source (default: TM work checker + VL inventory)",
     )
+    ap.add_argument(
+        "--from-js",
+        default="",
+        help="Rebuild .txt/.js/_accounts from a prior export .js (no Stagefront login)",
+    )
+    ap.add_argument(
+        "--valids",
+        default=str(ROOT / "valids.txt"),
+        help="Valid purchasing accounts (email:pw); only these get creds in .txt / accounts file",
+    )
     args = ap.parse_args()
+
+    valids_path = Path(args.valids)
+    if not valids_path.is_file() and (ROOT / "valids.txt").is_file():
+        valids_path = ROOT / "valids.txt"
+    valids = _load_valids(valids_path)
+    if valids:
+        print(f"Loaded {len(valids)} valid accounts from {valids_path.name}")
+
+    from_js = (args.from_js or "").strip()
+    if from_js:
+        js_in = Path(from_js)
+        if not js_in.is_file():
+            js_in = ROOT / from_js
+        if not js_in.is_file():
+            raise SystemExit(f"--from-js not found: {args.from_js}")
+        text = js_in.read_text(encoding="utf-8")
+        marker = "module.exports = "
+        i = text.find(marker)
+        if i < 0:
+            raise SystemExit("invalid --from-js file (no module.exports)")
+        records = json.loads(text[i + len(marker) :].rstrip().rstrip(";").strip())
+        for rec in records:
+            if "seat_pairs" not in rec and rec.get("barcodes"):
+                rec["seat_pairs"] = []
+            if "match" not in rec:
+                rec["match"] = "ok" if rec.get("barcodes") else "partial"
+        _apply_valids(records, valids)
+        company = "Cash Resale Tickets (Fouad Mahmoud)"
+        matched = sum(1 for r in records if r.get("match") == "ok")
+        partial = sum(1 for r in records if r.get("match") == "partial")
+        no_match = sum(1 for r in records if r.get("match") == "no_db_match")
+        unfulfilled = records
+        out_dir = Path(args.out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        txt_path = out_dir / f"sf_unfulfilled_{stamp}.txt"
+        js_path = out_dir / f"sf_unfulfilled_{stamp}.js"
+        header = [
+            f"# Stagefront unfulfilled · {datetime.now().isoformat(timespec='seconds')}",
+            f"# company={company!r} · unfulfilled={len(unfulfilled)} · valids={len(valids)}",
+            "# PURCHASING_ACCOUNT on invoice line only when email is in valids.txt",
+            "#",
+            "# INVOICE_ID | PURCHASING_ACCOUNT",
+            "# SEAT | BARCODE",
+            "# ---",
+            "",
+        ]
+        txt_path.write_text("\n".join(header + _format_export_blocks(records)), encoding="utf-8")
+        js_export = _js_export_records(records)
+        js_path.write_text(
+            "module.exports = " + json.dumps(js_export, indent=2, ensure_ascii=False) + ";\n",
+            encoding="utf-8",
+        )
+        ep_lines = sorted(
+            {r["valid_cred"] for r in records if r.get("is_valid_account") and r.get("valid_cred")}
+        )
+        accounts_path = out_dir / f"sf_unfulfilled_{stamp}_accounts.txt"
+        accounts_path.write_text("\n".join(ep_lines) + ("\n" if ep_lines else ""), encoding="utf-8")
+        print(f"Rebuilt from {js_in.name} · valids in export: {len(ep_lines)}")
+        print("Wrote:", txt_path)
+        print("Wrote:", js_path)
+        print("Wrote:", accounts_path)
+        return 0
 
     if args.pull_stock:
         import subprocess
@@ -510,6 +628,8 @@ def main() -> int:
             }
         )
 
+    _apply_valids(records, valids)
+
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -518,7 +638,8 @@ def main() -> int:
 
     header = [
         f"# Stagefront unfulfilled · {datetime.now().isoformat(timespec='seconds')}",
-        f"# company={company!r} · unfulfilled={len(unfulfilled)}",
+        f"# company={company!r} · unfulfilled={len(unfulfilled)} · valids={len(valids)}",
+        "# PURCHASING_ACCOUNT on invoice line only when email is in valids.txt",
         "#",
         "# INVOICE_ID | PURCHASING_ACCOUNT",
         "# SEAT | BARCODE",
@@ -527,30 +648,24 @@ def main() -> int:
     ]
     txt_path.write_text("\n".join(header + _format_export_blocks(records)), encoding="utf-8")
 
+    js_export = _js_export_records(records)
     js_body = (
-        "// Stagefront unfulfilled — seat | barcode blocks in companion .txt\n"
+        "// Stagefront unfulfilled — valids.txt get emailPassword; others barcodes + seat_pairs only\n"
         f"// {matched}/{len(unfulfilled)} ok · {partial} partial · {no_match} no_db_match\n"
         "module.exports = "
-        + json.dumps(records, indent=2, ensure_ascii=False)
+        + json.dumps(js_export, indent=2, ensure_ascii=False)
         + ";\n"
     )
     js_path.write_text(js_body, encoding="utf-8")
 
     # Simple email:password list (one combo per line, for support / login)
     ep_lines = sorted(
-        {
-            r["emailPassword"]
-            for r in records
-            if r.get("emailPassword") and ":" in str(r["emailPassword"])
-        }
+        {r["valid_cred"] for r in records if r.get("is_valid_account") and r.get("valid_cred")}
     )
     accounts_path = out_dir / f"sf_unfulfilled_{stamp}_accounts.txt"
     accounts_path.write_text("\n".join(ep_lines) + ("\n" if ep_lines else ""), encoding="utf-8")
 
-    print(
-        f"ok={matched}/{len(unfulfilled)} · partial={partial} · no_db_match={no_match} "
-        f"(see MARK/SUMMARY in .txt)"
-    )
+    print(f"ok={matched}/{len(unfulfilled)} · partial={partial} · no_db_match={no_match}")
     print("Wrote:", txt_path)
     print("Wrote:", js_path)
     print("Wrote:", accounts_path)
