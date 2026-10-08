@@ -1,4 +1,5 @@
 """Victory Live OIDC login via requests (no Selenium)."""
+import html
 import json
 import os
 import re
@@ -104,6 +105,8 @@ def apply_proxy_settings(
     proxy_user: str | None = None,
     proxy_pass: str | None = None,
     cookies_only: bool | None = None,
+    vl_username: str | None = None,
+    vl_password: str | None = None,
 ) -> None:
     """Call once at bot startup from vl_inventory_bot.config.json."""
     if not use_proxy:
@@ -125,6 +128,10 @@ def apply_proxy_settings(
         os.environ["VL_COOKIES_ONLY"] = "1"
     else:
         os.environ.pop("VL_COOKIES_ONLY", None)
+    if vl_username and str(vl_username).strip():
+        os.environ["VL_USERNAME"] = str(vl_username).strip()
+    if vl_password is not None and str(vl_password):
+        os.environ["VL_PASSWORD"] = str(vl_password)
 
 
 def proxy_status_for_log() -> str:
@@ -283,12 +290,22 @@ def _apply_browser_login_headers(s: requests.Session) -> None:
 
 def _login_form_error(html: str) -> str | None:
     low = (html or "").lower()
+    if re.search(r"invalid\s+(?:username|login)|incorrect\s+password", low):
+        return "Victory Live: invalid username or password (check vl_password / VL_PASSWORD)"
     if re.search(r"invalid\s+login\s+attempt", low):
         return "Victory Live: invalid login attempt"
     if re.search(r"locked\s+out|account\s+lock", low):
         return "Victory Live: account lockout"
     if re.search(r"two.?factor|authenticator|mfa", low):
         return "Victory Live: MFA / 2FA required (complete in browser once)"
+    for msg in re.findall(
+        r"(?:validation-summary-errors|field-validation-error|text-danger|alert-danger)[^>]*>[\s\S]*?<span[^>]*>([^<]{3,200})",
+        html or "",
+        re.I,
+    ):
+        t = re.sub(r"\s+", " ", msg).strip()
+        if t:
+            return t
     for msg in re.findall(
         r"(?:validation-summary-errors|field-validation-error|text-danger)[^>]*>([^<]{3,200})",
         html or "",
@@ -337,17 +354,38 @@ def _challenge_vl_login_page(s: requests.Session, *, timeout: int) -> requests.R
     )
 
 
+def _unescape_return_url(raw: str) -> str:
+    s = (raw or "").strip()
+    prev = None
+    while s != prev:
+        prev = s
+        s = html.unescape(s)
+    return s
+
+
 def _login_page_fields(html: str, login_url: str) -> tuple[str, str]:
     token = _verification_token(html)
     if not token:
         raise RuntimeError(f"No __RequestVerificationToken on login page ({login_url})")
-    return_url = _return_url(html, "")
+    return_url = _unescape_return_url(_return_url(html, "") or "")
     if not return_url:
         parsed = urlparse(login_url)
         return_url = parse_qs(parsed.query).get("ReturnUrl", [""])[0] if parsed.query else ""
+        return_url = _unescape_return_url(return_url)
     if not return_url:
         raise RuntimeError("Login page missing ReturnUrl (OIDC challenge incomplete)")
     return token, return_url
+
+
+def _fetch_login_form(s: requests.Session, *, timeout: int) -> tuple[str, str, str]:
+    """OIDC challenge + fresh login document (matched antiforgery cookie + form token)."""
+    challenged = _challenge_vl_login_page(s, timeout=timeout)
+    login_url = challenged.url or f"{LOGIN_BASE}/account/login"
+    page = s.get(login_url, timeout=timeout)
+    if page.status_code != 200:
+        page = challenged
+    token, return_url = _login_page_fields(page.text, login_url)
+    return login_url, token, return_url
 
 
 def _post_login_credentials(
@@ -651,38 +689,28 @@ def _perform_oidc_login(
     r_after_login: requests.Response | None = None
     last_err = ""
     for attempt in range(2):
-        challenged = _challenge_vl_login_page(s, timeout=timeout)
-        page = challenged
-        login_url = page.url
+        login_url, token, return_url = _fetch_login_form(s, timeout=timeout)
         if not _has_antiforgery_cookie(s):
             raise RuntimeError(
                 "Login page missing antiforgery cookie — proxy or VL blocked Set-Cookie"
             )
-        token, return_url = _login_page_fields(page.text, login_url)
         post = _post_login_credentials(
             s, login_url, return_url, token, username, password, timeout=timeout
         )
+        form_err = _login_form_error(post.text)
+        if form_err:
+            raise RuntimeError(f"Login failed: {form_err}")
         try:
             r_after_login = _continue_after_login_post(s, post, timeout=timeout)
             if r_after_login is not None:
                 break
-            post_follow = _post_login_credentials(
-                s,
-                login_url,
-                return_url,
-                token,
-                username,
-                password,
-                timeout=timeout,
-                allow_redirects=True,
-            )
-            if _has_apauth(s):
-                r_after_login = post_follow
-                break
-            r_after_login = _continue_after_login_post(s, post_follow, timeout=timeout)
-            if r_after_login is not None:
-                break
-            last_err = "login form returned after POST (antiforgery)"
+            if post.status_code == 200 and _verification_token(post.text):
+                last_err = (
+                    "login form returned after POST — wrong password or CSRF "
+                    f"(user={username})"
+                )
+            else:
+                last_err = f"login POST unexpected (HTTP {post.status_code})"
         except RuntimeError as exc:
             last_err = str(exc)
             if attempt == 0 and "antiforgery" not in last_err.lower():
@@ -690,9 +718,9 @@ def _perform_oidc_login(
     else:
         raise RuntimeError(
             "Victory Live login failed after retry — "
-            f"{last_err or 'CSRF/antiforgery mismatch'}. "
-            "If password is correct, log in once in Chrome on the egress IP, "
-            "export cookies, or check for MFA."
+            f"{last_err or 'unknown'}. "
+            "Set vl_username/vl_password in vl_inventory_bot.config.json on the VPS, "
+            "or export fresh cookies to data/vl_har_cookies.json from a browser login."
         )
 
     if r_after_login is not None:
