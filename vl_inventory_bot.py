@@ -598,18 +598,6 @@ _AUTOFULFILL_LOCK = asyncio.Lock()
 _AUTOFULFILL_CANCEL_EVENT: threading.Event | None = None
 
 
-class _SpecificFulfillAwaitFilter(filters.UpdateFilter):
-    """Only match the invoice follow-up message after /specific_fulfill."""
-
-    def filter(self, update: object, application: object, context: ContextTypes.DEFAULT_TYPE) -> bool:
-        if not isinstance(update, Update) or not update.message or not update.message.text:
-            return False
-        return bool(context.user_data.get("specific_fulfill_await"))
-
-
-_SPECIFIC_FULFILL_AWAIT = _SpecificFulfillAwaitFilter()
-
-
 def _autofulfill_fail_bucket(message: str) -> str:
     m = (message or "").strip().lower()
     if not m:
@@ -920,6 +908,8 @@ async def _run_specific_fulfill_invoice(
 async def specific_fulfill_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not await _deny_unless_admin(update):
         return
+    context.user_data.pop("vl_list_await", None)
+    context.user_data.pop("vl_list", None)
     raw = " ".join(context.args or []).strip()
     if raw:
         await _run_specific_fulfill_invoice(update, context, raw)
@@ -2071,6 +2061,14 @@ def _stockfrom_parse_range(text: str) -> tuple[str, str] | None:
     return None
 
 
+async def _group_minus1_text_router(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Invoice follow-up for /specific_fulfill, then /stockfrom dates (group -1)."""
+    if context.user_data.get("specific_fulfill_await"):
+        await specific_fulfill_invoice_reply(update, context)
+        raise ApplicationHandlerStop()
+    await stockfrom_date_reply(update, context)
+
+
 async def stockfrom_date_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Date steps for /stockfrom (user_data, not ConversationHandler — safe with concurrent_updates)."""
     msg = update.effective_message
@@ -2656,15 +2654,7 @@ def main() -> None:
     # /stockfrom + /specific_fulfill follow-ups (group -1) before /list or TM routers.
     app.add_handler(CommandHandler("stockfrom", stockfrom_cmd), group=-1)
     app.add_handler(
-        MessageHandler(
-            filters.TEXT & ~filters.COMMAND & _SPECIFIC_FULFILL_AWAIT,
-            specific_fulfill_invoice_reply,
-            block=True,
-        ),
-        group=-1,
-    )
-    app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, stockfrom_date_reply, block=True),
+        MessageHandler(filters.TEXT & ~filters.COMMAND, _group_minus1_text_router, block=True),
         group=-1,
     )
     app.add_handler(listing_callbacks)
