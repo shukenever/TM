@@ -24,6 +24,10 @@ AUTOFULFILL_WORKERS = max(1, min(8, int(os.environ.get("VL_AUTOFULFILL_WORKERS",
 _thread_sessions = threading.local()
 
 
+class AutofulfillCancelled(Exception):
+    """User requested /cancel_autofulfill."""
+
+
 def _find_order(session, invoice: str) -> dict | None:
     inv = str(invoice).strip()
     if not inv:
@@ -180,7 +184,12 @@ def _worker_session():
     return s
 
 
-def run_autofulfill_all_unfulfilled(*, sleep_sec: float = 0.2, on_progress=None) -> dict:
+def run_autofulfill_all_unfulfilled(
+    *,
+    sleep_sec: float = 0.2,
+    on_progress=None,
+    cancel_event: threading.Event | None = None,
+) -> dict:
     """
     Scan all open unfulfilled mobile VL orders and fulfill using load_vl_stock_df().
     Returns summary dict with ok, fail, targets, stock_rows, results.
@@ -193,7 +202,14 @@ def run_autofulfill_all_unfulfilled(*, sleep_sec: float = 0.2, on_progress=None)
 
     os.environ.setdefault("VL_AUTOFULFILL_RETRY_FAILED", "1")
 
+    cancelled = False
+
+    def _check_cancel() -> None:
+        if cancel_event is not None and cancel_event.is_set():
+            raise AutofulfillCancelled()
+
     def _p(msg: str) -> None:
+        _check_cancel()
         if on_progress:
             try:
                 on_progress(msg)
@@ -202,34 +218,46 @@ def run_autofulfill_all_unfulfilled(*, sleep_sec: float = 0.2, on_progress=None)
 
     _p("Loading VL session (saved cookies)…")
     t0 = time.time()
-    session = _shared_vl_session()
-    fv.validate_session(session)
-    # Workers reuse the same in-memory cookie session via vl_auth.login().
-    _thread_sessions.session = session
-    _p("Loading barcode stock…")
-    df = load_vl_stock_df()
-    _p("Scanning open Victory Live orders…")
-    scan_meta: dict = {}
-    orders = all_open_orders(session, on_progress=_p, meta=scan_meta)
-    _p(f"Found {len(orders)} open orders — checking which need barcodes…")
-    mobile_candidates = [
-        o for o in orders if o.get("IsMobileEnabled") and _likely_unfulfilled(o)
-    ]
-    targets = collect_targets(session, orders, on_progress=_p)
-    all_targets = len(targets)
-    targets, skipped_tried = filter_new_targets(targets)
-    if skipped_tried:
-        _p(f"Skipping {skipped_tried} already attempted (see {TRIED_PATH.name})")
+    orders: list = []
+    mobile_candidates: list = []
+    targets: list = []
+    all_targets = 0
+    skipped_tried = 0
     results: list[dict] = []
     ok = fail = done = 0
-    n = len(targets)
-    prog_lock = threading.Lock()
-    if all_targets == 0:
-        _p("No unfulfilled mobile orders to fulfill.")
-    elif n == 0:
-        _p(f"All {all_targets} target(s) were attempted before — nothing new.")
-    else:
-        _p(f"Fulfilling {n} new order(s) ({skipped_tried} skipped) · {AUTOFULFILL_WORKERS} workers…")
+    n = 0
+    df = None
+    scan_meta: dict = {}
+    workers = 1
+
+    try:
+        session = _shared_vl_session()
+        fv.validate_session(session)
+        # Workers reuse the same in-memory cookie session via vl_auth.login().
+        _thread_sessions.session = session
+        _p("Loading barcode stock…")
+        df = load_vl_stock_df()
+        _p("Scanning open Victory Live orders…")
+        orders = all_open_orders(session, on_progress=_p, meta=scan_meta)
+        _p(f"Found {len(orders)} open orders — checking which need barcodes…")
+        mobile_candidates = [
+            o for o in orders if o.get("IsMobileEnabled") and _likely_unfulfilled(o)
+        ]
+        targets = collect_targets(session, orders, on_progress=_p)
+        all_targets = len(targets)
+        targets, skipped_tried = filter_new_targets(targets)
+        if skipped_tried:
+            _p(f"Skipping {skipped_tried} already attempted (see {TRIED_PATH.name})")
+        n = len(targets)
+        prog_lock = threading.Lock()
+        if all_targets == 0:
+            _p("No unfulfilled mobile orders to fulfill.")
+        elif n == 0:
+            _p(f"All {all_targets} target(s) were attempted before — nothing new.")
+        else:
+            _p(f"Fulfilling {n} new order(s) ({skipped_tried} skipped) · {AUTOFULFILL_WORKERS} workers…")
+    except AutofulfillCancelled:
+        cancelled = True
 
     def _fulfill_one(order: dict) -> dict:
         inv = order.get("InvoiceNumber")
@@ -255,24 +283,50 @@ def run_autofulfill_all_unfulfilled(*, sleep_sec: float = 0.2, on_progress=None)
             time.sleep(sleep_sec)
         return row
 
-    workers = min(AUTOFULFILL_WORKERS, n) if n else 1
-    with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = [pool.submit(_fulfill_one, o) for o in targets]
-        for fut in as_completed(futures):
-            row = fut.result()
-            record_attempt(row)
-            results.append(row)
-            with prog_lock:
-                done += 1
-                if row.get("success"):
-                    ok += 1
-                else:
-                    fail += 1
-                    inv = row.get("invoice")
-                    _p(f"FAIL {inv}: {str(row.get('message') or '')[:160]}")
-                _p(f"Fulfilling {done}/{n} · ok {ok} fail {fail}")
+    if not cancelled and n > 0:
+        workers = min(AUTOFULFILL_WORKERS, n)
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = [pool.submit(_fulfill_one, o) for o in targets]
+            try:
+                for fut in as_completed(futures):
+                    if cancel_event is not None and cancel_event.is_set():
+                        cancelled = True
+                        for pending in futures:
+                            if not pending.done():
+                                pending.cancel()
+                        break
+                    row = fut.result()
+                    record_attempt(row)
+                    results.append(row)
+                    with prog_lock:
+                        done += 1
+                        if row.get("success"):
+                            ok += 1
+                        else:
+                            fail += 1
+                            inv = row.get("invoice")
+                            _p(f"FAIL {inv}: {str(row.get('message') or '')[:160]}")
+                        _p(f"Fulfilling {done}/{n} · ok {ok} fail {fail}")
+            except AutofulfillCancelled:
+                cancelled = True
+            finally:
+                if cancelled:
+                    pool.shutdown(wait=False, cancel_futures=True)
 
     elapsed = round(time.time() - t0, 1)
+    attempted_invoices = {str(r.get("invoice") or "") for r in results}
+    not_attempted = [
+        {
+            "invoice": o.get("InvoiceNumber"),
+            "rex": o.get("RexOrderId"),
+            "event": (o.get("ProductionName") or "")[:80],
+            "section": o.get("Section"),
+            "row": o.get("Row"),
+            "seats": o.get("Seats"),
+        }
+        for o in targets
+        if str(o.get("InvoiceNumber") or "") not in attempted_invoices
+    ]
     return {
         "ok": ok,
         "fail": fail,
@@ -285,13 +339,16 @@ def run_autofulfill_all_unfulfilled(*, sleep_sec: float = 0.2, on_progress=None)
         "mobile_candidates": len(mobile_candidates),
         "scan_windows": scan_meta.get("scan_windows"),
         "orders_merged_from_db": scan_meta.get("orders_merged_from_db", 0),
-        "stock_rows": len(df),
+        "stock_rows": len(df) if df is not None else 0,
         "fulfill_file_rows": int(df["_fulfill_file"].fillna(0).astype(int).sum())
-        if "_fulfill_file" in df.columns
+        if df is not None and "_fulfill_file" in df.columns
         else 0,
         "workers": workers,
         "elapsed_sec": elapsed,
         "results": results,
+        "cancelled": cancelled,
+        "targets_remaining": max(0, n - done) if n else 0,
+        "not_attempted": not_attempted,
     }
 
 

@@ -28,6 +28,7 @@ import logging
 import os
 import re
 import tempfile
+import threading
 from datetime import datetime
 from pathlib import Path
 
@@ -178,6 +179,7 @@ async def start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "Victory Live bot.\n"
         "/sync — inventory and orders, files sent when it finishes\n"
         "/autofulfill — fulfill open VL mobile orders using DB barcodes\n"
+        "/cancel_autofulfill — stop a running auto-fulfill and send partial report\n"
         "/autofulfill_reset — clear tried history so next run hits all orders again\n"
         "/fulfill_file — upload checker barcode file for autofulfill (merges)\n"
         "/fixstocktype — set all VL stock types to MOBILE TRANSFER (use dry to preview)\n"
@@ -592,6 +594,7 @@ async def _run_sync(bot, chat_id: int, message_id: int) -> None:
 
 
 _AUTOFULFILL_LOCK = asyncio.Lock()
+_AUTOFULFILL_CANCEL_EVENT: threading.Event | None = None
 
 
 def _autofulfill_fail_bucket(message: str) -> str:
@@ -653,8 +656,16 @@ def _write_autofulfill_report_files(result: dict) -> tuple[Path, Path]:
         f"  On file total tried: {result.get('tried_total', '?')}",
         f"  Success: {result.get('ok', 0)}",
         f"  Failed: {result.get('fail', 0)}",
-        "",
     ]
+    if result.get("cancelled"):
+        lines.extend(
+            [
+                f"  Cancelled: yes ({result.get('targets_remaining', 0)} not attempted)",
+                "",
+            ]
+        )
+    else:
+        lines.append("")
     if buckets:
         lines.append("Failure breakdown")
         for name, count in sorted(buckets.items(), key=lambda x: (-x[1], x[0])):
@@ -681,6 +692,22 @@ def _write_autofulfill_report_files(result: dict) -> tuple[Path, Path]:
     else:
         lines.append("(none)")
 
+    not_attempted = list(result.get("not_attempted") or [])
+    if not_attempted:
+        lines.extend(
+            [
+                "",
+                f"=== NOT ATTEMPTED ({len(not_attempted)}) — run cancelled or stopped early ===",
+            ]
+        )
+        for row in not_attempted:
+            inv = row.get("invoice") or "?"
+            ev = (row.get("event") or "")[:70]
+            sec = row.get("section") or ""
+            rw = row.get("row") or ""
+            seats = row.get("seats") or ""
+            lines.append(f"SKIP  {inv}  |  {ev}  |  {sec} {rw} {seats}")
+
     txt_path.write_text("\n".join(lines), encoding="utf-8")
     json_path.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
     return txt_path, json_path
@@ -700,8 +727,13 @@ def _autofulfill_summary_html(result: dict) -> str:
         b = _autofulfill_fail_bucket(str(r.get("message") or ""))
         buckets[b] = buckets.get(b, 0) + 1
 
+    title = (
+        "<b>Auto-fulfill cancelled</b> (partial report)"
+        if result.get("cancelled")
+        else "<b>Auto-fulfill finished</b>"
+    )
     lines = [
-        "<b>Auto-fulfill finished</b>",
+        title,
         "",
         f"Duration: <b>{elapsed}s</b> · workers: <b>{workers}</b>" if elapsed else f"Workers: <b>{workers}</b>",
         f"Stock barcodes: <b>{result.get('stock_rows', '?')}</b>"
@@ -714,6 +746,9 @@ def _autofulfill_summary_html(result: dict) -> str:
         f"Mobile unfulfilled targets: <b>{targets}</b> · new this run: <b>{result.get('targets_new', ok + fail)}</b>",
         f"Success: <b>{ok}</b> · Failed: <b>{fail}</b>",
     ]
+    if result.get("cancelled"):
+        rem = int(result.get("targets_remaining") or 0)
+        lines.append(f"Stopped early — <b>{rem}</b> target(s) not attempted (see report)")
     mc = result.get("mobile_candidates")
     if mc is not None:
         lines.append(f"Mobile candidates: <b>{mc}</b> (not all become fulfill targets)")
@@ -804,11 +839,32 @@ async def _send_autofulfill_report(
             pass
 
 
+async def cancel_autofulfill_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not await _deny_unless_admin(update):
+        return
+    global _AUTOFULFILL_CANCEL_EVENT
+    if not _AUTOFULFILL_LOCK.locked():
+        await update.message.reply_text("No auto-fulfill is running.")
+        return
+    if _AUTOFULFILL_CANCEL_EVENT is None:
+        await update.message.reply_text("Auto-fulfill is running but cancel is not available yet — try again in a few seconds.")
+        return
+    _AUTOFULFILL_CANCEL_EVENT.set()
+    await update.message.reply_text(
+        "Cancelling auto-fulfill…\n"
+        "In-flight orders may still finish; then you get the partial <b>.txt</b> + <b>.json</b> report.",
+        parse_mode=ParseMode.HTML,
+    )
+
+
 async def autofulfill_reset_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not await _deny_unless_admin(update):
         return
     if _AUTOFULFILL_LOCK.locked():
-        await update.message.reply_text("Auto-fulfill is running — wait for it to finish.")
+        await update.message.reply_text(
+            "Auto-fulfill is running — use <code>/cancel_autofulfill</code> to stop and get a partial report.",
+            parse_mode=ParseMode.HTML,
+        )
         return
     from vl_autofulfill_tried import clear_tried_history, tried_count
 
@@ -868,35 +924,43 @@ async def autofulfill_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 pass
 
     async def _run() -> None:
+        global _AUTOFULFILL_CANCEL_EVENT
+        cancel_event = threading.Event()
+        _AUTOFULFILL_CANCEL_EVENT = cancel_event
         pump = asyncio.create_task(_pump())
-        async with _AUTOFULFILL_LOCK:
-            try:
-                from ticketmaster.vl_fulfill_service import run_autofulfill_all_unfulfilled
+        try:
+            async with _AUTOFULFILL_LOCK:
+                try:
+                    from ticketmaster.vl_fulfill_service import run_autofulfill_all_unfulfilled
 
-                result = await asyncio.to_thread(
-                    run_autofulfill_all_unfulfilled, on_progress=on_progress
-                )
-            except Exception as exc:
-                log.exception("autofulfill failed")
+                    result = await asyncio.to_thread(
+                        run_autofulfill_all_unfulfilled,
+                        on_progress=on_progress,
+                        cancel_event=cancel_event,
+                    )
+                except Exception as exc:
+                    log.exception("autofulfill failed")
+                    await q.put(None)
+                    await pump
+                    try:
+                        await context.bot.edit_message_text(
+                            chat_id=chat_id,
+                            message_id=mid,
+                            text=f"Auto-fulfill failed: {exc}"[:4000],
+                        )
+                    except Exception:
+                        pass
+                    return
                 await q.put(None)
                 await pump
-                try:
-                    await context.bot.edit_message_text(
-                        chat_id=chat_id,
-                        message_id=mid,
-                        text=f"Auto-fulfill failed: {exc}"[:4000],
-                    )
-                except Exception:
-                    pass
-                return
-            await q.put(None)
-            await pump
-            await _send_autofulfill_report(
-                context.bot,
-                chat_id,
-                summary_message_id=mid,
-                result=result,
-            )
+                await _send_autofulfill_report(
+                    context.bot,
+                    chat_id,
+                    summary_message_id=mid,
+                    result=result,
+                )
+        finally:
+            _AUTOFULFILL_CANCEL_EVENT = None
 
     asyncio.create_task(_run())
 
@@ -2363,6 +2427,7 @@ _WORKER_BOT_COMMANDS = [
 _ADMIN_BOT_COMMANDS = [
     BotCommand("sync", "Sync inventory and orders, then send files"),
     BotCommand("autofulfill", "Fulfill open VL orders from DB barcodes"),
+    BotCommand("cancel_autofulfill", "Stop auto-fulfill and send partial report"),
     BotCommand("autofulfill_reset", "Clear autofulfill tried history"),
     BotCommand("fulfill_file", "Upload barcode file for autofulfill"),
     BotCommand("summary", "Database inventory totals"),
@@ -2507,6 +2572,7 @@ def main() -> None:
     app.add_handler(CommandHandler("help", start_cmd))
     app.add_handler(CommandHandler("sync", sync_cmd))
     app.add_handler(CommandHandler("autofulfill_reset", autofulfill_reset_cmd))
+    app.add_handler(CommandHandler("cancel_autofulfill", cancel_autofulfill_cmd))
     app.add_handler(CommandHandler("autofulfill", autofulfill_cmd))
     app.add_handler(CommandHandler("fulfill_file", fulfill_file_cmd))
     app.add_handler(CommandHandler("fixstocktype", fixstocktype_cmd))
