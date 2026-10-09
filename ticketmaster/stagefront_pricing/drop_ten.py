@@ -127,6 +127,65 @@ def _chunks(items: list, size: int):
         yield items[i : i + size]
 
 
+def _load_targets(path: Path) -> list[tuple[int, float]]:
+    updates: list[tuple[int, float]] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line or line.startswith("#") or line.startswith("listing_id"):
+            continue
+        parts = [p.strip() for p in line.split("|")]
+        updates.append((int(parts[0]), float(parts[-2])))
+    return updates
+
+
+def _post_with_retry(client: StagefrontClient, path: str, payload: Any, *, what: str) -> None:
+    """Retry network drops, then split the listing batch in half."""
+    last: Exception | None = None
+    for attempt in range(6):
+        try:
+            client.post_json(path, payload, timeout=90, retries=8)
+            return
+        except Exception as exc:
+            last = exc
+            msg = str(exc).lower()
+            network = any(
+                s in msg
+                for s in (
+                    "http -1",
+                    "remote end closed",
+                    "timed out",
+                    "timeout",
+                    "connection",
+                    "429",
+                    "502",
+                    "503",
+                    "504",
+                )
+            )
+            if not network or attempt == 5:
+                break
+            wait = min(2.0 * (attempt + 1), 12.0)
+            _say(f"{what} retry {attempt + 1}/6 in {wait:.0f}s: {str(exc)[:140]}")
+            time.sleep(wait)
+    ids = []
+    if isinstance(payload, dict):
+        ids = list(payload.get("ListingIds") or [])
+    elif isinstance(payload, list):
+        ids = [int(row.get("listing_id") or 0) for row in payload]
+    if last and len(ids) > 1:
+        _say(f"{what} splitting {len(ids)} after: {str(last)[:140]}")
+        half = len(payload["ListingIds"]) // 2 if isinstance(payload, dict) else len(payload) // 2
+        if isinstance(payload, dict):
+            left = {**payload, "ListingIds": payload["ListingIds"][:half]}
+            right = {**payload, "ListingIds": payload["ListingIds"][half:]}
+        else:
+            left, right = payload[:half], payload[half:]
+        _post_with_retry(client, path, left, what=what)
+        _post_with_retry(client, path, right, what=what)
+        return
+    if last:
+        raise last
+
+
 # Portal labels Shared_To EVERYWHERE only when 12 destinations are saved.
 # ListExportDestinations includes 128 (TM External), which the share API drops.
 # Destination 122 is not in that list, but saving it plus the other 11 is what
@@ -156,6 +215,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--har", default=str(DEFAULT_HAR))
     ap.add_argument("--pct", type=float, default=10.0)
     ap.add_argument("--wait", type=int, default=30)
+    ap.add_argument(
+        "--reshare",
+        action="store_true",
+        help="Fix 10% prices, unshare, wait, then share everywhere",
+    )
     ap.add_argument("--chunk", type=int, default=40)
     ap.add_argument("--out", default=str(ROOT / "stagefront_zero_unshared.txt"))
     ap.add_argument("--applied", default=str(ROOT / "stagefront_drop10_applied.txt"))
@@ -179,6 +243,105 @@ def main(argv: list[str] | None = None) -> int:
     client.set_cookie(cookie)
     client.ensure_api_session()
     _say("portal session OK")
+
+    if args.reshare:
+        targets = _load_targets(Path(args.applied))
+        rows = client.query_inventory(None)
+        live = {int(r["Listing_ID"]): r for r in rows if int(r.get("Listing_ID") or 0)}
+        present = [(lid, price) for lid, price in targets if lid in live]
+        missing = [lid for lid, _ in targets if lid not in live]
+        price_fix = [
+            (lid, price)
+            for lid, price in present
+            if abs(_price(live[lid]) - price) >= 0.011
+        ]
+        _say(
+            f"targets {len(targets)} still listed {len(present)} "
+            f"price fixes {len(price_fix)} missing {len(missing)}"
+        )
+        for chunk in _chunks(price_fix, args.chunk):
+            payload = [{"listing_id": lid, "price": price, "face": None} for lid, price in chunk]
+            _post_with_retry(client, "/api/Pricing/UpdateListingPrices", payload, what="price")
+            _say(f"priced {len(payload)} (through listing {payload[-1]['listing_id']})")
+        ids = [lid for lid, _ in present]
+        for chunk in _chunks(ids, args.chunk):
+            _post_with_retry(
+                client,
+                "/api/Pricing/UpdateListingsSharing",
+                {"ListingIds": chunk, "ShareOutSettings": []},
+                what="unshare",
+            )
+            _say(f"unshared {len(chunk)} (through listing {chunk[-1]})")
+        _say(f"waiting {args.wait}s before share-everywhere")
+        time.sleep(args.wait)
+        share_out = _share_everywhere()
+        _say("sharing everywhere " + ",".join(str(s["Export_Destination_ID"]) for s in share_out))
+        for chunk in _chunks(ids, args.chunk):
+            _post_with_retry(
+                client,
+                "/api/Pricing/UpdateListingsSharing",
+                {"ListingIds": chunk, "ShareOutSettings": share_out},
+                what="share",
+            )
+            _say(f"shared {len(chunk)} (through listing {chunk[-1]})")
+        rows = client.query_inventory(None)
+        live = {int(r["Listing_ID"]): r for r in rows if int(r.get("Listing_ID") or 0)}
+        bad_price: list[tuple[int, float]] = []
+        bad_share: list[int] = []
+        ok = 0
+        gone = 0
+        for lid, price in targets:
+            row = live.get(lid)
+            if not row:
+                gone += 1
+                continue
+            if abs(_price(row) - price) >= 0.011:
+                bad_price.append((lid, price))
+            if str(row.get("Shared_To") or "").upper() != "EVERYWHERE":
+                bad_share.append(lid)
+            if abs(_price(row) - price) < 0.011 and str(row.get("Shared_To") or "").upper() == "EVERYWHERE":
+                ok += 1
+        if bad_price:
+            _say(f"repricing {len(bad_price)} that were not 10% off")
+            for chunk in _chunks(bad_price, args.chunk):
+                payload = [{"listing_id": lid, "price": price, "face": None} for lid, price in chunk]
+                _post_with_retry(client, "/api/Pricing/UpdateListingPrices", payload, what="reprice")
+        if bad_share:
+            _say(f"resharing {len(bad_share)} that were not everywhere")
+            for chunk in _chunks(bad_share, args.chunk):
+                _post_with_retry(
+                    client,
+                    "/api/Pricing/UpdateListingsSharing",
+                    {"ListingIds": chunk, "ShareOutSettings": share_out},
+                    what="reshare",
+                )
+        if bad_price or bad_share:
+            rows = client.query_inventory(None)
+            live = {int(r["Listing_ID"]): r for r in rows if int(r.get("Listing_ID") or 0)}
+            ok = gone = 0
+            bad_price = []
+            bad_share = []
+            for lid, price in targets:
+                row = live.get(lid)
+                if not row:
+                    gone += 1
+                    continue
+                price_ok = abs(_price(row) - price) < 0.011
+                share_ok = str(row.get("Shared_To") or "").upper() == "EVERYWHERE"
+                if not price_ok:
+                    bad_price.append((lid, price))
+                if not share_ok:
+                    bad_share.append(lid)
+                if price_ok and share_ok:
+                    ok += 1
+        _say(f"done ok={ok} price_bad={len(bad_price)} share_bad={len(bad_share)} missing={gone}")
+        for lid, price in bad_price[:15]:
+            got = _price(live[lid]) if lid in live else None
+            _say(f"price mismatch {lid} live {got} want {price:.2f}")
+        for lid in bad_share[:15]:
+            shared = live[lid].get("Shared_To") if lid in live else None
+            _say(f"share mismatch {lid} {shared}")
+        return 0 if not bad_price and not bad_share else 1
 
     if args.restore_applied:
         applied_path = Path(args.applied)
