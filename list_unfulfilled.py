@@ -108,16 +108,31 @@ def prep_df(df):
     return df
 
 
-def seat_match(df, section, row, seat, event_date=None, venue=None, event_name=None):
+def seat_match(
+    df,
+    section,
+    row,
+    seat,
+    event_date=None,
+    venue=None,
+    event_name=None,
+    *,
+    strict: bool = False,
+):
     seat_s = str(seat).strip()
     row_u = str(row).upper()
     variants = section_variants(section)
 
     mask = df["_sec"].isin(variants) & (df["_row"] == row_u) & (df["_seat"] == seat_s)
     hits = df[mask]
-    if len(hits) == 0 and event_date is not None:
-        # e.g. VL "BALC" vs DB "Balcony"
+    if len(hits) == 0 and event_date is not None and not strict:
+        # e.g. VL "BALC" vs DB "Balcony" (disabled in strict — avoids wrong-section barcodes)
         hits = df[(df["_row"] == row_u) & (df["_seat"] == seat_s) & (df["_edate"] == event_date)]
+    if strict and event_date is not None and len(hits):
+        dated = hits[hits["_edate"] == event_date]
+        if len(dated) == 0:
+            return None
+        hits = dated
     if len(hits) > 1 and "_fulfill_file" in hits.columns:
         ff = hits[hits["_fulfill_file"].fillna(0).astype(int) == 1]
         if len(ff) >= 1:
@@ -143,8 +158,23 @@ def seat_match(df, section, row, seat, event_date=None, venue=None, event_name=N
         if len(dated) == 1:
             return dated.iloc[0]
         if len(dated) > 1:
-            return dated.iloc[0]
-    if len(hits) >= 1:
+            hits = dated
+    if len(hits) > 1 and venue:
+        v = venue.lower()
+        venue_hits = []
+        for _, r in hits.iterrows():
+            sv = str(r.get("_venue") or "")
+            if v[:8] in sv or sv[:8] in v:
+                venue_hits.append(r)
+        if len(venue_hits) == 1:
+            return venue_hits[0]
+        if len(venue_hits) > 1:
+            hits = pd.DataFrame(venue_hits)
+    if len(hits) == 1:
+        return hits.iloc[0]
+    if len(hits) > 1:
+        if strict:
+            return None
         if venue:
             v = venue.lower()
             for _, r in hits.iterrows():

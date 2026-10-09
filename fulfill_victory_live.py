@@ -146,7 +146,36 @@ def clean_barcode(bc):
     return bc
 
 
-def find_barcode(section, row, seat, df, allow_adjacent=True, order=None):
+def _fulfill_strict_stock() -> bool:
+    return os.environ.get("VL_FULFILL_LOOSE_STOCK", "").strip().lower() not in (
+        "1",
+        "true",
+        "yes",
+    )
+
+
+def _fulfill_replace_vl_barcodes() -> bool:
+    return os.environ.get("VL_FULFILL_REPLACE_VL", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+
+
+def find_barcode(
+    section,
+    row,
+    seat,
+    df,
+    allow_adjacent=True,
+    order=None,
+    *,
+    strict: bool | None = None,
+):
+    if strict is None:
+        strict = _fulfill_strict_stock()
+    if strict:
+        allow_adjacent = False
     if "_sec" in df.columns:
         try:
             from list_unfulfilled import parse_event_date, seat_match
@@ -164,6 +193,7 @@ def find_barcode(section, row, seat, df, allow_adjacent=True, order=None):
                 event_date,
                 venue,
                 event_name=(order or {}).get("ProductionName"),
+                strict=strict,
             )
             if hit is not None:
                 bc = hit.get("_bc") or hit.get("Barcodes")
@@ -370,29 +400,55 @@ def fulfill_order(session, order, df, *, ma_data: dict | None = None):
     if pos:
         session.get(f"{BASE}/api/orders/tmandata", params={"sellOrderId": rid, "sourcePosExchangeId": pos}, timeout=30)
 
-    # Step 3: build payload for ALL tickets (prefer stock DB over stale VL barcodes)
+    # Step 3: barcodes — keep VL when already set; stock only fills empty seats (strict match)
+    strict_stock = _fulfill_strict_stock()
+    replace_vl = _fulfill_replace_vl_barcodes()
     payload = []
+    seen_bc: dict[str, str] = {}
     for t in tickets:
         vl_bc = t.get("Barcode")
+        vl_clean = clean_barcode(vl_bc) if barcode_usable(vl_bc) else None
         found, src = find_barcode(
             t.get("Section") or order.get("Section"),
             t.get("Row") or order.get("Row"),
             t.get("Seat"),
             df,
             order=order,
+            strict=strict_stock,
         )
-        if found:
-            bc = found
-            if vl_bc and clean_barcode(vl_bc) != clean_barcode(found):
-                print(f"    Seat {t.get('Seat')}: {bc} (DB replaces VL barcode)")
+        seat_label = str(t.get("Seat"))
+        if vl_clean:
+            if (
+                replace_vl
+                and found
+                and clean_barcode(found) != vl_clean
+            ):
+                bc = found
+                print(f"    Seat {seat_label}: {bc} (stock replaces VL)")
             else:
-                note = f" (from seat {src})" if src != int(t.get("Seat")) else ""
-                print(f"    Seat {t.get('Seat')}: {bc}{note}")
-        elif barcode_usable(vl_bc):
-            bc = clean_barcode(vl_bc)
-            print(f"    Seat {t.get('Seat')}: {bc} (existing on VL, not in DB)")
+                bc = vl_clean
+                if found and clean_barcode(found) != vl_clean:
+                    print(f"    Seat {seat_label}: keep VL barcode (ignored stock mismatch)")
+                else:
+                    print(f"    Seat {seat_label}: {bc} (on VL)")
+        elif found:
+            bc = found
+            try:
+                seat_n = int(seat_label)
+                src_n = int(src) if src is not None else seat_n
+                note = f" (from seat {src})" if src_n != seat_n else ""
+            except (TypeError, ValueError):
+                note = ""
+            print(f"    Seat {seat_label}: {bc}{note} (from stock)")
         else:
-            return False, f"no barcode in DB for seat {t.get('Seat')} sec {t.get('Section')} row {t.get('Row')}"
+            return False, (
+                f"no strict stock match for seat {seat_label} "
+                f"sec {t.get('Section')} row {t.get('Row')}"
+            )
+        prev_seat = seen_bc.get(bc)
+        if prev_seat and prev_seat != seat_label:
+            return False, f"duplicate barcode {bc} for seats {prev_seat} and {seat_label}"
+        seen_bc[bc] = seat_label
         payload.append(ticket_payload(t, bc))
 
     def _ticket_bc(ticket: dict) -> str:
