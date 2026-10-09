@@ -598,6 +598,18 @@ _AUTOFULFILL_LOCK = asyncio.Lock()
 _AUTOFULFILL_CANCEL_EVENT: threading.Event | None = None
 
 
+class _SpecificFulfillAwaitFilter(filters.UpdateFilter):
+    """Only match the invoice follow-up message after /specific_fulfill."""
+
+    def filter(self, update: object, application: object, context: ContextTypes.DEFAULT_TYPE) -> bool:
+        if not isinstance(update, Update) or not update.message or not update.message.text:
+            return False
+        return bool(context.user_data.get("specific_fulfill_await"))
+
+
+_SPECIFIC_FULFILL_AWAIT = _SpecificFulfillAwaitFilter()
+
+
 def _autofulfill_fail_bucket(message: str) -> str:
     m = (message or "").strip().lower()
     if not m:
@@ -928,6 +940,7 @@ async def specific_fulfill_invoice_reply(update: Update, context: ContextTypes.D
         return
     context.user_data.pop("specific_fulfill_await", None)
     await _run_specific_fulfill_invoice(update, context, update.message.text.strip())
+    raise ApplicationHandlerStop()
 
 
 async def autofulfill_reset_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -2640,14 +2653,18 @@ def main() -> None:
             if update.message:
                 await update.message.reply_text("Nothing to cancel.")
 
-    # /stockfrom first (group -1) so dates never hit /list or TM routers.
+    # /stockfrom + /specific_fulfill follow-ups (group -1) before /list or TM routers.
     app.add_handler(CommandHandler("stockfrom", stockfrom_cmd), group=-1)
     app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, stockfrom_date_reply, block=True),
+        MessageHandler(
+            filters.TEXT & ~filters.COMMAND & _SPECIFIC_FULFILL_AWAIT,
+            specific_fulfill_invoice_reply,
+            block=True,
+        ),
         group=-1,
     )
     app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, specific_fulfill_invoice_reply, block=False),
+        MessageHandler(filters.TEXT & ~filters.COMMAND, stockfrom_date_reply, block=True),
         group=-1,
     )
     app.add_handler(listing_callbacks)
