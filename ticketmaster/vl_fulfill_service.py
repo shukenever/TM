@@ -5,7 +5,7 @@ import os
 import sqlite3
 import sys
 import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from pathlib import Path
 
 import pandas as pd
@@ -285,16 +285,31 @@ def run_autofulfill_all_unfulfilled(
 
     if not cancelled and n > 0:
         workers = min(AUTOFULFILL_WORKERS, n)
-        with ThreadPoolExecutor(max_workers=workers) as pool:
-            futures = [pool.submit(_fulfill_one, o) for o in targets]
-            try:
-                for fut in as_completed(futures):
+        pool = ThreadPoolExecutor(max_workers=workers)
+        in_flight: set = set()
+        target_iter = iter(targets)
+        try:
+            while True:
+                if cancel_event is not None and cancel_event.is_set():
+                    cancelled = True
+                    break
+                while len(in_flight) < workers:
                     if cancel_event is not None and cancel_event.is_set():
                         cancelled = True
-                        for pending in futures:
-                            if not pending.done():
-                                pending.cancel()
                         break
+                    try:
+                        order = next(target_iter)
+                    except StopIteration:
+                        break
+                    in_flight.add(pool.submit(_fulfill_one, order))
+                if cancelled:
+                    break
+                if not in_flight:
+                    break
+                done_set, in_flight = wait(in_flight, return_when=FIRST_COMPLETED, timeout=0.35)
+                if cancel_event is not None and cancel_event.is_set():
+                    cancelled = True
+                for fut in done_set:
                     row = fut.result()
                     record_attempt(row)
                     results.append(row)
@@ -307,11 +322,15 @@ def run_autofulfill_all_unfulfilled(
                             inv = row.get("invoice")
                             _p(f"FAIL {inv}: {str(row.get('message') or '')[:160]}")
                         _p(f"Fulfilling {done}/{n} · ok {ok} fail {fail}")
-            except AutofulfillCancelled:
-                cancelled = True
-            finally:
-                if cancelled:
-                    pool.shutdown(wait=False, cancel_futures=True)
+        except AutofulfillCancelled:
+            cancelled = True
+        finally:
+            if cancelled:
+                for fut in in_flight:
+                    fut.cancel()
+                pool.shutdown(wait=False, cancel_futures=True)
+            else:
+                pool.shutdown(wait=True)
 
     elapsed = round(time.time() - t0, 1)
     attempted_invoices = {str(r.get("invoice") or "") for r in results}
@@ -365,4 +384,4 @@ def fulfill_victory_live_order(invoice_id: str) -> tuple[bool, str]:
     if not order.get("IsMobileEnabled"):
         return False, "Order is not mobile-enabled on Victory Live"
     df = load_vl_stock_df()
-    return fv.fulfill_order(session, order, df)
+    return fv.fulfill_order_with_fallback(session, order, df)

@@ -179,7 +179,8 @@ async def start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "Victory Live bot.\n"
         "/sync — inventory and orders, files sent when it finishes\n"
         "/autofulfill — fulfill open VL mobile orders using DB barcodes\n"
-        "/cancel_autofulfill — stop a running auto-fulfill and send partial report\n"
+        "/cancel_autofulfill or /cancel — stop auto-fulfill instantly + partial report\n"
+        "/specific_fulfill <invoice> — fulfill one VL invoice (or send invoice next)\n"
         "/autofulfill_reset — clear tried history so next run hits all orders again\n"
         "/fulfill_file — upload checker barcode file for autofulfill (merges)\n"
         "/fixstocktype — set all VL stock types to MOBILE TRANSFER (use dry to preview)\n"
@@ -839,22 +840,94 @@ async def _send_autofulfill_report(
             pass
 
 
-async def cancel_autofulfill_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def cancel_autofulfill_cmd(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    *,
+    silent_if_idle: bool = False,
+) -> bool:
+    """Request stop; returns True if a run was active."""
     if not await _deny_unless_admin(update):
-        return
+        return False
     global _AUTOFULFILL_CANCEL_EVENT
     if not _AUTOFULFILL_LOCK.locked():
-        await update.message.reply_text("No auto-fulfill is running.")
-        return
+        if not silent_if_idle and update.message:
+            await update.message.reply_text("No auto-fulfill is running.")
+        return False
     if _AUTOFULFILL_CANCEL_EVENT is None:
-        await update.message.reply_text("Auto-fulfill is running but cancel is not available yet — try again in a few seconds.")
-        return
+        if update.message:
+            await update.message.reply_text(
+                "Auto-fulfill is starting — send <code>/cancel</code> again in a second.",
+                parse_mode=ParseMode.HTML,
+            )
+        return True
     _AUTOFULFILL_CANCEL_EVENT.set()
-    await update.message.reply_text(
-        "Cancelling auto-fulfill…\n"
-        "In-flight orders may still finish; then you get the partial <b>.txt</b> + <b>.json</b> report.",
+    if update.message:
+        await update.message.reply_text(
+            "Stopped — partial <b>.txt</b> + <b>.json</b> report uploading now.",
+            parse_mode=ParseMode.HTML,
+        )
+    return True
+
+
+async def _run_specific_fulfill_invoice(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+    invoice: str,
+) -> None:
+    inv = str(invoice or "").strip().split()[0]
+    if not inv:
+        await update.message.reply_text("Send a valid invoice number.")
+        return
+    if _AUTOFULFILL_LOCK.locked():
+        await update.message.reply_text(
+            "Auto-fulfill is running — use <code>/cancel</code> first.",
+            parse_mode=ParseMode.HTML,
+        )
+        return
+    msg = await update.message.reply_text(f"Fulfilling invoice <code>{html.escape(inv)}</code>…", parse_mode=ParseMode.HTML)
+
+    def _work() -> tuple[bool, str]:
+        from ticketmaster.vl_fulfill_service import fulfill_victory_live_order
+
+        return fulfill_victory_live_order(inv)
+
+    try:
+        ok, detail = await asyncio.to_thread(_work)
+    except Exception as exc:
+        log.exception("specific_fulfill %s", inv)
+        await msg.edit_text(f"Invoice {html.escape(inv)}: error — {html.escape(str(exc))[:500]}", parse_mode=ParseMode.HTML)
+        return
+    icon = "✅" if ok else "❌"
+    await msg.edit_text(
+        f"{icon} Invoice <code>{html.escape(inv)}</code>\n{html.escape(detail)[:3500]}",
         parse_mode=ParseMode.HTML,
     )
+
+
+async def specific_fulfill_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not await _deny_unless_admin(update):
+        return
+    raw = " ".join(context.args or []).strip()
+    if raw:
+        await _run_specific_fulfill_invoice(update, context, raw)
+        return
+    context.user_data["specific_fulfill_await"] = True
+    await update.message.reply_text(
+        "Send the <b>invoice number</b> in your next message (digits only is fine).",
+        parse_mode=ParseMode.HTML,
+    )
+
+
+async def specific_fulfill_invoice_reply(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not context.user_data.get("specific_fulfill_await"):
+        return
+    if not update.effective_user or not update.message or not update.message.text:
+        return
+    if not _admin(update.effective_user.id):
+        return
+    context.user_data.pop("specific_fulfill_await", None)
+    await _run_specific_fulfill_invoice(update, context, update.message.text.strip())
 
 
 async def autofulfill_reset_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -2428,6 +2501,7 @@ _ADMIN_BOT_COMMANDS = [
     BotCommand("sync", "Sync inventory and orders, then send files"),
     BotCommand("autofulfill", "Fulfill open VL orders from DB barcodes"),
     BotCommand("cancel_autofulfill", "Stop auto-fulfill and send partial report"),
+    BotCommand("specific_fulfill", "Fulfill one VL invoice by number"),
     BotCommand("autofulfill_reset", "Clear autofulfill tried history"),
     BotCommand("fulfill_file", "Upload barcode file for autofulfill"),
     BotCommand("summary", "Database inventory totals"),
@@ -2542,6 +2616,14 @@ def main() -> None:
     )
 
     async def unified_cancel_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if _AUTOFULFILL_LOCK.locked():
+            if await cancel_autofulfill_cmd(update, context, silent_if_idle=True):
+                raise ApplicationHandlerStop()
+        if context.user_data.get("specific_fulfill_await"):
+            context.user_data.pop("specific_fulfill_await", None)
+            if update.message:
+                await update.message.reply_text("Specific fulfill cancelled.")
+            raise ApplicationHandlerStop()
         if context.user_data.get("stockfrom_await"):
             _stockfrom_clear_await(context, update.effective_user.id if update.effective_user else None)
             if update.message:
@@ -2564,6 +2646,10 @@ def main() -> None:
         MessageHandler(filters.TEXT & ~filters.COMMAND, stockfrom_date_reply, block=True),
         group=-1,
     )
+    app.add_handler(
+        MessageHandler(filters.TEXT & ~filters.COMMAND, specific_fulfill_invoice_reply, block=False),
+        group=-1,
+    )
     app.add_handler(listing_callbacks)
     app.add_handler(listing_text)
     app.add_handler(listing_conv)
@@ -2573,6 +2659,7 @@ def main() -> None:
     app.add_handler(CommandHandler("sync", sync_cmd))
     app.add_handler(CommandHandler("autofulfill_reset", autofulfill_reset_cmd))
     app.add_handler(CommandHandler("cancel_autofulfill", cancel_autofulfill_cmd))
+    app.add_handler(CommandHandler("specific_fulfill", specific_fulfill_cmd))
     app.add_handler(CommandHandler("autofulfill", autofulfill_cmd))
     app.add_handler(CommandHandler("fulfill_file", fulfill_file_cmd))
     app.add_handler(CommandHandler("fixstocktype", fixstocktype_cmd))
