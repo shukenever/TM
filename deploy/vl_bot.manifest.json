@@ -1,0 +1,43 @@
+{
+  "skip_remote_paths": [
+    "vl_inventory_bot.config.json",
+    "data/vl_inventory.db",
+    "data/vl_bot.log",
+    "data/vl_bot.pid",
+    "data/vl_session.json",
+    "data/vl_autofulfill_tried.json",
+    "data/vl_fulfill_stock.db"
+  ],
+  "files": [
+    {"local": "vl_inventory_bot.py", "remote": "vl_inventory_bot.py"},
+    {"local": "vl_inventory_sync.py", "remote": "vl_inventory_sync.py"},
+    {"local": "vl_inventory_db.py", "remote": "vl_inventory_db.py"},
+    {"local": "vl_stock.py", "remote": "vl_stock.py"},
+    {"local": "vl_listing_api.py", "remote": "vl_listing_api.py"},
+    {"local": "vl_listing_handlers.py", "remote": "vl_listing_handlers.py"},
+    {"local": "vl_listing_user_report.py", "remote": "vl_listing_user_report.py"},
+    {"local": "vl_rm_recovery.py", "remote": "vl_rm_recovery.py"},
+    {"local": "vl_auth.py", "remote": "vl_auth.py"},
+    {"local": "deploy/vl_egress_proxy.py", "remote": "vl_egress_proxy.py"},
+    {"local": "deploy/open_vl_egress_port.ps1", "remote": "open_vl_egress_port.ps1"},
+    {"local": "deploy/START_VL_EGRESS_PROXY.bat", "remote": "START_VL_EGRESS_PROXY.bat"},
+    {"local": "ticketmaster/__init__.py", "remote": "ticketmaster/__init__.py"},
+    {"local": "ticketmaster/bot.py", "remote": "ticketmaster/bot.py"},
+    {"local": "ticketmaster/tm_worker_bridge.py", "remote": "ticketmaster/tm_worker_bridge.py"},
+    {"local": "ticketmaster/vl_share_targets.py", "remote": "ticketmaster/vl_share_targets.py"},
+    {"local": "ticketmaster/vl_pricing_import.py", "remote": "ticketmaster/vl_pricing_import.py"},
+    {"local": "ticketmaster/vl_fulfill_service.py", "remote": "ticketmaster/vl_fulfill_service.py"},
+    {"local": "fulfill_victory_live.py", "remote": "fulfill_victory_live.py"},
+    {"local": "vl_fulfill_pm.py", "remote": "vl_fulfill_pm.py"},
+    {"local": "list_unfulfilled.py", "remote": "list_unfulfilled.py"},
+    {"local": "fulfill_vl_all_unfulfilled.py", "remote": "fulfill_vl_all_unfulfilled.py"},
+    {"local": "_check_vl_fulfillable_all.py", "remote": "_check_vl_fulfillable_all.py"},
+    {"local": "vl_autofulfill_tried.py", "remote": "vl_autofulfill_tried.py"},
+    {"local": "vl_fulfill_stock_db.py", "remote": "vl_fulfill_stock_db.py"},
+    {"local": "vl_fulfill_stock_parse.py", "remote": "vl_fulfill_stock_parse.py"},
+    {"local": "export_partner_inventory_sample.py", "remote": "export_partner_inventory_sample.py"},
+    {"local": "bot_whitelist.py", "remote": "bot_whitelist.py"},
+    {"local": "deploy/vl_bot_receiver.py", "remote": "vl_bot_receiver.py"},
+    {"local": "deploy/START_VL_BOT.bat", "remote": "START_VL_BOT.bat"}
+  ]
+}
