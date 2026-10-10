@@ -1,0 +1,21 @@
+{
+  "skip_remote_paths": [
+    "stubhub_bot.config.json",
+    "data/stubhub_bot.db",
+    "data/stubhub_bot.db-wal",
+    "data/stubhub_bot.db-shm",
+    "data/sh_bot.log",
+    "data/sh_bot.pid",
+    "data/mobile_tickets.txt"
+  ],
+  "files": [
+    {"local": "stubhub_bot.py", "remote": "stubhub_bot.py"},
+    {"local": "stubhub_db.py", "remote": "stubhub_db.py"},
+    {"local": "stubhub_worm.py", "remote": "stubhub_worm.py"},
+    {"local": "stubhub_listings.py", "remote": "stubhub_listings.py"},
+    {"local": "stubhub_capture.py", "remote": "stubhub_capture.py"},
+    {"local": "stubhub_sale_notify.py", "remote": "stubhub_sale_notify.py"},
+    {"local": "deploy/sh_bot_receiver.py", "remote": "sh_bot_receiver.py"},
+    {"local": "deploy/START_SH_BOT.bat", "remote": "START_SH_BOT.bat"}
+  ]
+}
