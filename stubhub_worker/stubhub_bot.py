@@ -211,6 +211,7 @@ def _help(role: str | None) -> str:
             "/queue — capture + listing queue stats\n"
             "/requeue <capture_id> — put failed/assigned job back to pending\n"
             "/export — full DB snapshot for admin\n"
+            "/clearlistings confirm — wipe all lister seats (pending + listed)\n"
             "/add — email, then recovery phrase\n"
             "/accs — full database\n"
             "/free  /used  /stats\n"
@@ -730,6 +731,37 @@ async def export_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     await update.message.reply_document(
         document=InputFile(buf, filename="stubhub_admin_export.txt"),
         caption="Accounts + capture queue + listing counts",
+    )
+
+
+async def clearlistings_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not update.message or not update.effective_user or not _private(update):
+        return
+    if not _admin(update.effective_user.id):
+        await update.message.reply_text("Admin only.")
+        return
+    counts = db.listing_counts()
+    if not context.args or context.args[0].lower() != "confirm":
+        await update.message.reply_text(
+            "This deletes every lister seat in the database "
+            "(pending and listed). Worm accounts and the work3 capture queue stay.\n\n"
+            f"Now: {counts['total']} seat(s) "
+            f"({counts['pending']} pending · {counts['listed']} listed · "
+            f"{counts['pending_events']} event(s) in /next queue).\n\n"
+            "To proceed: /clearlistings confirm"
+        )
+        return
+    result = db.clear_all_listings()
+    await update.message.reply_text(
+        f"Listings cleared.\n"
+        f"Removed {result['deleted']} seat(s) "
+        f"({result['pending']} pending · {result['listed']} listed).\n"
+        f"Lister queue: {db.listing_counts()['total']} seat(s) left."
+    )
+    await _notify_admins(
+        context.bot,
+        f"CLEAR LISTINGS by admin {update.effective_user.id}\n"
+        f"deleted {result['deleted']} seat(s)",
     )
 
 
@@ -1653,6 +1685,7 @@ def main() -> None:
     app.add_handler(CommandHandler("requeue", requeue_cmd))
     app.add_handler(CommandHandler("capture", capture_cmd))
     app.add_handler(CommandHandler("export", export_cmd))
+    app.add_handler(CommandHandler("clearlistings", clearlistings_cmd))
     app.add_handler(CommandHandler("done", done_cmd))
     app.add_handler(CommandHandler("next", next_cmd))
     app.add_handler(CommandHandler("mobile", mobile_cmd))

@@ -619,6 +619,29 @@ def listing_counts() -> dict[str, int]:
             conn.close()
 
 
+def clear_all_listings() -> dict[str, int]:
+    """Delete every row in listings. Worm accounts and capture jobs are untouched."""
+    with _LOCK:
+        conn = _conn()
+        try:
+            pending = int(
+                conn.execute(
+                    "SELECT COUNT(*) AS n FROM listings WHERE status='pending'"
+                ).fetchone()["n"]
+            )
+            listed = int(
+                conn.execute(
+                    "SELECT COUNT(*) AS n FROM listings WHERE status='listed'"
+                ).fetchone()["n"]
+            )
+            total = int(conn.execute("SELECT COUNT(*) AS n FROM listings").fetchone()["n"])
+            conn.execute("DELETE FROM listings")
+            conn.commit()
+            return {"deleted": total, "pending": pending, "listed": listed}
+        finally:
+            conn.close()
+
+
 def _event_rows(conn: sqlite3.Connection, row: sqlite3.Row) -> list[sqlite3.Row]:
     return conn.execute(
         """
